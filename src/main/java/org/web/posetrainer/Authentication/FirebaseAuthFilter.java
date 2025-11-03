@@ -25,6 +25,8 @@ public class FirebaseAuthFilter extends OncePerRequestFilter {
         this.firebaseAuth = FirebaseAuth.getInstance(app);
     }
 
+    
+
     @Override
     protected void doFilterInternal(
             HttpServletRequest request,
