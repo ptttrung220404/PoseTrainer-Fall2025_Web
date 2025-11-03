@@ -1,6 +1,9 @@
 package org.web.posetrainer.Config;
 
+import com.google.cloud.firestore.Firestore;
 import com.google.firebase.FirebaseApp;
+import com.google.firebase.auth.FirebaseAuth;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -20,34 +23,62 @@ import java.util.List;
 public class SecurityConfig {
 
     private final FirebaseApp firebaseApp;
+    private final Firestore firestore;
 
-    public SecurityConfig(FirebaseApp firebaseApp) {
+    public SecurityConfig(FirebaseApp firebaseApp, Firestore firestore) {
+        this.firestore = firestore;
+        System.out.println("FirebaseApp loaded: " + firebaseApp.getName());
         this.firebaseApp = firebaseApp;
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        var firebaseFilter = new FirebaseAuthFilter(firebaseApp);
+    public SecurityFilterChain filterChain(HttpSecurity http,
+                                           FirebaseAuth firebaseAuth,
+                                           Firestore firestore) throws Exception {
+        var firebaseFilter = new FirebaseAuthFilter(firebaseAuth, firestore);
 
         http
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/health", "/actuator/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/auth/**").permitAll() // nếu có endpoint public
-                        .anyRequest().authenticated()
+                        .requestMatchers("/me").authenticated()      // test: chỉ cần xác thực
+                        .anyRequest().hasRole("ADMIN")               // phần còn lại bắt buộc ADMIN
                 )
-                .addFilterBefore(firebaseFilter, UsernamePasswordAuthenticationFilter.class)
-                .cors(Customizer.withDefaults());
+                .addFilterBefore(firebaseFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
+                .cors(org.springframework.security.config.Customizer.withDefaults())
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((req, res, e) -> res.setStatus(HttpServletResponse.SC_UNAUTHORIZED))
+                );
 
         return http.build();
     }
+
+//    @Bean
+//    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+//        var firebaseFilter = new FirebaseAuthFilter(firebaseApp);
+//
+//        http
+//                .csrf(csrf -> csrf.disable())
+//                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+//                .authorizeHttpRequests(auth -> auth
+//                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+//                        .requestMatchers("/health", "/actuator/**").permitAll()
+//                        .requestMatchers(HttpMethod.POST, "/auth/**").permitAll()
+//                        .anyRequest().hasRole("ADMIN")                               // tất cả endpoint còn lại: ADMIN
+//                )
+//                .addFilterBefore(firebaseFilter, UsernamePasswordAuthenticationFilter.class)
+//                .cors(Customizer.withDefaults());
+//
+//        return http.build();
+//    }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         var cfg = new CorsConfiguration();
         cfg.setAllowedOrigins(List.of("*")); // chỉnh theo domain của bạn
-        cfg.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
+        cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         cfg.setAllowedHeaders(List.of("*"));
         var source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", cfg);
