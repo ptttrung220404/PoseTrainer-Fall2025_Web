@@ -35,6 +35,8 @@ public class FirebaseAuthFilter extends OncePerRequestFilter {
         this(FirebaseAuth.getInstance(app), firestore);
     }
 
+    
+
     @Override
     protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
             throws ServletException, IOException {
