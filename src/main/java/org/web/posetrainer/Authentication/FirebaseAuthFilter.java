@@ -35,7 +35,7 @@ public class FirebaseAuthFilter extends OncePerRequestFilter {
         this(FirebaseAuth.getInstance(app), firestore);
     }
 
-    
+
 
     @Override
     protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
@@ -45,7 +45,6 @@ public class FirebaseAuthFilter extends OncePerRequestFilter {
         final String h = req.getHeader(HttpHeaders.AUTHORIZATION);
         System.out.println(">>> Authorization header = " + h);
 
-        // Parse "Bearer <token>" robust
         String idToken = null;
         if (h != null) {
             String[] parts = h.trim().split("\\s+");
@@ -60,47 +59,56 @@ public class FirebaseAuthFilter extends OncePerRequestFilter {
 
         if (idToken != null) {
             try {
-                // 1) Verify ID token
                 FirebaseToken decoded = firebaseAuth.verifyIdToken(idToken, true);
                 String uid = decoded.getUid();
                 System.out.println(">>> VERIFIED uid=" + uid);
 
-                // 2) Lấy authorities
                 List<SimpleGrantedAuthority> authorities = new ArrayList<>();
 
-                // 2a) từ custom claims nếu có (roles: ["ADMIN", ...])
+                // 2a) roles từ custom claims (nếu có)
                 Object rolesObj = decoded.getClaims().get("roles");
                 if (rolesObj instanceof List<?> list && !list.isEmpty()) {
                     for (Object r : list) {
-                        String roleStr = String.valueOf(r).toUpperCase(Locale.ROOT);
-                        authorities.add(new SimpleGrantedAuthority("ROLE_" + roleStr));
+                        String roleUp = String.valueOf(r).toUpperCase(Locale.ROOT);
+                        authorities.add(new SimpleGrantedAuthority(roleUp));
                     }
-                } else {
-                    // 2b) Đọc từ Firestore: users/{uid}.role == "ADMIN" (hoặc "USER")
-                    try {
-                        DocumentSnapshot snap = firestore.collection("users")
-                                .document(uid)
-                                .get()
-                                .get(3, TimeUnit.SECONDS);
+                }
 
-                        if (snap.exists()) {
+                // 2b) roles từ Firestore (ghi đè nếu có)
+                try {
+                    DocumentSnapshot snap = firestore.collection("users")
+                            .document(uid)
+                            .get()
+                            .get(3, TimeUnit.SECONDS);
+
+                    if (snap.exists()) {
+                        // Ưu tiên mảng roles: ["ADMIN","TRAINER"]
+                        @SuppressWarnings("unchecked")
+                        List<String> rolesArr = (List<String>) snap.get("roles");
+                        if (rolesArr != null && !rolesArr.isEmpty()) {
+                            authorities.clear(); // Firestore là nguồn sự thật
+                            for (String r : rolesArr) {
+                                String roleUp = r.toUpperCase(Locale.ROOT);
+                                authorities.add(new SimpleGrantedAuthority(roleUp));
+                            }
+                        } else {
+                            // Hoặc field role: "ADMIN"
                             String role = snap.getString("role");
                             if (role != null) {
                                 String roleUp = role.toUpperCase(Locale.ROOT);
                                 if ("ADMIN".equals(roleUp) || "USER".equals(roleUp)) {
-                                    authorities.add(new SimpleGrantedAuthority("ROLE_" + roleUp));
+                                    authorities.clear(); // ưu tiên Firestore
+                                    authorities.add(new SimpleGrantedAuthority( roleUp));
                                 }
                             }
-                            // Nếu bạn chỉ muốn ADMIN mới có quyền: có thể KHÔNG add USER vào authorities
-                        } else {
-                            System.out.println(">>> Firestore: users/" + uid + " not found");
                         }
-                    } catch (Exception e) {
-                        System.out.println(">>> Firestore role lookup failed: " + e.getMessage());
+                    } else {
+                        System.out.println(">>> Firestore: users/" + uid + " not found");
                     }
+                } catch (Exception e) {
+                    System.out.println(">>> Firestore role lookup failed: " + e.getMessage());
                 }
 
-                // 3) Set Authentication vào SecurityContext
                 var authToken = new UsernamePasswordAuthenticationToken(uid, idToken, authorities);
                 authToken.setDetails(Map.of(
                         "email", decoded.getEmail(),
@@ -110,7 +118,6 @@ public class FirebaseAuthFilter extends OncePerRequestFilter {
                 System.out.println(">>> Authorities = " + authorities);
 
             } catch (Exception e) {
-                // Verify thất bại -> trả 401 (khác với 403 thiếu quyền)
                 System.out.println(">>> VERIFY FAILED: " + e.getClass().getSimpleName() + " - " + e.getMessage());
                 SecurityContextHolder.clearContext();
                 res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -123,6 +130,7 @@ public class FirebaseAuthFilter extends OncePerRequestFilter {
         chain.doFilter(req, res);
     }
 }
+
 
 
 //                List<String> roles = rolesObj instanceof List ? (List<String>) rolesObj : List.of("USER");
