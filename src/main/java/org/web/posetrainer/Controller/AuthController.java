@@ -1,10 +1,13 @@
 package org.web.posetrainer.Controller;
 
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.web.posetrainer.DTO.LoginRequest;
 import org.web.posetrainer.Entity.Workouts;
+import org.web.posetrainer.Service.AuthService;
 import org.web.posetrainer.Service.UserService;
 import org.web.posetrainer.Service.WorkoutsService;
 import org.springframework.security.core.GrantedAuthority;
@@ -40,9 +43,10 @@ public class AuthController {
 //        ));
 //    }
     private final UserService userService;
-
-    public AuthController(UserService userService) {
+    private final AuthService authService;
+    public AuthController(UserService userService, AuthService authService) {
         this.userService = userService;
+        this.authService = authService;
     }
 
     @GetMapping("/me")
@@ -84,5 +88,16 @@ public class AuthController {
     public String health() {
         return "ok";
     }
-
+    @PostMapping("/auth/login")
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
+        try {
+            var resp = authService.login(request);
+            return ResponseEntity.ok(resp);
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body(Map.of(
+                    "error", "INVALID_CREDENTIALS",
+                    "message", e.getMessage()
+            ));
+        }
+    }
 }
