@@ -41,10 +41,12 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/health", "/actuator/**").permitAll()
-                        .requestMatchers("/me").authenticated()      // test: chỉ cần xác thực
-                        .anyRequest().hasRole("ADMIN")               // phần còn lại bắt buộc ADMIN
+                        .requestMatchers("/me").authenticated()          // chỉ cần có token
+                        .requestMatchers("/admin/**").hasAuthority("ADMIN")   // 🔒 ràng buộc rõ cho admin
+                        .anyRequest().authenticated()
                 )
                 .addFilterBefore(firebaseFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
                 .cors(org.springframework.security.config.Customizer.withDefaults())
