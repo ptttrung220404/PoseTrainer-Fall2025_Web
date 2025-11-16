@@ -2,11 +2,14 @@ package org.web.posetrainer.Entity;
 
 import java.io.Serializable;
 import java.util.List;
-
+import com.google.cloud.firestore.annotation.PropertyName;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import com.google.cloud.Timestamp;
+import com.google.cloud.firestore.annotation.ServerTimestamp;
 
 @Setter
 @Getter
@@ -24,9 +27,19 @@ public class Excercise {
     private Media media;
     private MediaPipe mediapipe;
     private DefaultConfig defaultConfig;
+    @JsonProperty("isPublic")
+    @PropertyName("isPublic")
     private boolean isPublic;
     private long updatedAt;
+    @PropertyName("isPublic")
+    public boolean getIsPublic() {    // Firestore sẽ dùng cái này
+        return isPublic;
+    }
 
+    @PropertyName("isPublic")
+    public void setIsPublic(boolean isPublic) {   // Firestore sẽ dùng cái này
+        this.isPublic = isPublic;
+    }
     @Setter
     @Getter
     @AllArgsConstructor
