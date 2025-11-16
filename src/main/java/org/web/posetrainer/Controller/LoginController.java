@@ -49,7 +49,7 @@ public class LoginController {
 
             // Gửi tên hiển thị sang dashboard (dùng FlashAttribute)
             redirectAttributes.addFlashAttribute("displayName", resp.getDisplayName());
-            return "redirect:/dashboard";
+            return "redirect:/admin/dashboard";
 
         } catch (Exception e) {
             // Login lỗi -> quay lại /login kèm thông báo
@@ -57,14 +57,5 @@ public class LoginController {
             return "redirect:/login";
         }
     }
-    @GetMapping( )
-    public String dashboard(Authentication auth, Model model,
-                            @ModelAttribute(value = "displayName") String displayName) {
-        if (auth != null) {
-            model.addAttribute("uid", auth.getName());
-            model.addAttribute("roles", auth.getAuthorities());
-        }
-        model.addAttribute("displayName", displayName);
-        return "dashboard"; // -> templates/dashboard.html
-    }
+
 }

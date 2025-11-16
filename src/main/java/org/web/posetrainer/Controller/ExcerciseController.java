@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 @RestController
-@RequestMapping("admin/exercises")
+@RequestMapping("/api/admin/exercises")
 @PreAuthorize("hasRole('ADMIN')")
 public class ExcerciseController {
 
@@ -68,13 +68,6 @@ public class ExcerciseController {
         String id = excerciseService.createExcercise(excercise);
         return ResponseEntity.ok(Map.of("id", id));
     }
-
-    @GetMapping
-    public ResponseEntity<?> getAll() throws ExecutionException, InterruptedException {
-        System.out.println(">>> Enter getAll excercises");
-        return ResponseEntity.ok(excerciseService.getAll());
-    }
-
     @GetMapping("/{id}")
     public ResponseEntity<?> getById(@PathVariable String id) throws ExecutionException, InterruptedException {
         Excercise ex = excerciseService.getById(id);
@@ -83,4 +76,12 @@ public class ExcerciseController {
         }
         return ResponseEntity.ok(ex);
     }
+    @PutMapping("/{id}")
+    public ResponseEntity<?> update(@PathVariable String id,
+                                    @RequestBody Excercise payload) throws ExecutionException, InterruptedException {
+        // TODO: viết hàm update trong ExcerciseService
+        excerciseService.updateExcercise(id, payload);
+        return ResponseEntity.ok().build();
+    }
+
 }
