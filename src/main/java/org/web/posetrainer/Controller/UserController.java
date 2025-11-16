@@ -19,7 +19,8 @@ import java.util.concurrent.ExecutionException;
 @RestController
 @RequestMapping("/admin/users")
 @RequiredArgsConstructor
-@PreAuthorize("hasAuthority('ADMIN')")
+@PreAuthorize("hasRole('ADMIN')")
+
 public class UserController {
     private final FirebaseAuth firebaseAuth;
     private final Firestore firestore;

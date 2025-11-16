@@ -29,14 +29,15 @@ public class FirebaseInitialization {
 
                     FirebaseOptions options = FirebaseOptions.builder()
                             .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+                            .setStorageBucket("posetrainer-capstonefall2025.firebasestorage.app")
                             .build();
 
                     FirebaseApp.initializeApp(options);
-                    System.out.println("✅ Firebase initialized successfully");
+                    System.out.println("Firebase initialized successfully");
                 }
             }
         } catch (Exception e) {
-            System.err.println("❌ Firebase init failed: " + e.getMessage());
+            System.err.println("Firebase init failed: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -47,6 +48,7 @@ public class FirebaseInitialization {
                          new ClassPathResource("serviceAccountKey.json").getInputStream()) {
                 FirebaseOptions options = FirebaseOptions.builder()
                         .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+                        .setStorageBucket("posetrainer-capstonefall2025.firebasestorage.app")
                         .build();
                 return FirebaseApp.initializeApp(options);
             }

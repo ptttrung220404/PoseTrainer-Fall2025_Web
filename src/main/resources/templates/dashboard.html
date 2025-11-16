@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard</title>
+    <style>
+        body { font-family: sans-serif; background: #f5f5f5; }
+        .box {
+            max-width: 600px; margin: 60px auto; padding: 24px;
+            background: #fff; border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        h1 { margin-top: 0; }
+        .meta { color: #555; margin-top: 8px; }
+        ul { margin-top: 4px; }
+    </style>
+</head>
+<body>
+<div class="box">
+    <h1 th:text="'Xin chào, ' + (${displayName} != null ? ${displayName} : 'user')"></h1>
+
+    <div class="meta" th:if="${uid}">
+        <p><strong>UID:</strong> <span th:text="${uid}"></span></p>
+        <p><strong>Roles:</strong></p>
+        <ul>
+            <li th:each="r : ${roles}"
+                th:text="${r}">ROLE_USER</li>
+        </ul>
+    </div>
+
+    <p>Đây là trang sau khi đăng nhập thành công.</p>
+
+    <p><a href="/me" target="_blank">Xem JSON /me</a></p>
+</div>
+</body>
+</html>
