@@ -15,47 +15,47 @@ import java.util.Map;
 import java.util.UUID;
 @Service
 public class FirebaseStorageService {
-    private final Bucket bucket;
+    private final String bucketName;
 
-    public FirebaseStorageService(FirebaseApp app) {
-        this.bucket = StorageClient.getInstance(app).bucket();
-        System.out.println(">>> Firebase Storage bucket = " + bucket.getName());
+    public FirebaseStorageService(com.google.firebase.FirebaseApp app) {
+        this.bucketName = app.getOptions().getStorageBucket();
     }
 
-    public String uploadExerciseVideo(MultipartFile file, Excercise excercise) throws IOException {
-        if (file.isEmpty()) {
-            throw new IllegalArgumentException("File video rỗng");
+
+    public Excercise.Media uploadExerciseMedia(String exerciseId,
+                                               MultipartFile video,
+                                               MultipartFile thumbnail) throws IOException {
+
+        Bucket bucket = StorageClient.getInstance().bucket(bucketName);
+        String basePath = "exercises/" + exerciseId + "/";
+
+        String videoUrl = null;
+        String thumbUrl = null;
+
+        if (video != null && !video.isEmpty()) {
+            String objectName = basePath + "demo.mp4"; // hoặc lấy từ video.getOriginalFilename()
+            Blob blob = bucket.create(objectName, video.getBytes(), video.getContentType());
+            videoUrl = buildDownloadUrl(objectName);
         }
 
-        String folder = "exercise_videos";
-        String safeSlug = excercise.getSlug() != null && !excercise.getSlug().isBlank()
-                ? excercise.getSlug()
-                : UUID.randomUUID().toString();
+        if (thumbnail != null && !thumbnail.isEmpty()) {
+            String objectName = basePath + "thumbnail.jpg"; // hoặc dùng tên file gốc
+            Blob blob = bucket.create(objectName, thumbnail.getBytes(), thumbnail.getContentType());
+            thumbUrl = buildDownloadUrl(objectName);
+        }
 
-        String objectName = folder + "/" + safeSlug + "_" + file.getOriginalFilename();
+        Excercise.Media media = new Excercise.Media();
+        media.setDemoVideoUrl(videoUrl);
+        media.setThumbnailUrl(thumbUrl);
+        return media;
+    }
 
-        // Tạo blob trên storage
-        Blob blob = bucket.create(
-                objectName,
-                file.getBytes(),
-                file.getContentType() != null ? file.getContentType() : MediaType.APPLICATION_OCTET_STREAM_VALUE
-        );
-
-        // Thêm token để tạo link download public
-        String token = UUID.randomUUID().toString();
-        blob.toBuilder()
-                .setMetadata(Map.of("firebaseStorageDownloadTokens", token))
-                .build()
-                .update();
-
-        String encodedName = URLEncoder.encode(objectName, StandardCharsets.UTF_8);
-        String downloadUrl = String.format(
-                "https://firebasestorage.googleapis.com/v0/b/%s/o/%s?alt=media&token=%s",
-                bucket.getName(),
-                encodedName,
-                token
-        );
-
-        return downloadUrl;
+    private String buildDownloadUrl(String objectName) {
+        // dạng: https://firebasestorage.googleapis.com/v0/b/<bucket>/o/<path>?alt=media
+        return "https://firebasestorage.googleapis.com/v0/b/"
+                + bucketName
+                + "/o/"
+                + URLEncoder.encode(objectName, StandardCharsets.UTF_8)
+                + "?alt=media";
     }
 }

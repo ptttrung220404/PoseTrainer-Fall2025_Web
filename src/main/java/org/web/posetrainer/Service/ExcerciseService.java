@@ -75,6 +75,16 @@ public class ExcerciseService {
                 .set(updates, SetOptions.merge())
                 .get();
     }
+    public void updateExcerciseMedia(String id, Excercise.Media media)
+            throws ExecutionException, InterruptedException {
 
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("media", media);
+        updates.put("updatedAt", System.currentTimeMillis());
 
+        firestore.collection(COLLECTION_NAME)
+                .document(id)
+                .set(updates, SetOptions.merge())
+                .get();
+    }
 }

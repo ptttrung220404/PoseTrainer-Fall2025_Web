@@ -30,6 +30,9 @@
         .btn-primary {
             background: #007bff; color: #fff;
         }
+        .btn-secondary {
+            background: #6c757d; color: #fff;
+        }
         .tag {
             display: inline-block;
             padding: 2px 6px;
@@ -98,6 +101,14 @@
             border: 1px solid #ccc;
             border-radius: 4px;
             font-size: 14px;
+        }
+        .preview-media {
+            margin-top: 8px;
+        }
+        .preview-media video,
+        .preview-media img {
+            max-width: 100%;
+            border-radius: 4px;
         }
     </style>
 </head>
@@ -170,7 +181,7 @@
     <div class="modal">
         <div class="modal-header">
             <h2>Thêm bài tập</h2>
-            <button class="btn" onclick="closeAddModal()">✕</button>
+            <button class="btn btn-secondary" onclick="closeAddModal()">✕</button>
         </div>
         <div class="modal-body">
             <form id="addForm">
@@ -222,7 +233,7 @@
             <div id="addMessage" style="color: red; margin-top: 8px;"></div>
         </div>
         <div class="modal-footer">
-            <button class="btn" onclick="closeAddModal()">Hủy</button>
+            <button class="btn btn-secondary" onclick="closeAddModal()">Hủy</button>
             <button class="btn btn-primary" onclick="submitAdd()">Lưu</button>
         </div>
     </div>
@@ -233,7 +244,7 @@
     <div class="modal">
         <div class="modal-header">
             <h2>Chi tiết bài tập</h2>
-            <button class="btn" onclick="closeDetailModal()">✕</button>
+            <button class="btn btn-secondary" onclick="closeDetailModal()">✕</button>
         </div>
         <div class="modal-body">
             <form id="detailForm">
@@ -263,16 +274,38 @@
                     <label>Public?</label>
                     <input type="checkbox" name="isPublic"> Public
                 </div>
+
                 <div class="field">
                     <label>Video demo URL</label>
                     <input type="text" name="demoVideoUrl" readonly>
+                </div>
+
+                <!-- THÊM: upload media mới -->
+                <div class="field">
+                    <label>Video demo mới</label>
+                    <input type="file" id="detailVideo" name="video" accept="video/*">
+                </div>
+                <div class="field">
+                    <label>Thumbnail mới</label>
+                    <input type="file" id="detailThumb" name="thumbnail" accept="image/*">
+                </div>
+
+                <!-- optional: preview hiện tại -->
+                <div class="preview-media">
+                    <div>
+                        <small>Preview video hiện tại:</small>
+                        <video id="previewVideo" controls style="margin-top:4px;" th:if="${false}"></video>
+                    </div>
                 </div>
             </form>
             <div id="detailMessage" style="color: red; margin-top: 8px;"></div>
         </div>
         <div class="modal-footer">
-            <button class="btn" onclick="closeDetailModal()">Đóng</button>
+            <button class="btn btn-secondary" onclick="closeDetailModal()">Đóng</button>
+            <!-- Lưu text fields -->
             <button class="btn btn-primary" onclick="submitUpdate()">Lưu thay đổi</button>
+            <!-- Lưu media -->
+            <button class="btn btn-primary" onclick="submitMediaUpdate()">Cập nhật media</button>
         </div>
     </div>
 </div>
@@ -299,7 +332,7 @@
             return;
         }
 
-        // build JSON excercise
+        // build JSON exercise
         const muscles = form.muscles.value
             ? form.muscles.value.split(',').map(s => s.trim()).filter(s => s)
             : [];
@@ -389,9 +422,23 @@
 
             if (ex.media && ex.media.demoVideoUrl) {
                 form.demoVideoUrl.value = ex.media.demoVideoUrl;
+                const pv = document.getElementById('previewVideo');
+                if (pv) {
+                    pv.src = ex.media.demoVideoUrl;
+                    pv.style.display = 'block';
+                }
             } else {
                 form.demoVideoUrl.value = '';
+                const pv = document.getElementById('previewVideo');
+                if (pv) {
+                    pv.removeAttribute('src');
+                    pv.style.display = 'none';
+                }
             }
+
+            // clear file input mỗi lần mở
+            document.getElementById('detailVideo').value = '';
+            document.getElementById('detailThumb').value = '';
 
             document.getElementById('detailModalBackdrop').style.display = 'flex';
         } catch (e) {
@@ -405,6 +452,7 @@
         document.getElementById('detailModalBackdrop').style.display = 'none';
     }
 
+    // Cập nhật thông tin text (name, level, tags, isPublic)
     async function submitUpdate() {
         const form = document.getElementById('detailForm');
         const msg = document.getElementById('detailMessage');
@@ -433,7 +481,6 @@
         };
 
         try {
-            // TODO: cần tạo API PUT /api/admin/exercises/{id} ở backend
             const resp = await fetch('/api/admin/exercises/' + id, {
                 method: 'PUT',
                 headers: {
@@ -452,6 +499,63 @@
         } catch (e) {
             console.error(e);
             msg.textContent = 'Có lỗi kết nối khi cập nhật';
+        }
+    }
+
+    // Cập nhật media (video + thumbnail)
+    async function submitMediaUpdate() {
+        const form = document.getElementById('detailForm');
+        const msg = document.getElementById('detailMessage');
+        msg.textContent = '';
+
+        const id = form.id.value;
+        if (!id) {
+            msg.textContent = 'Thiếu ID bài tập';
+            return;
+        }
+
+        const video = document.getElementById('detailVideo').files[0];
+        const thumb = document.getElementById('detailThumb').files[0];
+
+        if (!video && !thumb) {
+            msg.textContent = 'Hãy chọn video hoặc thumbnail để cập nhật';
+            return;
+        }
+
+        const fd = new FormData();
+        if (video) fd.append('video', video);
+        if (thumb) fd.append('thumbnail', thumb);
+
+        try {
+            const resp = await fetch('/api/admin/exercises/' + id + '/media', {
+                method: 'PUT',
+                body: fd
+            });
+
+            if (!resp.ok) {
+                msg.textContent = 'Cập nhật media thất bại (HTTP ' + resp.status + ')';
+                return;
+            }
+
+            const data = await resp.json();
+            if (data.videoUrl) {
+                form.demoVideoUrl.value = data.videoUrl;
+                const pv = document.getElementById('previewVideo');
+                if (pv) {
+                    pv.src = data.videoUrl;
+                    pv.style.display = 'block';
+                }
+            }
+
+            msg.style.color = 'green';
+            msg.textContent = 'Cập nhật media thành công!';
+            // clear input sau khi upload
+            document.getElementById('detailVideo').value = '';
+            document.getElementById('detailThumb').value = '';
+        } catch (e) {
+            console.error(e);
+            msg.style.color = 'red';
+            msg.textContent = 'Có lỗi kết nối khi cập nhật media';
         }
     }
 </script>

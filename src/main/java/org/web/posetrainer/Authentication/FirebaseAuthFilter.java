@@ -136,11 +136,21 @@ public class FirebaseAuthFilter extends OncePerRequestFilter {
             }
 
             // 5) Set Authentication
+            // 5) Set Authentication
             var authToken = new UsernamePasswordAuthenticationToken(uid, idToken, authorities);
+
+            String email = decoded.getEmail();
+            String name = decoded.getName();
+
+            if (name == null || name.isBlank()) {
+                name = email; // fallback
+            }
+
             authToken.setDetails(Map.of(
-                    "email", decoded.getEmail(),
-                    "name", decoded.getName()
+                    "email", email,
+                    "name", name
             ));
+
             SecurityContextHolder.getContext().setAuthentication(authToken);
             System.out.println(">>> Authorities = " + authorities);
 

@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Danh sách Workout Template</title>
+    <style>
+        /* --- reuse style from exercise page, minor tweaks --- */
+        body { font-family: sans-serif; background: #f5f5f5; }
+        .container {
+            max-width: 1100px; margin: 28px auto; padding: 22px;
+            background: #fff; border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+        }
+        h1 { margin-top: 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+        th, td { padding: 8px 10px; border-bottom: 1px solid #e0e0e0; text-align: left; font-size: 14px; }
+        th { background: #fafafa; font-weight: 600; }
+        .top-bar { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+        .btn { display:inline-block; padding:8px 14px; border-radius:4px; text-decoration:none; font-size:14px; border:none; cursor:pointer; }
+        .btn-primary { background:#007bff; color:#fff; }
+        .btn-success { background:#28a745; color:#fff; }
+        .btn-warning { background:#ffc107; color:#000; }
+        .btn-danger { background:#dc3545; color:#fff; }
+        .small { font-size:13px; padding:6px 8px; }
+        .badge { display:inline-block; padding:2px 6px; border-radius:3px; font-size:12px; background:#eee; }
+        .tag { display:inline-block; padding:2px 6px; border-radius:3px; background:#e3f2fd; font-size:12px; margin-right:4px; }
+
+        /* MODAL */
+        .modal-backdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); justify-content:center; align-items:center; z-index:999; }
+        .modal { background:#fff; border-radius:8px; padding:18px; max-width:880px; width:96%; box-shadow:0 6px 20px rgba(0,0,0,0.25); }
+        .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+        .modal-body { max-height:65vh; overflow:auto; }
+        .modal-footer { display:flex; justify-content:flex-end; gap:8px; margin-top:12px; }
+        .field { margin-bottom:10px; }
+        .field label { display:block; margin-bottom:4px; font-weight:600; }
+        .field input[type="text"], .field input[type="number"], .field textarea, .field select {
+            width:100%; padding:7px 8px; border:1px solid #ccc; border-radius:4px; font-size:14px;
+        }
+        .items-table { width:100%; border-collapse:collapse; margin-top:8px; }
+        .items-table th, .items-table td { padding:6px 8px; border:1px solid #eaeaea; text-align:left; }
+        .item-actions button { margin-right:6px; }
+        .muted { color:#666; font-size:13px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="top-bar">
+        <h1>Danh sách Workout Template</h1>
+        <div>
+            <button class="btn btn-success" onclick="openAddModal()">+ Thêm Workout</button>
+            <a href="/admin/dashboard" class="btn small" style="background:#f0f0f0">⟵ Quay lại</a>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+        <tr>
+            <th>Title</th>
+            <th>Level</th>
+            <th>Public?</th>
+            <th>#Exercises</th>
+            <th>UpdatedAt</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody id="workoutsBody">
+        <!-- rows inserted by JS -->
+        </tbody>
+    </table>
+
+    <p class="muted" style="margin-top:12px;">Tip: Click "Chi tiết" để mở modal sửa, thêm/xóa/reorder exercise.</p>
+</div>
+
+<!-- ========== ADD WORKOUT MODAL ========== -->
+<div id="addModal" class="modal-backdrop">
+    <div class="modal" role="dialog" aria-modal="true">
+        <div class="modal-header">
+            <h3>Thêm Workout Template</h3>
+            <button class="btn" onclick="closeAddModal()">✕</button>
+        </div>
+
+        <div class="modal-body">
+            <form id="addForm">
+                <div class="field">
+                    <label>Title</label>
+                    <input type="text" name="title" required>
+                </div>
+
+                <div class="field">
+                    <label>Slug (unique id)</label>
+                    <input type="text" name="slug" placeholder="auto nếu bỏ trống">
+                </div>
+
+                <div class="field">
+                    <label>Level</label>
+                    <select name="level">
+                        <option value="easy">easy</option>
+                        <option value="medium">medium</option>
+                        <option value="hard">hard</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label>Public?</label>
+                    <input type="checkbox" name="isPublic" checked> Public
+                </div>
+
+                <hr>
+
+                <div class="field">
+                    <label>Chọn exercise để thêm vào workout</label>
+                    <select id="addExerciseSelect">
+                        <option value="">-- Chọn exercise --</option>
+                    </select>
+                </div>
+
+                <div style="display:flex; gap:8px;">
+                    <div style="flex:1;">
+                        <label>Sets</label>
+                        <input type="number" id="add_sets" value="3">
+                    </div>
+                    <div style="flex:1;">
+                        <label>Reps</label>
+                        <input type="number" id="add_reps" value="10">
+                    </div>
+                    <div style="width:120px;">
+                        <label>Rest (s)</label>
+                        <input type="number" id="add_rest" value="60">
+                    </div>
+                    <div style="width:140px;">
+                        <label>Difficulty</label>
+                        <select id="add_diff">
+                            <option>easy</option><option>medium</option><option>hard</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin-top:10px;">
+                    <button type="button" class="btn btn-primary" onclick="addItemInAddModal()">+ Thêm vào danh sách</button>
+                </div>
+
+                <div style="margin-top:12px;">
+                    <table class="items-table" id="addItemsTable">
+                        <thead><tr><th>#</th><th>Exercise</th><th>Sets</th><th>Reps</th><th>Rest</th><th>Diff</th><th>Action</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+                <div id="addError" class="muted" style="color:red; margin-top:8px;"></div>
+            </form>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeAddModal()">Hủy</button>
+            <button class="btn btn-success" onclick="submitAddWorkout()">Lưu</button>
+        </div>
+    </div>
+</div>
+
+<!-- ========== DETAIL / EDIT MODAL ========== -->
+<div id="detailModal" class="modal-backdrop">
+    <div class="modal" role="dialog" aria-modal="true">
+        <div class="modal-header">
+            <h3>Chi tiết / Sửa Workout</h3>
+            <button class="btn" onclick="closeDetailModal()">✕</button>
+        </div>
+
+        <div class="modal-body">
+            <form id="detailForm">
+                <input type="hidden" name="id">
+
+                <div class="field">
+                    <label>Title</label>
+                    <input type="text" name="title">
+                </div>
+
+                <div class="field">
+                    <label>Slug (id)</label>
+                    <input type="text" name="slug" readonly>
+                </div>
+
+                <div class="field">
+                    <label>Level</label>
+                    <select name="level">
+                        <option value="easy">easy</option>
+                        <option value="medium">medium</option>
+                        <option value="hard">hard</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label>Public?</label>
+                    <input type="checkbox" name="isPublic"> Public
+                </div>
+
+                <hr>
+
+                <h4>Danh sách exercises</h4>
+
+                <div style="display:flex; gap:8px; align-items:flex-end;">
+                    <div style="flex:1;">
+                        <label>Chọn exercise</label>
+                        <select id="detailExerciseSelect">
+                            <option value="">-- Chọn exercise --</option>
+                        </select>
+                    </div>
+                    <div style="width:90px;"><label>Sets</label><input id="detail_sets" type="number" value="3"></div>
+                    <div style="width:90px;"><label>Reps</label><input id="detail_reps" type="number" value="10"></div>
+                    <div style="width:90px;"><label>Rest</label><input id="detail_rest" type="number" value="60"></div>
+                    <div style="width:120px;">
+                        <label>Diff</label>
+                        <select id="detail_diff"><option>easy</option><option>medium</option><option>hard</option></select>
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-primary" onclick="addItemInDetailModal()">+ Add</button>
+                    </div>
+                </div>
+
+                <div style="margin-top:12px;">
+                    <table class="items-table" id="detailItemsTable">
+                        <thead><tr><th>#</th><th>Exercise</th><th>Sets</th><th>Reps</th><th>Rest</th><th>Diff</th><th style="width:160px">Actions</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+                <div id="detailError" class="muted" style="color:red; margin-top:8px;"></div>
+            </form>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeDetailModal()">Đóng</button>
+            <button class="btn btn-warning" onclick="submitItemsUpdate()">Lưu Items</button>
+            <button class="btn btn-primary" onclick="submitWorkoutUpdate()">Lưu Info</button>
+            <button class="btn btn-danger" onclick="deleteWorkout()">Xóa Workout</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ---------- state ----------
+    let exercisesList = []; // {id, name, ...}
+    let workouts = []; // loaded list
+    let addItems = []; // items for add modal
+    let detailItems = []; // items for detail modal
+    let currentEditingId = null;
+
+    // ---------- helpers ----------
+    function q(sel, root=document) { return root.querySelector(sel); }
+    function qa(sel, root=document) { return Array.from(root.querySelectorAll(sel)); }
+
+    // ---------- boot: load workouts & exercises ----------
+    window.addEventListener('load', () => {
+        loadExercises();
+        loadWorkouts();
+    });
+
+    async function loadExercises() {
+        try {
+            const resp = await fetch('/api/admin/exercises');
+            if (!resp.ok) {
+                console.error('Cannot load exercises', resp.status);
+                return;
+            }
+            exercisesList = await resp.json();
+            populateExerciseSelects();
+        } catch (e) {
+            console.error('Load exercises error', e);
+        }
+    }
+
+    function populateExerciseSelects() {
+        const addSel = q('#addExerciseSelect');
+        const detailSel = q('#detailExerciseSelect');
+        if (!addSel || !detailSel) return;
+        addSel.innerHTML = '<option value="">-- Chọn exercise --</option>';
+        detailSel.innerHTML = '<option value="">-- Chọn exercise --</option>';
+
+        exercisesList.forEach(ex => {
+            const title = ex.title || ex.name || ex.slug || ex.id;
+            const opt = `<option value="${ex.id}">${title}</option>`;
+            addSel.insertAdjacentHTML('beforeend', opt);
+            detailSel.insertAdjacentHTML('beforeend', opt);
+        });
+    }
+
+    async function loadWorkouts() {
+        try {
+            const resp = await fetch('/api/admin/workouts');
+            if (!resp.ok) {
+                console.error('Cannot load workouts', resp.status);
+                return;
+            }
+            workouts = await resp.json();
+            renderWorkoutsTable();
+        } catch (e) {
+            console.error('Load workouts error', e);
+        }
+    }
+
+    function renderWorkoutsTable() {
+        const tbody = q('#workoutsBody');
+        tbody.innerHTML = '';
+
+        if (!Array.isArray(workouts) || workouts.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6">Chưa có workout nào.</td></tr>';
+            return;
+        }
+
+        workouts.forEach(w => {
+            const updated = w.updatedAt ? new Date(w.updatedAt).toLocaleString() : '-';
+            const itemsCount = Array.isArray(w.items) ? w.items.length : 0;
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${escapeHtml(w.title || w.name || w.id)}</td>
+                <td><span class="badge">${escapeHtml(w.level || '')}</span></td>
+                <td>${w.isPublic ? '<span class="badge" style="background:#d4edda">Public</span>' : '<span class="badge" style="background:#f8d7da">Private</span>'}</td>
+                <td>${itemsCount}</td>
+                <td>${updated}</td>
+                <td>
+                    <button class="btn btn-primary small" onclick="openDetailModal('${w.id}')">Chi tiết</button>
+                    <button class="btn" onclick="openAddModalWithClone('${w.id}')">Duplicate</button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    function escapeHtml(s) {
+        if (!s) return '';
+        return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c]));
+    }
+
+    // ---------- ADD MODAL ----------
+    function openAddModal() {
+        addItems = [];
+        q('#addForm').reset();
+        q('#addItemsTable tbody').innerHTML = '';
+        q('#addError').textContent = '';
+        q('#addModal').style.display = 'flex';
+    }
+
+    // open add modal but prefill by cloning existing workout
+    async function openAddModalWithClone(id) {
+        try {
+            const resp = await fetch('/api/admin/workouts/' + id);
+            if (!resp.ok) { alert('Cannot load workout to clone'); return; }
+            const w = await resp.json();
+
+            // prefill
+            q('#addForm [name=title]').value = (w.title || w.name) + ' (copy)';
+            q('#addForm [name=slug]').value = ''; // new slug
+            q('#addForm [name=level]').value = w.level || 'medium';
+            q('#addForm [name=isPublic]').checked = !!w.isPublic;
+
+            addItems = (w.items || []).map(it => ({
+                exerciseId: it.exerciseId,
+                sets: it.configOverride?.sets ?? (it.sets ?? 3),
+                reps: it.configOverride?.reps ?? (it.reps ?? 10),
+                restSec: it.configOverride?.restSec ?? (it.restSec ?? 60),
+                difficulty: it.configOverride?.difficulty ?? (it.difficulty ?? 'medium')
+            }));
+            renderAddItemsTable();
+
+            q('#addError').textContent = '';
+            q('#addModal').style.display = 'flex';
+        } catch (e) {
+            console.error(e);
+            alert('Lỗi khi clone');
+        }
+    }
+
+    function closeAddModal() { q('#addModal').style.display = 'none'; }
+
+    function addItemInAddModal() {
+        const sel = q('#addExerciseSelect');
+        const exId = sel.value;
+        if (!exId) { q('#addError').textContent = 'Chọn exercise trước'; return; }
+
+        const sets = parseInt(q('#add_sets').value || '3', 10);
+        const reps = parseInt(q('#add_reps').value || '10', 10);
+        const rest = parseInt(q('#add_rest').value || '60', 10);
+        const diff = q('#add_diff').value || 'medium';
+
+        addItems.push({ exerciseId: exId, sets, reps, restSec: rest, difficulty: diff });
+        renderAddItemsTable();
+    }
+
+    function renderAddItemsTable() {
+        const tbody = q('#addItemsTable tbody');
+        tbody.innerHTML = '';
+        addItems.forEach((it, idx) => {
+            const ex = exercisesList.find(e => e.id === it.exerciseId);
+            const title = ex ? (ex.title || ex.name || ex.slug || ex.id) : it.exerciseId;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${idx+1}</td>
+                <td>${escapeHtml(title)}</td>
+                <td>${it.sets}</td>
+                <td>${it.reps}</td>
+                <td>${it.restSec}</td>
+                <td>${it.difficulty}</td>
+                <td>
+                    <button class="btn btn-warning small" onclick="moveAddItemUp(${idx})">↑</button>
+                    <button class="btn btn-warning small" onclick="moveAddItemDown(${idx})">↓</button>
+                    <button class="btn btn-danger small" onclick="removeAddItem(${idx})">Del</button>
+                </td>`;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function moveAddItemUp(i) { if (i<=0) return; [addItems[i-1], addItems[i]] = [addItems[i], addItems[i-1]]; renderAddItemsTable(); }
+    function moveAddItemDown(i) { if (i>=addItems.length-1) return; [addItems[i+1], addItems[i]] = [addItems[i], addItems[i+1]]; renderAddItemsTable(); }
+    function removeAddItem(i) { addItems.splice(i,1); renderAddItemsTable(); }
+
+    async function submitAddWorkout() {
+        const title = q('#addForm [name=title]').value.trim();
+        if (!title) { q('#addError').textContent = 'Title bắt buộc'; return; }
+        const slug = q('#addForm [name=slug]').value.trim();
+        const level = q('#addForm [name=level]').value;
+        const isPublic = q('#addForm [name=isPublic]').checked;
+
+        // build items array in proper structure
+        const items = addItems.map((it, idx) => ({
+            order: idx + 1,
+            exerciseId: it.exerciseId,
+            configOverride: {
+                sets: it.sets,
+                reps: it.reps,
+                restSec: it.restSec,
+                difficulty: it.difficulty
+            }
+        }));
+
+        const payload = {
+            title: title,
+            slug: slug || undefined,
+            level: level,
+            isPublic: isPublic,
+            items: items,
+            updatedAt: Date.now()
+        };
+
+        try {
+            const resp = await fetch('/api/admin/workouts/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (!resp.ok) {
+                const text = await resp.text();
+                q('#addError').textContent = 'Tạo thất bại (HTTP ' + resp.status + ') ' + text;
+                return;
+            }
+            closeAddModal();
+            await loadWorkouts();
+        } catch (e) {
+            console.error(e);
+            q('#addError').textContent = 'Lỗi khi tạo workout';
+        }
+    }
+
+    // ---------- DETAIL MODAL ----------
+    function openDetailModal(id) {
+        currentEditingId = id;
+        q('#detailError').textContent = '';
+        q('#detailItemsTable tbody').innerHTML = '';
+        q('#detailModal').style.display = 'flex';
+        loadWorkoutDetail(id);
+    }
+
+    function closeDetailModal() { q('#detailModal').style.display = 'none'; currentEditingId = null; }
+
+    async function loadWorkoutDetail(id) {
+        try {
+            const resp = await fetch('/api/admin/workouts/' + id);
+            if (!resp.ok) { q('#detailError').textContent = 'Không lấy được workout'; return; }
+            const w = await resp.json();
+
+            // fill info
+            q('#detailForm [name=id]').value = w.id || w.slug || w.title;
+            q('#detailForm [name=title]').value = w.title || w.name || '';
+            q('#detailForm [name=slug]').value = w.slug || w.id || '';
+            q('#detailForm [name=level]').value = w.level || 'medium';
+            q('#detailForm [name=isPublic]').checked = !!w.isPublic;
+
+            // items
+            detailItems = (w.items || []).map((it, idx) => ({
+                order: it.order ?? (idx+1),
+                exerciseId: it.exerciseId,
+                configOverride: it.configOverride ?? { sets: it.sets ?? 3, reps: it.reps ?? 10, restSec: it.restSec ?? 60, difficulty: it.difficulty ?? 'medium' }
+            }));
+
+            renderDetailItemsTable();
+        } catch (e) {
+            console.error(e);
+            q('#detailError').textContent = 'Lỗi khi tải chi tiết';
+        }
+    }
+
+    function renderDetailItemsTable() {
+        const tbody = q('#detailItemsTable tbody');
+        tbody.innerHTML = '';
+        detailItems.forEach((it, idx) => {
+            const ex = exercisesList.find(e => e.id === it.exerciseId);
+            const title = ex ? (ex.title || ex.name || ex.slug || ex.id) : it.exerciseId;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${idx+1}</td>
+                <td>${escapeHtml(title)}</td>
+                <td>${it.configOverride.sets}</td>
+                <td>${it.configOverride.reps}</td>
+                <td>${it.configOverride.restSec}</td>
+                <td>${it.configOverride.difficulty}</td>
+                <td class="item-actions">
+                    <button class="btn btn-warning small" onclick="moveDetailItemUp(${idx})">↑</button>
+                    <button class="btn btn-warning small" onclick="moveDetailItemDown(${idx})">↓</button>
+                    <button class="btn btn-primary small" onclick="editDetailItem(${idx})">Edit</button>
+                    <button class="btn btn-danger small" onclick="removeDetailItem(${idx})">Del</button>
+                </td>`;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function moveDetailItemUp(i) { if (i<=0) return; [detailItems[i-1], detailItems[i]] = [detailItems[i], detailItems[i-1]]; renderDetailItemsTable(); }
+    function moveDetailItemDown(i) { if (i>=detailItems.length-1) return; [detailItems[i+1], detailItems[i]] = [detailItems[i], detailItems[i+1]]; renderDetailItemsTable(); }
+    function removeDetailItem(i) { detailItems.splice(i,1); renderDetailItemsTable(); }
+
+    function editDetailItem(i) {
+        // prefill the small edit controls with values; simple inline editing using prompt for brevity
+        const it = detailItems[i];
+        const sets = prompt('Sets', it.configOverride.sets);
+        if (sets === null) return;
+        const reps = prompt('Reps', it.configOverride.reps);
+        if (reps === null) return;
+        const rest = prompt('RestSec', it.configOverride.restSec);
+        if (rest === null) return;
+        const diff = prompt('Difficulty', it.configOverride.difficulty);
+        if (diff === null) return;
+
+        it.configOverride.sets = parseInt(sets,10);
+        it.configOverride.reps = parseInt(reps,10);
+        it.configOverride.restSec = parseInt(rest,10);
+        it.configOverride.difficulty = diff;
+        renderDetailItemsTable();
+    }
+
+    function addItemInDetailModal() {
+        const sel = q('#detailExerciseSelect');
+        const exId = sel.value;
+        if (!exId) { q('#detailError').textContent = 'Chọn exercise để thêm'; return; }
+
+        const sets = parseInt(q('#detail_sets').value || '3', 10);
+        const reps = parseInt(q('#detail_reps').value || '10', 10);
+        const rest = parseInt(q('#detail_rest').value || '60', 10);
+        const diff = q('#detail_diff').value || 'medium';
+
+        detailItems.push({
+            order: detailItems.length + 1,
+            exerciseId: exId,
+            configOverride: { sets, reps, restSec: rest, difficulty: diff }
+        });
+        renderDetailItemsTable();
+    }
+
+    // ---------- Submit update workout info ----------
+    async function submitWorkoutUpdate() {
+        if (!currentEditingId) { q('#detailError').textContent = 'Missing id'; return; }
+        const title = q('#detailForm [name=title]').value.trim();
+        const level = q('#detailForm [name=level]').value;
+        const isPublic = q('#detailForm [name=isPublic]').checked;
+
+        const payload = { title, level, isPublic, updatedAt: Date.now() };
+
+        try {
+            const resp = await fetch('/api/admin/workouts/' + currentEditingId, {
+                method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+            });
+            if (!resp.ok) { q('#detailError').textContent = 'Cập nhật info thất bại'; return; }
+            await loadWorkouts();
+            q('#detailError').style.color = 'green';
+            q('#detailError').textContent = 'Cập nhật info thành công';
+            setTimeout(()=> q('#detailError').textContent = '', 1500);
+        } catch (e) {
+            console.error(e);
+            q('#detailError').textContent = 'Lỗi khi cập nhật info';
+        }
+    }
+
+    // ---------- Submit items update (send full items array) ----------
+    async function submitItemsUpdate() {
+        if (!currentEditingId) { q('#detailError').textContent = 'Missing id'; return; }
+
+        // normalize items
+        const itemsPayload = detailItems.map((it, idx) => ({
+            order: idx + 1,
+            exerciseId: it.exerciseId,
+            configOverride: it.configOverride
+        }));
+
+        try {
+            const resp = await fetch('/api/admin/workouts/' + currentEditingId + '/items', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ items: itemsPayload })
+            });
+            if (!resp.ok) { q('#detailError').textContent = 'Cập nhật items thất bại'; return; }
+            await loadWorkouts();
+            q('#detailError').style.color = 'green';
+            q('#detailError').textContent = 'Cập nhật items thành công';
+            setTimeout(()=> q('#detailError').textContent = '', 1500);
+        } catch (e) {
+            console.error(e);
+            q('#detailError').textContent = 'Lỗi khi cập nhật items';
+        }
+    }
+
+    // ---------- Delete workout ----------
+    async function deleteWorkout() {
+        if (!currentEditingId) return;
+        if (!confirm('Bạn có chắc muốn xóa workout này?')) return;
+        try {
+            const resp = await fetch('/api/admin/workouts/' + currentEditingId, { method: 'DELETE' });
+            if (!resp.ok) { alert('Xóa thất bại'); return; }
+            closeDetailModal();
+            await loadWorkouts();
+        } catch (e) {
+            console.error(e);
+            alert('Lỗi khi xóa');
+        }
+    }
+
+    // ---------- small util: refresh lists ----------
+    // (already implemented above: loadWorkouts, loadExercises)
+
+</script>
+</body>
+</html>
