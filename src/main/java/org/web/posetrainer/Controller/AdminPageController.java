@@ -1,5 +1,6 @@
 package org.web.posetrainer.Controller;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -10,16 +11,17 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.web.posetrainer.Entity.Excercise;
 import org.web.posetrainer.Service.ExcerciseService;
+import org.web.posetrainer.Service.WorkoutsTemplatesService;
+
 import java.util.concurrent.ExecutionException;
 @Controller
 @RequestMapping("/admin")
 @PreAuthorize("hasRole('ADMIN')")
+@RequiredArgsConstructor
 public class AdminPageController {
     private final ExcerciseService excerciseService;
+    private final WorkoutsTemplatesService workoutsService;
 
-    public AdminPageController(ExcerciseService excerciseService) {
-        this.excerciseService = excerciseService;
-    }
     @GetMapping("/dashboard")
     public String dashboard(Authentication auth, Model model,
                             @ModelAttribute(value = "displayName") String displayName) {
@@ -58,5 +60,10 @@ public class AdminPageController {
     @GetMapping
     public String adminRoot() {
         return "redirect:/admin/dashboard";
+    }
+    @GetMapping("/workouts")
+    public String showWorkoutList(Model model) throws ExecutionException, InterruptedException {
+        model.addAttribute("workouts", WorkoutsTemplatesService.getAll());
+        return "workout-list";
     }
 }
