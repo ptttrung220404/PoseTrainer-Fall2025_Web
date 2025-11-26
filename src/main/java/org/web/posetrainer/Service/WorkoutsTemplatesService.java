@@ -1,33 +1,47 @@
 package org.web.posetrainer.Service;
 
 import com.google.api.core.ApiFuture;
-import com.google.cloud.Timestamp;
 import com.google.cloud.firestore.*;
 import com.google.firebase.cloud.FirestoreClient;
 import org.springframework.stereotype.Service;
 import org.web.posetrainer.Entity.WorkoutTemplate;
 
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
+
 @Service
 public class WorkoutsTemplatesService {
-    private static final String COLLECTION_NAME = "workouts_templates";
-    private final Firestore firestore;
 
-    public WorkoutsTemplatesService(Firestore firestore) {
-        this.firestore = firestore;
-    }
+    private static final String COLLECTION_NAME = "workouts_templates";
 
     private Firestore db() {
         return FirestoreClient.getFirestore();
     }
+
+    // --------------------------
+    // Tạo mã workout tùy chỉnh
+    // --------------------------
+    private String generateWorkoutId() {
+        byte[] bytes = new byte[5];
+        new SecureRandom().nextBytes(bytes);
+        StringBuilder sb = new StringBuilder("wt_");
+        for (byte b : bytes) {
+            sb.append(String.format("%02x", b));
+        }
+        return sb.toString();
+    }
+
+    // --------------------------
+    // Tạo Workout mới (theo docId)
+    // --------------------------
     public String createWorkout(WorkoutTemplate workout) throws Exception {
+        String docId = generateWorkoutId();
+        DocumentReference docRef = db().collection(COLLECTION_NAME).document(docId);
 
-        DocumentReference docRef = db().collection(COLLECTION_NAME).document();
-
-        workout.setId(docRef.getId());
+        workout.setId(docId);                    // set ID = docId
         workout.setVersion(1);
         workout.setUpdatedAt(System.currentTimeMillis());
 
@@ -36,80 +50,81 @@ public class WorkoutsTemplatesService {
         }
 
         docRef.set(workout).get();
-        return workout.getId();
+        return docId;
     }
 
     // --------------------------
-    // Lấy chi tiết
+    // Lấy chi tiết Workout
     // --------------------------
-    public WorkoutTemplate getWorkout(String id) throws Exception {
+    public WorkoutTemplate getWorkout(String docId) throws Exception {
         DocumentSnapshot snap = db().collection(COLLECTION_NAME)
-                .document(id).get().get();
+                .document(docId).get().get();
 
         return snap.exists() ? snap.toObject(WorkoutTemplate.class) : null;
     }
 
-
     // --------------------------
-    // Cập nhật Workout
+    // Cập nhật Workout (docId)
+    // Controller đã tăng version → service KHÔNG tăng nữa
     // --------------------------
-    public void updateWorkout(WorkoutTemplate workout) throws Exception {
-        workout.setUpdatedAt(System.currentTimeMillis());
-        workout.setVersion(workout.getVersion() + 1);
-
+    public void updateWorkout(String docId, WorkoutTemplate workout) throws Exception {
+        workout.setId(docId);  // đảm bảo object vẫn có id
         db().collection(COLLECTION_NAME)
-                .document(workout.getId())
-                .set(workout)
+                .document(docId)     // CHỈ DÙNG docId từ controller
+                .set(workout, SetOptions.merge())
                 .get();
     }
 
     // --------------------------
     // Xóa Workout
     // --------------------------
-    public void deleteWorkout(String id) throws Exception {
+    public void deleteWorkout(String docId) throws Exception {
         db().collection(COLLECTION_NAME)
-                .document(id)
+                .document(docId)
                 .delete()
                 .get();
     }
 
-
     // --------------------------
-    // Thêm 1 exercise ID
+    // Thêm 1 item
     // --------------------------
-    public void addWorkoutItem(String workoutId, WorkoutTemplate.WorkoutItem item) throws Exception {
-        DocumentReference doc = db().collection(COLLECTION_NAME).document(workoutId);
+    public void addWorkoutItem(String docId, WorkoutTemplate.WorkoutItem item) throws Exception {
 
-        // Tải dữ liệu cũ
-        WorkoutTemplate workout = getWorkout(workoutId);
+        WorkoutTemplate workout = getWorkout(docId);
         if (workout == null) return;
 
         if (workout.getItems() == null) {
             workout.setItems(new ArrayList<>());
         }
 
-        // Set order theo size hiện tại
+        // Set order theo index
         item.setOrder(workout.getItems().size() + 1);
 
         workout.getItems().add(item);
         workout.setUpdatedAt(System.currentTimeMillis());
         workout.setVersion(workout.getVersion() + 1);
 
-        doc.set(workout).get();
+        db().collection(COLLECTION_NAME)
+                .document(docId)
+                .set(workout)
+                .get();
     }
+
     // --------------------------
-    // Xóa 1 exercise ID
+    // Xóa 1 item theo exerciseId
     // --------------------------
-    public void removeWorkoutItem(String workoutId, String exerciseId) throws Exception {
-        WorkoutTemplate workout = getWorkout(workoutId);
+    public void removeWorkoutItem(String docId, String exerciseId) throws Exception {
+
+        WorkoutTemplate workout = getWorkout(docId);
         if (workout == null) return;
 
         List<WorkoutTemplate.WorkoutItem> newItems =
-                workout.getItems().stream()
+                workout.getItems()
+                        .stream()
                         .filter(i -> !i.getExerciseId().equals(exerciseId))
                         .collect(Collectors.toList());
 
-        // Cập nhật lại order
+        // Re-order lại
         for (int i = 0; i < newItems.size(); i++) {
             newItems.get(i).setOrder(i + 1);
         }
@@ -118,8 +133,15 @@ public class WorkoutsTemplatesService {
         workout.setUpdatedAt(System.currentTimeMillis());
         workout.setVersion(workout.getVersion() + 1);
 
-        db().collection(COLLECTION_NAME).document(workoutId).set(workout).get();
+        db().collection(COLLECTION_NAME)
+                .document(docId)
+                .set(workout)
+                .get();
     }
+
+    // --------------------------
+    // Lấy tất cả workout
+    // --------------------------
     public static List<WorkoutTemplate> getAll() throws ExecutionException, InterruptedException {
         Firestore db = FirestoreClient.getFirestore();
         List<WorkoutTemplate> list = new ArrayList<>();
@@ -127,9 +149,9 @@ public class WorkoutsTemplatesService {
         ApiFuture<QuerySnapshot> future = db.collection(COLLECTION_NAME).get();
         for (DocumentSnapshot doc : future.get().getDocuments()) {
             WorkoutTemplate w = doc.toObject(WorkoutTemplate.class);
-            list.add(w);
+            if (w != null) { w.setId(doc.getId()); // gán docId vào field id
+                list.add(w); }
         }
         return list;
     }
-
 }
