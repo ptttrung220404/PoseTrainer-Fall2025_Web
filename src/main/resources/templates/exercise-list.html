@@ -294,9 +294,15 @@
                 <div class="preview-media">
                     <div>
                         <small>Preview video hiện tại:</small>
-                        <video id="previewVideo" controls style="margin-top:4px;" th:if="${false}"></video>
+                        <video id="previewVideo" controls style="margin-top:4px; display:none; max-width: 250px;"></video>
+                    </div>
+
+                    <div style="margin-top: 12px;">
+                        <small>Preview thumbnail hiện tại:</small>
+                        <img id="previewThumb" style="margin-top:4px; display:none; max-width: 150px; border-radius:6px;">
                     </div>
                 </div>
+
             </form>
             <div id="detailMessage" style="color: red; margin-top: 8px;"></div>
         </div>
@@ -398,56 +404,79 @@
 
     // ================== DETAIL / EDIT MODAL ==================
     async function openDetailModal(btn) {
-        const id = btn.dataset.id;
-        const msg = document.getElementById('detailMessage');
-        msg.textContent = '';
+    const id = btn.dataset.id;
+    const msg = document.getElementById('detailMessage');
+    msg.textContent = '';
 
-        try {
-            const resp = await fetch('/api/admin/exercises/' + id);
-            if (!resp.ok) {
-                msg.textContent = 'Không tải được dữ liệu (HTTP ' + resp.status + ')';
-                document.getElementById('detailModalBackdrop').style.display = 'flex';
-                return;
-            }
-            const ex = await resp.json();
-
-            const form = document.getElementById('detailForm');
-            form.id.value = ex.id || id;
-            form.name.value = ex.name || '';
-            form.slug.value = ex.slug || '';
-            form.level.value = ex.level || '';
-            form.muscles.value = (ex.muscles || []).join(',');
-            form.tags.value = (ex.tags || []).join(',');
-            form.isPublic.checked = !!ex.isPublic;
-
-            if (ex.media && ex.media.demoVideoUrl) {
-                form.demoVideoUrl.value = ex.media.demoVideoUrl;
-                const pv = document.getElementById('previewVideo');
-                if (pv) {
-                    pv.src = ex.media.demoVideoUrl;
-                    pv.style.display = 'block';
-                }
-            } else {
-                form.demoVideoUrl.value = '';
-                const pv = document.getElementById('previewVideo');
-                if (pv) {
-                    pv.removeAttribute('src');
-                    pv.style.display = 'none';
-                }
-            }
-
-            // clear file input mỗi lần mở
-            document.getElementById('detailVideo').value = '';
-            document.getElementById('detailThumb').value = '';
-
+    try {
+        const resp = await fetch('/api/admin/exercises/' + id);
+        if (!resp.ok) {
+            msg.textContent = 'Không tải được dữ liệu (HTTP ' + resp.status + ')';
             document.getElementById('detailModalBackdrop').style.display = 'flex';
-        } catch (e) {
-            console.error(e);
-            msg.textContent = 'Có lỗi kết nối khi tải dữ liệu';
-            document.getElementById('detailModalBackdrop').style.display = 'flex';
+            return;
         }
-    }
 
+        const ex = await resp.json();
+        const form = document.getElementById('detailForm');
+        const $ = (sel) => form.querySelector(sel);
+
+        // Gán dữ liệu text
+        const idInput = $('[name=id]');
+        const nameInput = $('[name=name]');
+        const slugInput = $('[name=slug]');
+        const levelInput = $('[name=level]');
+        const musclesInput = $('[name=muscles]');
+        const tagsInput = $('[name=tags]');
+        const isPublicInput = $('[name=isPublic]');
+        const demoVideoUrlInput = $('[name=demoVideoUrl]');
+
+        if (idInput) idInput.value = ex.id || id;
+        if (nameInput) nameInput.value = ex.name || '';
+        if (slugInput) slugInput.value = ex.slug || '';
+        if (levelInput) levelInput.value = ex.level || '';
+        if (musclesInput) musclesInput.value = (ex.muscles || []).join(',');
+        if (tagsInput) tagsInput.value = (ex.tags || []).join(',');
+        if (isPublicInput) isPublicInput.checked = !!ex.isPublic;
+        if (demoVideoUrlInput) demoVideoUrlInput.value = ex.media?.demoVideoUrl || '';
+
+        // Preview video
+        const pv = document.getElementById('previewVideo');
+        if (pv) {
+            if (ex.media?.demoVideoUrl) {
+                pv.src = ex.media.demoVideoUrl;
+                pv.style.display = 'block';
+            } else {
+                pv.removeAttribute('src');
+                pv.style.display = 'none';
+            }
+        }
+
+        // Preview thumbnail
+        const pt = document.getElementById('previewThumb');
+        if (pt) {
+            if (ex.media?.thumbnailUrl) {
+                pt.src = ex.media.thumbnailUrl;
+                pt.style.display = 'block';
+            } else {
+                pt.removeAttribute('src');
+                pt.style.display = 'none';
+            }
+        }
+
+        // Clear file inputs
+        const detailVideo = document.getElementById('detailVideo');
+        const detailThumb = document.getElementById('detailThumb');
+        if (detailVideo) detailVideo.value = '';
+        if (detailThumb) detailThumb.value = '';
+
+        // Show modal
+        document.getElementById('detailModalBackdrop').style.display = 'flex';
+    } catch (e) {
+        console.error(e);
+        msg.textContent = 'Có lỗi kết nối khi tải dữ liệu';
+        document.getElementById('detailModalBackdrop').style.display = 'flex';
+    }
+    }
     function closeDetailModal() {
         document.getElementById('detailModalBackdrop').style.display = 'none';
     }
