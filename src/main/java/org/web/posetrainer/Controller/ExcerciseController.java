@@ -29,10 +29,12 @@ public class ExcerciseController {
         this.excerciseService = excerciseService;
         this.storageService = storageService;
     }
+
     @GetMapping
     public List<Excercise> getAll() throws ExecutionException, InterruptedException {
         return excerciseService.getAll();
     }
+
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> createExcerciseJson(@RequestBody Excercise excercise)
             throws ExecutionException, InterruptedException {
@@ -42,6 +44,7 @@ public class ExcerciseController {
         String id = excerciseService.createExcercise(excercise);
         return ResponseEntity.ok(Map.of("id", id));
     }
+
     @GetMapping("/{id}")
     public ResponseEntity<?> getById(@PathVariable String id) throws ExecutionException, InterruptedException {
         Excercise ex = excerciseService.getById(id);
@@ -50,13 +53,15 @@ public class ExcerciseController {
         }
         return ResponseEntity.ok(ex);
     }
+
     @PutMapping("/{id}")
     public ResponseEntity<?> update(@PathVariable String id,
                                     @RequestBody Excercise payload) throws ExecutionException, InterruptedException {
-        // TODO: viết hàm update trong ExcerciseService
+
         excerciseService.updateExcercise(id, payload);
         return ResponseEntity.ok().build();
     }
+
     @PutMapping(value = "/{id}/media", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> updateMedia(
             @PathVariable String id,

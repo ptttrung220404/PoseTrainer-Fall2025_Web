@@ -50,6 +50,26 @@ public class FirebaseStorageService {
         return media;
     }
 
+    public String uploadCollectionThumbnail(String collectionId, MultipartFile thumbnail)
+            throws IOException {
+
+        if (thumbnail == null || thumbnail.isEmpty()) {
+            return null;
+        }
+
+        Bucket bucket = StorageClient.getInstance().bucket(bucketName);
+        String basePath = "collections/" + collectionId + "/";
+
+        // Tên file cố định như Exercise
+        String objectName = basePath + "thumbnail.jpg";
+
+        // Upload lên Firebase Storage
+        bucket.create(objectName, thumbnail.getBytes(), thumbnail.getContentType());
+
+        // Trả về public media link
+        return buildDownloadUrl(objectName);
+    }
+
     private String buildDownloadUrl(String objectName) {
         // dạng: https://firebasestorage.googleapis.com/v0/b/<bucket>/o/<path>?alt=media
         return "https://firebasestorage.googleapis.com/v0/b/"

@@ -1,4 +1,140 @@
 package org.web.posetrainer.Service;
+import com.google.api.core.ApiFuture;
+import com.google.cloud.firestore.*;
+import com.google.firebase.cloud.FirestoreClient;
+import org.springframework.stereotype.Service;
+import org.web.posetrainer.Entity.Collections;
+import org.web.posetrainer.Entity.WorkoutTemplate;
 
+import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
+
+@Service
 public class CollectionsService {
+    private static final String COLLECTION_NAME = "collections";
+
+    private Firestore db() {
+        return FirestoreClient.getFirestore();
+    }
+
+    private String generateCollectionId() {
+        byte[] bytes = new byte[4]; // 4 bytes = 8 hex chars
+        new SecureRandom().nextBytes(bytes);
+        StringBuilder sb = new StringBuilder("col_");
+        for (byte b : bytes) {
+            sb.append(String.format("%02x", b));
+        }
+        return sb.toString();
+    }
+    public String createCollection(Collections col) throws Exception {
+        String docId = generateCollectionId();
+        DocumentReference docRef = db().collection(COLLECTION_NAME).document(docId);
+
+        col.setId(docId);
+        col.setCreatedAt(System.currentTimeMillis());
+        col.setUpdatedAt(System.currentTimeMillis());
+
+        if (col.getWorkoutTemplateIds() == null) {
+            col.setWorkoutTemplateIds(new ArrayList<>());
+        }
+        if (col.getTags() == null) {
+            col.setTags(new ArrayList<>());
+        }
+
+        docRef.set(col).get();
+        return docId;
+    }
+    public List<Collections> getAll() throws ExecutionException, InterruptedException {
+        Firestore firestore = db();
+        List<Collections> list = new ArrayList<>();
+
+        ApiFuture<QuerySnapshot> future = firestore.collection(COLLECTION_NAME).get();
+        for (DocumentSnapshot doc : future.get().getDocuments()) {
+            Collections c = doc.toObject(Collections.class);
+            if (c != null) {
+                c.setId(doc.getId()); // gán docId vào field id
+                list.add(c);
+            }
+        }
+        return list;
+    }
+    public Collections getById(String docId) throws Exception {
+        DocumentSnapshot snap = db()
+                .collection(COLLECTION_NAME)
+                .document(docId)
+                .get()
+                .get();
+
+        return snap.exists() ? snap.toObject(Collections.class) : null;
+    }
+    public void updateCollection(String docId, Collections col) throws Exception {
+        col.setId(docId);
+        col.setUpdatedAt(System.currentTimeMillis());
+
+
+        db().collection(COLLECTION_NAME)
+                .document(docId)
+                .set(col, SetOptions.merge())
+                .get();
+    }
+    public void deleteCollection(String docId) throws Exception {
+        db().collection(COLLECTION_NAME)
+                .document(docId)
+                .delete()
+                .get();
+    }
+    public void addWorkoutToCollection(String colId, String workoutId) throws Exception {
+        Collections col = getById(colId);
+        if (col == null) return;
+
+        if (col.getWorkoutTemplateIds() == null) {
+            col.setWorkoutTemplateIds(new ArrayList<>());
+        }
+
+        if (!col.getWorkoutTemplateIds().contains(workoutId)) {
+            col.getWorkoutTemplateIds().add(workoutId);
+        }
+
+        col.setUpdatedAt(System.currentTimeMillis());
+
+
+        db().collection(COLLECTION_NAME)
+                .document(colId)
+                .set(col)
+                .get();
+    }
+    public void removeWorkoutFromCollection(String colId, String workoutId) throws Exception {
+        Collections col = getById(colId);
+        if (col == null) return;
+
+        if (col.getWorkoutTemplateIds() != null) {
+            col.getWorkoutTemplateIds().remove(workoutId);
+        }
+
+        col.setUpdatedAt(System.currentTimeMillis());
+
+
+        db().collection(COLLECTION_NAME)
+                .document(colId)
+                .set(col)
+                .get();
+    }
+    public void updateCollectionThumbnail(String id, String thumbnailUrl)
+            throws ExecutionException, InterruptedException {
+
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("thumbnailUrl", thumbnailUrl);
+        updates.put("updatedAt", System.currentTimeMillis());
+
+        db().collection(COLLECTION_NAME)
+                .document(id)
+                .set(updates, SetOptions.merge())
+                .get();
+    }
+
 }

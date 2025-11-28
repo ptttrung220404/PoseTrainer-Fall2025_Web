@@ -32,6 +32,10 @@ public class WorkoutsTemplatesController {
         this.storageService = storageService;
     }
 
+    @GetMapping
+    public List<WorkoutTemplate> getAll() throws ExecutionException, InterruptedException {
+        return WorkoutsTemplatesService.getAll();
+    }
 
     @PostMapping(value = "/create", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> createWorkout(@RequestBody WorkoutTemplate request, Principal principal) throws Exception {
@@ -144,6 +148,7 @@ public class WorkoutsTemplatesController {
                     .body(Map.of("error", e.getMessage()));
         }
     }
+
     @DeleteMapping("/{docId}")
     public ResponseEntity<?> deleteWorkout(@PathVariable String docId) {
         try {
@@ -168,9 +173,5 @@ public class WorkoutsTemplatesController {
         }
     }
 
-    @GetMapping
-    public List<WorkoutTemplate> getAll() throws ExecutionException, InterruptedException {
-        return WorkoutsTemplatesService.getAll();
-    }
 
 }

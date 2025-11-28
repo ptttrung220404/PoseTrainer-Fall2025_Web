@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.web.posetrainer.Entity.Excercise;
+import org.web.posetrainer.Service.CollectionsService;
 import org.web.posetrainer.Service.ExcerciseService;
 import org.web.posetrainer.Service.WorkoutsTemplatesService;
 
@@ -21,7 +22,7 @@ import java.util.concurrent.ExecutionException;
 public class AdminPageController {
     private final ExcerciseService excerciseService;
     private final WorkoutsTemplatesService workoutsService;
-
+    private final CollectionsService collectionsService;
     @GetMapping("/dashboard")
     public String dashboard(Authentication auth, Model model,
                             @ModelAttribute(value = "displayName") String displayName) {
@@ -38,32 +39,19 @@ public class AdminPageController {
         model.addAttribute("exercises", excerciseService.getAll());
         return "exercise-list"; // templates/exercise-list.html
     }
-    @GetMapping("/exercises/{id}")
-    public String showExerciseDetail(@PathVariable String id, Model model)
-            throws ExecutionException, InterruptedException {
-
-        Excercise ex = excerciseService.getById(id);
-        if (ex == null) {
-            return "error/404";
-        }
-
-        model.addAttribute("exercise", ex);
-        return "exercise-detail"; // templates/exercise-detail.html
-    }
-
-    // Màn form thêm exercise
-    @GetMapping("/exercises/new")
-    public String showExerciseForm() {
-        System.out.println(">>> Enter showExerciseForm view");
-        return "exercise-form"; // templates/exercise-form.html
-    }
     @GetMapping
     public String adminRoot() {
         return "redirect:/admin/dashboard";
     }
+
     @GetMapping("/workouts")
     public String showWorkoutList(Model model) throws ExecutionException, InterruptedException {
         model.addAttribute("workouts", WorkoutsTemplatesService.getAll());
         return "workout-list";
+    }
+    @GetMapping("/collections")
+    public String showCollectionList(Model model) throws ExecutionException, InterruptedException {
+        model.addAttribute("collections", collectionsService.getAll());
+        return "collection-list";
     }
 }
