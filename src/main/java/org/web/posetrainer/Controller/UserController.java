@@ -5,6 +5,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.UserRecord;
 import com.google.firebase.auth.UserRecord.CreateRequest;
+import com.google.firebase.auth.UserRecord.UpdateRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -12,18 +13,20 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.web.posetrainer.DTO.CreateUserRequest;
 import org.web.posetrainer.Entity.User;
+import org.web.posetrainer.Service.UserService;
 
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 @RestController
-@RequestMapping("/admin/users")
+@RequestMapping("/api/admin/users")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN')")
 
 public class UserController {
     private final FirebaseAuth firebaseAuth;
     private final Firestore firestore;
+    private final UserService userService;
     @PostMapping
     public ResponseEntity<?> create(@Valid @RequestBody CreateUserRequest req) {
         String uid = null;
@@ -52,6 +55,7 @@ public class UserController {
             userDoc.setDisplayName(req.getDisplayName());
             userDoc.setPhotoURL(req.getPhotoURL());
             userDoc.setRoles(roles);
+            userDoc.setActive(req.getActive() != null ? req.getActive() : true);
             if (req.getNotification() != null) {
                 userDoc.setNotification(new User.NotificationSettings(
                         req.getNotification().getFcmToken(),
@@ -72,7 +76,8 @@ public class UserController {
                     "uid", uid,
                     "email", userDoc.getEmail(),
                     "displayName", userDoc.getDisplayName(),
-                    "roles", userDoc.getRoles()
+                    "roles", userDoc.getRoles(),
+                    "active", userDoc.isActive()
             ));
 
         } catch (Exception e) {
@@ -104,5 +109,33 @@ public class UserController {
         firebaseAuth.setCustomUserClaims(uid, Map.of("roles", roles));
         firestore.collection("users").document(uid).update("roles", roles).get();
         return ResponseEntity.ok(Map.of("uid", uid, "roles", roles));
+    }
+
+    // Khóa/mở khóa tài khoản
+    @PatchMapping("/{uid}/active")
+    public ResponseEntity<?> updateActiveStatus(
+            @PathVariable String uid,
+            @RequestBody Map<String, Boolean> body)
+            throws ExecutionException, InterruptedException, FirebaseAuthException {
+        Boolean active = body.get("active");
+        if (active == null) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "INVALID_REQUEST",
+                    "message", "Trường 'active' là bắt buộc"
+            ));
+        }
+
+        // Cập nhật trong Firestore
+        firestore.collection("users").document(uid).update("active", active).get();
+
+        // Cập nhật trong Firebase Auth: disable/enable user
+        UpdateRequest updateRequest = new UpdateRequest(uid).setDisabled(!active);
+        firebaseAuth.updateUser(updateRequest);
+
+        return ResponseEntity.ok(Map.of(
+                "uid", uid,
+                "active", active,
+                "message", active ? "Tài khoản đã được mở khóa" : "Tài khoản đã được khóa"
+        ));
     }
 }

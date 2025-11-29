@@ -181,8 +181,23 @@
             <th>Actions</th>
         </tr>
         </thead>
-        <tbody id="collectionsBody">
-        <!-- rows inserted by JS -->
+        <tbody>
+        <tr th:if="${#lists.isEmpty(collections)}">
+            <td colspan="6">Chưa có collection nào.</td>
+        </tr>
+        <tr th:each="c : ${collections}">
+            <td th:text="${c.title}">Title</td>
+            <td th:text="${c.category ?: ''}">Category</td>
+            <td>
+                <span th:if="${c.isPublic}" class="badge" style="background:#d4edda">Public</span>
+                <span th:unless="${c.isPublic}" class="badge" style="background:#f8d7da">Private</span>
+            </td>
+            <td th:text="${#lists.size(c.workoutTemplateIds ?: {})}">0</td>
+            <td th:text="${c.updatedAt > 0 ? #dates.format(new java.util.Date(c.updatedAt), 'dd/MM/yyyy HH:mm') : '-'}">-</td>
+            <td>
+                <button class="btn btn-primary small" th:attr="onclick='openDetailModal(\'' + ${c.id} + '\')'">Chi tiết</button>
+            </td>
+        </tr>
         </tbody>
     </table>
     <p class="muted" style="margin-top:12px;">Tip: Click "Chi tiết" để mở modal sửa, upload thumbnail, chọn workout
@@ -321,8 +336,8 @@
 
     // ---------- boot ----------
     window.addEventListener('load', () => {
+        // Load workouts list for dropdowns (from server or API)
         loadWorkouts();
-        loadCollections();
         const addThumb = q('#addThumbnail');
         const detailThumb = q('#detailThumbnail');
         addThumb?.addEventListener('change', () => previewThumb('add'));
@@ -383,45 +398,7 @@
         });
     }
 
-    // ---------- collections list ----------
-    async function loadCollections() {
-        try {
-            const resp = await httpFetch('/api/admin/collections');
-            if (!resp.ok) {
-                console.error('Cannot load collections', resp.status);
-                return;
-            }
-            collections = await resp.json();
-            renderCollectionsTable();
-        } catch (e) {
-            console.error('Load collections error', e);
-        }
-    }
-
-    function renderCollectionsTable() {
-        const tbody = q('#collectionsBody');
-        tbody.innerHTML = '';
-        if (!Array.isArray(collections) || collections.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6">Chưa có collection nào.</td></tr>';
-            return;
-        }
-        collections.forEach(c => {
-            const updated = c.updatedAt ? new Date(c.updatedAt).toLocaleString() : '-';
-            const count = Array.isArray(c.workoutTemplateIds) ? c.workoutTemplateIds.length : 0;
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${escapeHtml(c.title || '')}</td>
-                <td>${escapeHtml(c.category || '')}</td>
-                <td>${c.isPublic ? '<span class="badge" style="background:#d4edda">Public</span>' : '<span class="badge" style="background:#f8d7da">Private</span>'}</td>
-                <td>${count}</td>
-                <td>${updated}</td>
-                <td>
-                    <button class="btn btn-primary small" onclick="openDetailModal('${c.id}')">Chi tiết</button>
-                </td>
-            `;
-            tbody.appendChild(row);
-        });
-    }
+    // Collections are now loaded from server via Thymeleaf, no need to load via JS
 
     // ---------- ADD MODAL ----------
     function openAddModal() {
@@ -525,7 +502,7 @@
             await resp.json();
             closeAddModal();
             addWorkoutItems = [];
-            await loadCollections();
+            window.location.reload(); // Reload page to refresh list
         } catch (e) {
             console.error(e);
             q('#addError').textContent = 'Lỗi khi tạo collection';
@@ -656,7 +633,7 @@
                 q('#detailError').textContent = 'Cập nhật thất bại';
                 return;
             }
-            await loadCollections();
+            window.location.reload(); // Reload page to refresh list
             q('#detailError').style.color = 'green';
             q('#detailError').textContent = 'Cập nhật thành công';
             setTimeout(() => {
@@ -680,8 +657,8 @@
             return;
         }
         q('#detailError').textContent = '';
-        await maybeUploadThumbnail(currentEditingId, 'detail');
-        await loadCollections();
+            await maybeUploadThumbnail(currentEditingId, 'detail');
+        window.location.reload(); // Reload page to refresh list
     }
 
     async function maybeUploadThumbnail(id, mode) {
@@ -747,7 +724,7 @@
                 return;
             }
             closeDetailModal();
-            await loadCollections();
+            window.location.reload(); // Reload page to refresh list
         } catch (e) {
             console.error(e);
             alert('Lỗi khi xóa');

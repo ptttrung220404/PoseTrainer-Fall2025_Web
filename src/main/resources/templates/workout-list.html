@@ -200,8 +200,24 @@
             <th>Actions</th>
         </tr>
         </thead>
-        <tbody id="workoutsBody">
-        <!-- rows inserted by JS -->
+        <tbody>
+        <tr th:if="${#lists.isEmpty(workouts)}">
+            <td colspan="6">Chưa có workout nào.</td>
+        </tr>
+        <tr th:each="w : ${workouts}">
+            <td th:text="${w.title ?: w.name ?: w.id}">Title</td>
+            <td><span class="badge" th:text="${w.level ?: ''}">level</span></td>
+            <td>
+                <span th:if="${w.isPublic}" class="badge" style="background:#d4edda">Public</span>
+                <span th:unless="${w.isPublic}" class="badge" style="background:#f8d7da">Private</span>
+            </td>
+            <td th:text="${#lists.size(w.items ?: {})}">0</td>
+            <td th:text="${w.updatedAt > 0 ? #dates.format(new java.util.Date(w.updatedAt), 'dd/MM/yyyy HH:mm') : '-'}">-</td>
+            <td>
+                <button class="btn btn-primary small" th:attr="onclick='openDetailModal(\'' + ${w.id} + '\')'">Chi tiết</button>
+                <button class="btn" th:attr="onclick='openAddModalWithClone(\'' + ${w.id} + '\')'">Duplicate</button>
+            </td>
+        </tr>
         </tbody>
     </table>
 
@@ -493,10 +509,10 @@
         return Array.from(root.querySelectorAll(sel));
     }
 
-    // ---------- boot: load workouts & exercises ----------
+    // ---------- boot: load exercises for dropdowns ----------
     window.addEventListener('load', () => {
         loadExercises();
-        loadWorkouts();
+        // Workouts are now loaded from server via Thymeleaf, no need to load via JS
     });
 
     async function loadExercises() {
@@ -528,47 +544,7 @@
         });
     }
 
-    async function loadWorkouts() {
-        try {
-            const resp = await fetch('/api/admin/workouts');
-            if (!resp.ok) {
-                console.error('Cannot load workouts', resp.status);
-                return;
-            }
-            workouts = await resp.json();
-            renderWorkoutsTable();
-        } catch (e) {
-            console.error('Load workouts error', e);
-        }
-    }
-
-    function renderWorkoutsTable() {
-        const tbody = q('#workoutsBody');
-        tbody.innerHTML = '';
-
-        if (!Array.isArray(workouts) || workouts.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6">Chưa có workout nào.</td></tr>';
-            return;
-        }
-
-        workouts.forEach(w => {
-            const updated = w.updatedAt ? new Date(w.updatedAt).toLocaleString() : '-';
-            const itemsCount = Array.isArray(w.items) ? w.items.length : 0;
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${escapeHtml(w.title || w.name || w.id)}</td>
-                <td><span class="badge">${escapeHtml(w.level || '')}</span></td>
-                <td>${w.isPublic ? '<span class="badge" style="background:#d4edda">Public</span>' : '<span class="badge" style="background:#f8d7da">Private</span>'}</td>
-                <td>${itemsCount}</td>
-                <td>${updated}</td>
-                <td>
-                    <button class="btn btn-primary small" onclick="openDetailModal('${w.id}')">Chi tiết</button>
-                    <button class="btn" onclick="openAddModalWithClone('${w.id}')">Duplicate</button>
-                </td>
-            `;
-            tbody.appendChild(row);
-        });
-    }
+    // Workouts are now loaded from server via Thymeleaf, no need to load via JS
 
     function escapeHtml(s) {
         if (!s) return '';
@@ -732,7 +708,7 @@
                 return;
             }
             closeAddModal();
-            await loadWorkouts();
+            window.location.reload(); // Reload page to refresh list
         } catch (e) {
             console.error(e);
             q('#addError').textContent = 'Lỗi khi tạo workout';
@@ -926,7 +902,7 @@
                 return;
             }
 
-            await loadWorkouts();
+            window.location.reload(); // Reload page to refresh list
             q('#detailError').style.color = 'green';
             q('#detailError').textContent = 'Cập nhật workout thành công';
             setTimeout(() => q('#detailError').textContent = '', 1500);
@@ -963,7 +939,7 @@
                 q('#detailError').textContent = 'Cập nhật items thất bại';
                 return;
             }
-            await loadWorkouts();
+            window.location.reload(); // Reload page to refresh list
             q('#detailError').style.color = 'green';
             q('#detailError').textContent = 'Cập nhật items thành công';
             setTimeout(() => q('#detailError').textContent = '', 1500);
@@ -984,7 +960,7 @@
                 return;
             }
             closeDetailModal();
-            await loadWorkouts();
+            window.location.reload(); // Reload page to refresh list
         } catch (e) {
             console.error(e);
             alert('Lỗi khi xóa');

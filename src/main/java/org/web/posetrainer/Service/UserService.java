@@ -2,9 +2,12 @@ package org.web.posetrainer.Service;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
+import com.google.cloud.firestore.QuerySnapshot;
 import org.springframework.stereotype.Service;
 import org.web.posetrainer.Entity.User;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
@@ -53,5 +56,18 @@ public class UserService {
             Thread.currentThread().interrupt();
             return false;
         }
+    }
+
+    public List<User> getAll() throws ExecutionException, InterruptedException {
+        ApiFuture<QuerySnapshot> future = firestore.collection(COLLECTION_NAME).get();
+        List<User> result = new ArrayList<>();
+        for (DocumentSnapshot doc : future.get().getDocuments()) {
+            User user = doc.toObject(User.class);
+            if (user != null) {
+                user.setUid(doc.getId()); // gán UID (vì Firestore không tự fill)
+                result.add(user);
+            }
+        }
+        return result;
     }
 }
