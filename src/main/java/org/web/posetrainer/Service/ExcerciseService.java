@@ -6,7 +6,9 @@ import org.springframework.stereotype.Service;
 import org.web.posetrainer.Entity.Excercise;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 @Service
 public class ExcerciseService {
@@ -55,12 +57,34 @@ public class ExcerciseService {
     public void updateExcercise(String id, Excercise excercise)
             throws ExecutionException, InterruptedException {
 
-        excercise.setUpdatedAt(System.currentTimeMillis());
+        Map<String, Object> updates = new HashMap<>();
+
+        // chỉ update các field mà modal cho phép chỉnh sửa
+        if (excercise.getName() != null) updates.put("name", excercise.getName());
+        if (excercise.getSlug() != null) updates.put("slug", excercise.getSlug());
+        if (excercise.getLevel() != null) updates.put("level", excercise.getLevel());
+        if (excercise.getMuscles() != null) updates.put("muscles", excercise.getMuscles());
+        if (excercise.getTags() != null) updates.put("tags", excercise.getTags());
+        updates.put("isPublic", excercise.getIsPublic());
+
+        // update time
+        updates.put("updatedAt", System.currentTimeMillis());
 
         firestore.collection(COLLECTION_NAME)
                 .document(id)
-                .set(excercise, SetOptions.merge())
+                .set(updates, SetOptions.merge())
                 .get();
     }
+    public void updateExcerciseMedia(String id, Excercise.Media media)
+            throws ExecutionException, InterruptedException {
 
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("media", media);
+        updates.put("updatedAt", System.currentTimeMillis());
+
+        firestore.collection(COLLECTION_NAME)
+                .document(id)
+                .set(updates, SetOptions.merge())
+                .get();
+    }
 }

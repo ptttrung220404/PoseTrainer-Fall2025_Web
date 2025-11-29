@@ -22,6 +22,7 @@ public class User {
     private long lastLoginAt;
     private NotificationSettings notification;
     private List<String> roles;
+    private boolean active = true; // Trạng thái tài khoản: true = active, false = inactive (bị khóa)
 
     @Setter
     @Getter

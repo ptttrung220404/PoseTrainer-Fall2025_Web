@@ -21,6 +21,9 @@ public class CreateUserRequest {
     // ví dụ ["ADMIN"] hoặc ["USER"]
     private List<String> roles;
 
+    // Trạng thái tài khoản: true = active, false = inactive (bị khóa)
+    private Boolean active = true;
+
     // tuỳ chọn
     private NotificationSettings notification;
 

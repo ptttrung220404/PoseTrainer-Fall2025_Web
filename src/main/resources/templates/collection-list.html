@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>Collections Manager</title>
+    <style>
+        /* (Reuse style from your workouts page) */
+        body {
+            font-family: sans-serif;
+            background: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 28px auto;
+            padding: 22px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        h1 {
+            margin-top: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+        }
+
+        th, td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #e0e0e0;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        th {
+            background: #fafafa;
+            font-weight: 600;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 8px 14px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: #fff;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: #fff;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #000;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: #fff;
+        }
+
+        .small {
+            font-size: 13px;
+            padding: 6px 8px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+            background: #eee;
+        }
+
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+        }
+
+        .modal {
+            background: #fff;
+            border-radius: 8px;
+            padding: 18px;
+            max-width: 880px;
+            width: 96%;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .modal-body {
+            max-height: 65vh;
+            overflow: auto;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .field {
+            margin-bottom: 10px;
+        }
+
+        .field label {
+            display: block;
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .field input[type="text"], .field input[type="number"], .field textarea, .field select {
+            width: 100%;
+            padding: 7px 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .muted {
+            color: #666;
+            font-size: 13px;
+        }
+
+        .preview-thumb {
+            max-width: 160px;
+            display: block;
+            margin-top: 6px;
+            border-radius: 6px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="top-bar">
+        <h1>Collections</h1>
+        <div>
+            <button class="btn btn-success" onclick="openAddModal()">+ Thêm Collection</button>
+            <a href="/admin/dashboard" class="btn small" style="background:#f0f0f0">⟵ Quay lại</a>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+        <tr>
+            <th>Title</th>
+            <th>Category</th>
+            <th>Public?</th>
+            <th>#Workouts</th>
+            <th>UpdatedAt</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:if="${#lists.isEmpty(collections)}">
+            <td colspan="6">Chưa có collection nào.</td>
+        </tr>
+        <tr th:each="c : ${collections}">
+            <td th:text="${c.title}">Title</td>
+            <td th:text="${c.category ?: ''}">Category</td>
+            <td>
+                <span th:if="${c.isPublic}" class="badge" style="background:#d4edda">Public</span>
+                <span th:unless="${c.isPublic}" class="badge" style="background:#f8d7da">Private</span>
+            </td>
+            <td th:text="${#lists.size(c.workoutTemplateIds ?: {})}">0</td>
+            <td th:text="${c.updatedAt > 0 ? #dates.format(new java.util.Date(c.updatedAt), 'dd/MM/yyyy HH:mm') : '-'}">-</td>
+            <td>
+                <button class="btn btn-primary small" th:attr="onclick='openDetailModal(\'' + ${c.id} + '\')'">Chi tiết</button>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    <p class="muted" style="margin-top:12px;">Tip: Click "Chi tiết" để mở modal sửa, upload thumbnail, chọn workout
+        items.</p>
+</div>
+
+<!-- ADD COLLECTION MODAL -->
+<div id="addModal" class="modal-backdrop">
+    <div class="modal" role="dialog" aria-modal="true">
+        <div class="modal-header">
+            <h3>Thêm Collection</h3>
+            <button class="btn" onclick="closeAddModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <form id="addForm">
+                <div class="field">
+                    <label>Title</label>
+                    <input type="text" name="title" required>
+                </div>
+                <div class="field">
+                    <label>Slug (id) — optional</label>
+                    <input type="text" name="slug" placeholder="auto nếu bỏ trống">
+                </div>
+                <div class="field">
+                    <label>Description</label>
+                    <textarea name="description"></textarea>
+                </div>
+                <div class="field">
+                    <label>Category</label>
+                    <input type="text" name="category">
+                </div>
+                <!-- Workouts select + table -->
+                <div style="margin-top:10px; display:flex; gap:8px; align-items:center;"><select id="addWorkoutSelect"
+                                                                                                 style="flex:1">
+                    <!-- populated from workoutsList --> </select>
+                    <button type="button" class="btn btn-primary small" onclick="addWorkoutInAddModal()">+ Thêm</button>
+                </div>
+                <table class="items-table" id="addWorkoutTable" style="margin-top:12px;">
+                    <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Workout</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                <div class="field"><label>Thumbnail (ảnh)</label> <input type="file" id="addThumbnail" accept="image/*"
+                                                                         onchange="previewThumb('add')">
+                    <div><img id="addPreviewThumb" class="preview-thumb" style="display:none;"></div>
+                </div>
+                <div class="field"><label>Public?</label> <input type="checkbox" name="isPublic" checked></div>
+                <div class="field"><label>Tags (comma separated)</label> <input type="text" name="tags"></div>
+                <div id="addError" class="muted" style="color:red"></div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn" onclick="closeAddModal()">Hủy</button>
+            <button class="btn btn-success" onclick="submitAddCollection()">Lưu</button>
+        </div>
+    </div>
+</div>
+
+<!-- DETAIL / EDIT COLLECTION MODAL -->
+<div id="detailModal" class="modal-backdrop">
+    <div class="modal" role="dialog" aria-modal="true">
+        <div class="modal-header">
+            <h3>Chi tiết / Sửa Collection</h3>
+            <button class="btn" onclick="closeDetailModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <form id="detailForm">
+                <input type="hidden" name="id">
+                <div class="field">
+                    <label>Title</label>
+                    <input type="text" name="title">
+                </div>
+                <div class="field">
+                    <label>Slug (id)</label>
+                    <input type="text" name="slug" readonly>
+                </div>
+                <div class="field">
+                    <label>Description</label>
+                    <textarea name="description"></textarea>
+                </div>
+                <div class="field">
+                    <label>Category</label>
+                    <input type="text" name="category">
+                </div>
+                <div class="field">
+                    <label>Workouts (chọn nhiều)</label>
+                    <div style="margin-top:10px; display:flex; gap:8px; align-items:center;"><select
+                            id="detailWorkoutSelect" style="flex:1"> <!-- populated from workoutsList --> </select>
+                        <button type="button" class="btn btn-primary small" onclick="addWorkoutInDetailModal()">+ Thêm
+                        </button>
+                    </div>
+                    <table class="items-table" id="detailWorkoutTable" style="margin-top:12px;">
+                        <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Workout</th>
+                            <th>Action</th>
+                        </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                    <div class="field"><label>Current Thumbnail</label>
+                        <div><img id="detailPreviewThumb" class="preview-thumb" style="display:none;"></div>
+                    </div>
+                    <div class="field"><label>Upload new thumbnail</label> <input type="file" id="detailThumbnail"
+                                                                                  accept="image/*"
+                                                                                  onchange="previewThumb('detail')">
+                    </div>
+                    <div class="field"><label>Public?</label> <input type="checkbox" name="isPublic"></div>
+                    <div class="field"><label>Tags (comma separated)</label> <input type="text" name="tags"></div>
+                    <div id="detailError" class="muted" style="color:red"></div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn" onclick="closeDetailModal()">Đóng</button>
+            <button class="btn btn-warning" onclick="submitUpdateCollection()">Lưu Info</button>
+            <button class="btn btn-primary" onclick="uploadThumbnail()">Upload Thumbnail</button>
+            <button class="btn btn-danger" onclick="deleteCollection()">Xóa</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ---------- state ----------
+    let workoutsList = [];
+    let collections = [];
+    let addWorkoutItems = [];
+    let detailWorkoutItems = [];
+    let currentEditingId = null;
+
+    // ---------- boot ----------
+    window.addEventListener('load', () => {
+        // Load workouts list for dropdowns (from server or API)
+        loadWorkouts();
+        const addThumb = q('#addThumbnail');
+        const detailThumb = q('#detailThumbnail');
+        addThumb?.addEventListener('change', () => previewThumb('add'));
+        detailThumb?.addEventListener('change', () => previewThumb('detail'));
+    });
+
+    // ---------- helpers ----------
+    function q(sel, root = document) {
+        return root.querySelector(sel);
+    }
+
+    function escapeHtml(s) {
+        if (!s) return '';
+        return String(s).replace(/[&<>"']/g, c => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        }[c]));
+    }
+
+    async function httpFetch(url, options = {}) {
+        const opts = {...options, credentials: 'include'};
+        if (options.headers) {
+            opts.headers = options.headers;
+        }
+        return fetch(url, opts);
+    }
+
+    // ---------- load workouts ----------
+    async function loadWorkouts() {
+        try {
+            const resp = await httpFetch('/api/admin/workouts');
+            if (!resp.ok) {
+                console.error('Cannot load workouts', resp.status);
+                return;
+            }
+            workoutsList = await resp.json();
+            populateWorkoutSelects();
+        } catch (e) {
+            console.error('Load workouts error', e);
+        }
+    }
+
+    function populateWorkoutSelects() {
+        const addSel = q('#addWorkoutSelect');
+        const detailSel = q('#detailWorkoutSelect');
+        [addSel, detailSel].forEach(sel => {
+            if (!sel) return;
+            sel.innerHTML = '<option value="">-- Chọn workout --</option>';
+            workoutsList.forEach(w => {
+                const opt = document.createElement('option');
+                opt.value = w.id;
+                opt.textContent = w.title || w.name || w.slug || w.id;
+                sel.appendChild(opt);
+            });
+        });
+    }
+
+    // Collections are now loaded from server via Thymeleaf, no need to load via JS
+
+    // ---------- ADD MODAL ----------
+    function openAddModal() {
+        addWorkoutItems = [];
+        q('#addForm').reset();
+        q('#addError').textContent = '';
+        renderAddWorkoutTable();
+        q('#addPreviewThumb').style.display = 'none';
+        q('#addModal').style.display = 'flex';
+    }
+
+    function closeAddModal() {
+        q('#addModal').style.display = 'none';
+    }
+
+    function addWorkoutInAddModal() {
+        const sel = q('#addWorkoutSelect');
+        const workoutId = sel?.value;
+        if (!workoutId) {
+            q('#addError').textContent = 'Chọn workout trước';
+            return;
+        }
+        if (addWorkoutItems.some(it => it.workoutId === workoutId)) {
+            q('#addError').textContent = 'Workout đã tồn tại trong danh sách';
+            return;
+        }
+        addWorkoutItems.push({workoutId});
+        q('#addError').textContent = '';
+        renderAddWorkoutTable();
+    }
+
+    function moveAddWorkout(i, dir) {
+        const newIdx = i + dir;
+        if (newIdx < 0 || newIdx >= addWorkoutItems.length) return;
+        [addWorkoutItems[i], addWorkoutItems[newIdx]] = [addWorkoutItems[newIdx], addWorkoutItems[i]];
+        renderAddWorkoutTable();
+    }
+
+    function removeAddWorkout(i) {
+        addWorkoutItems.splice(i, 1);
+        renderAddWorkoutTable();
+    }
+
+    function renderAddWorkoutTable() {
+        const tbody = q('#addWorkoutTable tbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        addWorkoutItems.forEach((item, idx) => {
+            const w = workoutsList.find(wk => wk.id === item.workoutId);
+            const title = w ? (w.title || w.name || w.slug || w.id) : item.workoutId;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${idx + 1}</td>
+                <td>${escapeHtml(title)}</td>
+                <td>
+                    <button class="btn btn-warning small" onclick="moveAddWorkout(${idx}, -1)">↑</button>
+                    <button class="btn btn-warning small" onclick="moveAddWorkout(${idx}, 1)">↓</button>
+                    <button class="btn btn-danger small" onclick="removeAddWorkout(${idx})">Del</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    async function submitAddCollection() {
+        const form = q('#addForm');
+        q('#addError').textContent = '';
+        const title = form.title.value.trim();
+        if (!title) {
+            q('#addError').textContent = 'Title bắt buộc';
+            return;
+        }
+        const thumbFile = q('#addThumbnail').files[0];
+        if (!thumbFile) {
+            q('#addError').textContent = 'Vui lòng chọn thumbnail';
+            return;
+        }
+        const payload = {
+            title,
+            slug: form.slug.value.trim() || undefined,
+            description: form.description.value.trim(),
+            category: form.category.value.trim(),
+            workoutTemplateIds: addWorkoutItems.map((it, idx) => it.workoutId),
+            isPublic: !!form.isPublic.checked,
+            tags: (form.tags.value || '').split(',').map(s => s.trim()).filter(Boolean),
+            updatedAt: Date.now()
+        };
+        try {
+            const fd = new FormData();
+            fd.append('data', new Blob([JSON.stringify(payload)], {type: 'application/json'}));
+            fd.append('thumbnail', thumbFile);
+            const resp = await httpFetch('/api/admin/collections/create', {
+                method: 'POST',
+                body: fd
+            });
+            if (!resp.ok) {
+                const text = await resp.text();
+                q('#addError').textContent = 'Tạo thất bại (HTTP ' + resp.status + ') ' + text;
+                return;
+            }
+            await resp.json();
+            closeAddModal();
+            addWorkoutItems = [];
+            window.location.reload(); // Reload page to refresh list
+        } catch (e) {
+            console.error(e);
+            q('#addError').textContent = 'Lỗi khi tạo collection';
+        }
+    }
+
+    // ---------- DETAIL MODAL ----------
+    function openDetailModal(id) {
+        currentEditingId = id;
+        q('#detailError').textContent = '';
+        q('#detailModal').style.display = 'flex';
+        loadCollectionDetail(id);
+    }
+
+    function closeDetailModal() {
+        q('#detailModal').style.display = 'none';
+        currentEditingId = null;
+    }
+
+    async function loadCollectionDetail(id) {
+        try {
+            const resp = await httpFetch('/api/admin/collections/' + id);
+            if (!resp.ok) {
+                q('#detailError').textContent = 'Không lấy được collection';
+                return;
+            }
+            const c = await resp.json();
+            const form = q('#detailForm');
+            form.id.value = c.id || id;
+            form.title.value = c.title || '';
+            form.slug.value = c.slug || c.id || '';
+            form.description.value = c.description || '';
+            form.category.value = c.category || '';
+            form.isPublic.checked = !!c.isPublic;
+            form.tags.value = (c.tags || []).join(',');
+
+            detailWorkoutItems = Array.isArray(c.workoutTemplateIds)
+                ? c.workoutTemplateIds.map(workoutId => ({workoutId}))
+                : [];
+            renderDetailWorkoutTable();
+            populateWorkoutSelects(); // ensure options exist even if loadWorkouts finished earlier
+
+            const img = q('#detailPreviewThumb');
+            if (c.thumbnailUrl) {
+                img.src = c.thumbnailUrl;
+                img.style.display = 'block';
+            } else {
+                img.removeAttribute('src');
+                img.style.display = 'none';
+            }
+        } catch (e) {
+            console.error(e);
+            q('#detailError').textContent = 'Lỗi khi tải chi tiết';
+        }
+    }
+
+    function addWorkoutInDetailModal() {
+        const sel = q('#detailWorkoutSelect');
+        const workoutId = sel?.value;
+        if (!workoutId) {
+            q('#detailError').textContent = 'Chọn workout để thêm';
+            return;
+        }
+        if (detailWorkoutItems.some(it => it.workoutId === workoutId)) {
+            q('#detailError').textContent = 'Workout đã trong danh sách';
+            return;
+        }
+        detailWorkoutItems.push({workoutId});
+        q('#detailError').textContent = '';
+        renderDetailWorkoutTable();
+    }
+
+    function moveDetailWorkout(i, dir) {
+        const newIdx = i + dir;
+        if (newIdx < 0 || newIdx >= detailWorkoutItems.length) return;
+        [detailWorkoutItems[i], detailWorkoutItems[newIdx]] = [detailWorkoutItems[newIdx], detailWorkoutItems[i]];
+        renderDetailWorkoutTable();
+    }
+
+    function removeDetailWorkout(i) {
+        detailWorkoutItems.splice(i, 1);
+        renderDetailWorkoutTable();
+    }
+
+    function renderDetailWorkoutTable() {
+        const tbody = q('#detailWorkoutTable tbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        detailWorkoutItems.forEach((item, idx) => {
+            const w = workoutsList.find(wk => wk.id === item.workoutId);
+            const title = w ? (w.title || w.name || w.slug || w.id) : item.workoutId;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${idx + 1}</td>
+                <td>${escapeHtml(title)}</td>
+                <td>
+                    <button class="btn btn-warning small" onclick="moveDetailWorkout(${idx}, -1)">↑</button>
+                    <button class="btn btn-warning small" onclick="moveDetailWorkout(${idx}, 1)">↓</button>
+                    <button class="btn btn-danger small" onclick="removeDetailWorkout(${idx})">Del</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    async function submitUpdateCollection() {
+        if (!currentEditingId) {
+            q('#detailError').textContent = 'Missing id';
+            return;
+        }
+        const form = q('#detailForm');
+        const payload = {
+            title: form.title.value.trim(),
+            description: form.description.value.trim(),
+            category: form.category.value.trim(),
+            workoutTemplateIds: detailWorkoutItems.map(it => it.workoutId),
+            isPublic: !!form.isPublic.checked,
+            tags: (form.tags.value || '').split(',').map(s => s.trim()).filter(Boolean),
+            updatedAt: Date.now()
+        };
+        try {
+            const resp = await httpFetch('/api/admin/collections/' + currentEditingId, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            if (!resp.ok) {
+                q('#detailError').textContent = 'Cập nhật thất bại';
+                return;
+            }
+            window.location.reload(); // Reload page to refresh list
+            q('#detailError').style.color = 'green';
+            q('#detailError').textContent = 'Cập nhật thành công';
+            setTimeout(() => {
+                q('#detailError').style.color = 'red';
+                q('#detailError').textContent = '';
+            }, 1500);
+        } catch (e) {
+            console.error(e);
+            q('#detailError').textContent = 'Lỗi khi cập nhật';
+        }
+    }
+
+    async function uploadThumbnail() {
+        if (!currentEditingId) {
+            q('#detailError').textContent = 'Missing id';
+            return;
+        }
+        const file = q('#detailThumbnail').files[0];
+        if (!file) {
+            q('#detailError').textContent = 'Chọn file trước';
+            return;
+        }
+        q('#detailError').textContent = '';
+            await maybeUploadThumbnail(currentEditingId, 'detail');
+        window.location.reload(); // Reload page to refresh list
+    }
+
+    async function maybeUploadThumbnail(id, mode) {
+        const input = mode === 'add' ? q('#addThumbnail') : q('#detailThumbnail');
+        const file = input?.files?.[0];
+        if (!file) return;
+        const fd = new FormData();
+        fd.append('thumbnail', file);
+        try {
+            const resp = await httpFetch('/api/admin/collections/' + id + '/thumbnail', {
+                method: 'PUT',
+                body: fd
+            });
+            if (!resp.ok) {
+                console.warn('Thumbnail upload failed', resp.status);
+                q('#detailError').textContent = 'Upload thumbnail thất bại';
+                return;
+            }
+            const data = await resp.json();
+            if (mode === 'detail' && data.thumbnailUrl) {
+                const img = q('#detailPreviewThumb');
+                img.src = data.thumbnailUrl;
+                img.style.display = 'block';
+            } else if (mode === 'add' && data.thumbnailUrl) {
+                const img = q('#addPreviewThumb');
+                img.src = data.thumbnailUrl;
+                img.style.display = 'block';
+            }
+            q('#detailError').style.color = 'green';
+            q('#detailError').textContent = 'Upload thumbnail thành công';
+            setTimeout(() => {
+                q('#detailError').style.color = 'red';
+                q('#detailError').textContent = '';
+            }, 1500);
+        } catch (e) {
+            console.error(e);
+            q('#detailError').textContent = 'Lỗi khi upload thumbnail';
+        }
+    }
+
+    function previewThumb(mode) {
+        const input = mode === 'add' ? q('#addThumbnail') : q('#detailThumbnail');
+        const img = mode === 'add' ? q('#addPreviewThumb') : q('#detailPreviewThumb');
+        if (!input || !img) return;
+        const file = input.files[0];
+        if (!file) {
+            img.removeAttribute('src');
+            img.style.display = 'none';
+            return;
+        }
+        img.src = URL.createObjectURL(file);
+        img.style.display = 'block';
+    }
+
+    // ---------- DELETE ----------
+    async function deleteCollection() {
+        if (!currentEditingId) return;
+        if (!confirm('Bạn có chắc muốn xóa collection này?')) return;
+        try {
+            const resp = await httpFetch('/api/admin/collections/' + currentEditingId, {method: 'DELETE'});
+            if (!resp.ok) {
+                alert('Xóa thất bại');
+                return;
+            }
+            closeDetailModal();
+            window.location.reload(); // Reload page to refresh list
+        } catch (e) {
+            console.error(e);
+            alert('Lỗi khi xóa');
+        }
+    }
+</script>
+</body>
+</html>

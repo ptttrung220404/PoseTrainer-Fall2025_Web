@@ -3,18 +3,12 @@ package org.web.posetrainer.Controller;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.web.posetrainer.DTO.LoginRequest;
-import org.web.posetrainer.Entity.Workouts;
 import org.web.posetrainer.Service.AuthService;
 import org.web.posetrainer.Service.UserService;
-import org.web.posetrainer.Service.WorkoutsService;
-import org.springframework.security.core.GrantedAuthority;
 
-import javax.annotation.Resource;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 
 @RestController
 public class AuthController {
