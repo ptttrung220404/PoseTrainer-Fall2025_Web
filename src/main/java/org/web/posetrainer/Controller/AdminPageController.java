@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.web.posetrainer.Service.CollectionsService;
+import org.web.posetrainer.Service.CommunityService;
 import org.web.posetrainer.Service.ExcerciseService;
 import org.web.posetrainer.Service.UserService;
 import org.web.posetrainer.Service.WorkoutsTemplatesService;
@@ -23,6 +24,7 @@ public class AdminPageController {
     private final WorkoutsTemplatesService workoutsService;
     private final CollectionsService collectionsService;
     private final UserService userService;
+    private final CommunityService communityService;
     @GetMapping("/dashboard")
     public String dashboard(Authentication auth, Model model,
                             @ModelAttribute(value = "displayName") String displayName) {
@@ -62,4 +64,25 @@ public class AdminPageController {
         model.addAttribute("users", userService.getAll());
         return "user-list";
     }
+
+    @GetMapping("/community")
+    public String showCommunityList(Model model) throws ExecutionException, InterruptedException {
+        model.addAttribute("posts", communityService.getAll());
+        return "community-list";
+    }
+    @GetMapping("/profile")
+    public String showProfile(Authentication auth, Model model) {
+        if (auth == null || !auth.isAuthenticated()) {
+            return "redirect:/login";
+        }
+
+        String uid = auth.getName();
+        userService.getUserByUid(uid).ifPresentOrElse(
+                user -> model.addAttribute("user", user),
+                () -> model.addAttribute("error", "Không tìm thấy thông tin người dùng")
+        );
+
+        return "user-profile";
+    }
+
 }

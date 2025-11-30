@@ -70,4 +70,33 @@ public class UserService {
         }
         return result;
     }
+
+    public boolean updateUser(String uid, User updatedUser) throws ExecutionException, InterruptedException {
+        try {
+            // Lấy user hiện tại
+            Optional<User> existingUserOpt = getUserByUid(uid);
+            if (existingUserOpt.isEmpty()) {
+                return false;
+            }
+            
+            User existingUser = existingUserOpt.get();
+            
+            // Cập nhật các trường có thể thay đổi
+            if (updatedUser.getDisplayName() != null) {
+                existingUser.setDisplayName(updatedUser.getDisplayName());
+            }
+            if (updatedUser.getPhotoURL() != null) {
+                existingUser.setPhotoURL(updatedUser.getPhotoURL());
+            }
+            if (updatedUser.getNotification() != null) {
+                existingUser.setNotification(updatedUser.getNotification());
+            }
+            
+            // Lưu lại
+            return saveUser(existingUser);
+        } catch (Exception e) {
+            System.err.println(">>> Firestore updateUser failed: " + e.getMessage());
+            return false;
+        }
+    }
 }
