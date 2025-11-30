@@ -1,7 +1,9 @@
 package org.web.posetrainer.Entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.cloud.Timestamp;
 import com.google.cloud.firestore.annotation.Exclude;
+import com.google.cloud.firestore.annotation.PropertyName;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -35,6 +37,10 @@ public class Community {
     public Timestamp updatedAt;
 
     public List<String> likedBy;
+
+    @JsonProperty("isVisible")
+    @PropertyName("isVisible")
+    public boolean isVisible = true;
 
     // NOT stored in Firestore - only for UI
     @Exclude
@@ -84,6 +90,18 @@ public class Community {
         return createdAt.toDate().toInstant()
                 .atZone(ZoneId.of("Asia/Ho_Chi_Minh"))
                 .format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+    }
+
+    @JsonProperty("isVisible")
+    @PropertyName("isVisible")
+    public boolean getIsVisible() {
+        return isVisible;
+    }
+
+    @JsonProperty("isVisible")
+    @PropertyName("isVisible")
+    public void setIsVisible(boolean isVisible) {
+        this.isVisible = isVisible;
     }
 
     // ====== Nested classes ======
