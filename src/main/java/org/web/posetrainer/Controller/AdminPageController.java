@@ -32,14 +32,25 @@ public class AdminPageController {
             model.addAttribute("uid", auth.getName());
             model.addAttribute("roles", auth.getAuthorities());
         }
+        if (displayName == null || displayName.trim().isEmpty()) {
+            displayName = "Admin";
+        }
         model.addAttribute("displayName", displayName);
         return "dashboard"; // -> templates/dashboard.html
     }
     @GetMapping("/exercises")
-    public String showExerciseList(Model model) throws ExecutionException, InterruptedException {
-        System.out.println(">>> Enter showExerciseList view");
+    public String showExerciseList(Authentication auth, Model model,
+                                   @ModelAttribute(value = "displayName") String displayName)
+            throws ExecutionException, InterruptedException {
+
+        if (auth != null) {
+            model.addAttribute("uid", auth.getName());
+            String name = (displayName != null && !displayName.isEmpty()) ? displayName : "Admin";
+            model.addAttribute("displayName", name);
+        }
+
         model.addAttribute("exercises", excerciseService.getAll());
-        return "exercise-list"; // templates/exercise-list.html
+        return "exercise-list";
     }
     @GetMapping
     public String adminRoot() {
@@ -47,20 +58,41 @@ public class AdminPageController {
     }
 
     @GetMapping("/workouts")
-    public String showWorkoutList(Model model) throws ExecutionException, InterruptedException {
+    public String showWorkoutList(Authentication auth, Model model,
+                                  @ModelAttribute(value = "displayName") String displayName)
+            throws ExecutionException, InterruptedException {
+        if (auth != null) {
+            model.addAttribute("uid", auth.getName());
+            model.addAttribute("displayName", displayName != null && !displayName.isEmpty() ? displayName : "Admin");
+        }
         model.addAttribute("workouts", WorkoutsTemplatesService.getAll());
         model.addAttribute("exercises", excerciseService.getAll());
         return "workout-list";
     }
     @GetMapping("/collections")
-    public String showCollectionList(Model model) throws ExecutionException, InterruptedException {
+    public String showCollectionList(Authentication auth, Model model,
+                                     @ModelAttribute(value = "displayName") String displayName)
+            throws ExecutionException, InterruptedException {
+
+        if (auth != null) {
+            model.addAttribute("uid", auth.getName());
+            model.addAttribute("displayName", displayName != null && !displayName.isEmpty() ? displayName : "Admin");
+        }
+
         model.addAttribute("collections", collectionsService.getAll());
         model.addAttribute("workouts", WorkoutsTemplatesService.getAll());
         return "collection-list";
     }
-
     @GetMapping("/users")
-    public String showUserList(Model model) throws ExecutionException, InterruptedException {
+    public String showUserList(Authentication auth, Model model,
+                               @ModelAttribute(value = "displayName") String displayName)
+            throws ExecutionException, InterruptedException {
+
+        if (auth != null) {
+            model.addAttribute("uid", auth.getName());
+            model.addAttribute("displayName", displayName != null && !displayName.isEmpty() ? displayName : "Admin");
+        }
+
         model.addAttribute("users", userService.getAll());
         return "user-list";
     }

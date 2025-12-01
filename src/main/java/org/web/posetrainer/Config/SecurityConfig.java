@@ -43,18 +43,21 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/auth/**","/login").permitAll()
+                        .requestMatchers("/auth/**", "/login").permitAll()
                         .requestMatchers("/favicon.ico", "/css/**", "/js/**", "/images/**").permitAll()
                         .requestMatchers("/health", "/actuator/**").permitAll()
-                        .requestMatchers("/me","/dashboard").authenticated()          // chỉ cần có token
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-                        // 🔒 ràng buộc rõ cho admin
+                        .requestMatchers("/me").authenticated()
+
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(firebaseFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
-                .cors(org.springframework.security.config.Customizer.withDefaults())
+                .addFilterBefore(firebaseFilter, UsernamePasswordAuthenticationFilter.class)
+                .cors(Customizer.withDefaults())
                 .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint((req, res, e) -> res.setStatus(HttpServletResponse.SC_UNAUTHORIZED))
+                        .authenticationEntryPoint((req, res, e) -> {
+                            System.out.println("Auth failed for: " + req.getRequestURI());
+                            res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                        })
                 );
 
         return http.build();
