@@ -22,32 +22,24 @@ public class FirebaseStorageService {
     }
 
 
-    public Excercise.Media uploadExerciseMedia(String exerciseId,
-                                               MultipartFile video,
-                                               MultipartFile thumbnail) throws IOException {
+    public String uploadExerciseVideo(String exerciseId, MultipartFile video) throws IOException {
+        if (video == null || video.isEmpty()) return null;
 
         Bucket bucket = StorageClient.getInstance().bucket(bucketName);
-        String basePath = "exercises/" + exerciseId + "/";
+        String objectName = "exercises/" + exerciseId + "/demo.mp4";
 
-        String videoUrl = null;
-        String thumbUrl = null;
+        bucket.create(objectName, video.getBytes(), video.getContentType());
+        return buildDownloadUrl(objectName);
+    }
 
-        if (video != null && !video.isEmpty()) {
-            String objectName = basePath + "demo.mp4"; // hoặc lấy từ video.getOriginalFilename()
-            Blob blob = bucket.create(objectName, video.getBytes(), video.getContentType());
-            videoUrl = buildDownloadUrl(objectName);
-        }
+    public String uploadExerciseThumbnail(String exerciseId, MultipartFile thumbnail) throws IOException {
+        if (thumbnail == null || thumbnail.isEmpty()) return null;
 
-        if (thumbnail != null && !thumbnail.isEmpty()) {
-            String objectName = basePath + "thumbnail.jpg"; // hoặc dùng tên file gốc
-            Blob blob = bucket.create(objectName, thumbnail.getBytes(), thumbnail.getContentType());
-            thumbUrl = buildDownloadUrl(objectName);
-        }
+        Bucket bucket = StorageClient.getInstance().bucket(bucketName);
+        String objectName = "exercises/" + exerciseId + "/thumbnail.jpg";
 
-        Excercise.Media media = new Excercise.Media();
-        media.setDemoVideoUrl(videoUrl);
-        media.setThumbnailUrl(thumbUrl);
-        return media;
+        bucket.create(objectName, thumbnail.getBytes(), thumbnail.getContentType());
+        return buildDownloadUrl(objectName);
     }
 
     public String uploadCollectionThumbnail(String collectionId, MultipartFile thumbnail)

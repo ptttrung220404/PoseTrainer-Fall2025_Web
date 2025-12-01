@@ -75,16 +75,22 @@ public class ExcerciseService {
                 .set(updates, SetOptions.merge())
                 .get();
     }
-    public void updateExcerciseMedia(String id, Excercise.Media media)
+    public void updateExcerciseMediaPartial(String id, Map<String, Object> mediaUpdates)
             throws ExecutionException, InterruptedException {
 
         Map<String, Object> updates = new HashMap<>();
-        updates.put("media", media);
+
+        // update từng field trong media.*
+        for (var entry : mediaUpdates.entrySet()) {
+            updates.put("media." + entry.getKey(), entry.getValue());
+        }
+
         updates.put("updatedAt", System.currentTimeMillis());
 
-        firestore.collection(COLLECTION_NAME)
+        firestore.collection("exercises")
                 .document(id)
-                .set(updates, SetOptions.merge())
+                .update(updates)
                 .get();
     }
+
 }

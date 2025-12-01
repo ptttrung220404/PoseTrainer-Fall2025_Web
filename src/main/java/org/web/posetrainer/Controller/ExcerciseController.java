@@ -12,6 +12,7 @@ import org.web.posetrainer.Firebase.FirebaseStorageService;
 import org.web.posetrainer.Service.WorkoutsTemplatesService;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -69,19 +70,30 @@ public class ExcerciseController {
             @RequestPart(value = "thumbnail", required = false) MultipartFile thumbnailFile
     ) throws IOException, ExecutionException, InterruptedException {
 
-        System.out.println(">>> Enter updateMedia for exercise id=" + id);
+        Map<String, Object> mediaUpdates = new HashMap<>();
 
-        // 1) Upload lên Storage
-        Excercise.Media media = storageService.uploadExerciseMedia(id, videoFile, thumbnailFile);
+        // Upload video nếu có
+        if (videoFile != null && !videoFile.isEmpty()) {
+            String videoUrl = storageService.uploadExerciseVideo(id, videoFile);
+            mediaUpdates.put("demoVideoUrl", videoUrl);
+        }
 
-        // 2) Update Firestore
-        excerciseService.updateExcerciseMedia(id, media);
+        // Upload thumbnail nếu có
+        if (thumbnailFile != null && !thumbnailFile.isEmpty()) {
+            String thumbUrl = storageService.uploadExerciseThumbnail(id, thumbnailFile);
+            mediaUpdates.put("thumbnailUrl", thumbUrl);
+        }
 
-        return ResponseEntity.ok(Map.of(
-                "id", id,
-                "videoUrl", media.getDemoVideoUrl(),
-                "thumbnailUrl", media.getThumbnailUrl()
-        ));
+        if (mediaUpdates.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "NO_MEDIA",
+                    "message", "You must upload at least one file"
+            ));
+        }
+
+        excerciseService.updateExcerciseMediaPartial(id, mediaUpdates);
+
+        return ResponseEntity.ok(mediaUpdates);
     }
 
 }
