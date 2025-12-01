@@ -34,3 +34,4 @@ build/
 
 serviceAccountKey.json"src/main/resources/serviceAccountKey.json" 
 "**/serviceAccountKey.json" 
+src/main/resources/serviceAccountKey.json
