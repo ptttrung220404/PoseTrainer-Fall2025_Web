@@ -32,4 +32,5 @@ build/
 ### VS Code ###
 .vscode/
 
-serviceAccountKey.json
+serviceAccountKey.json"src/main/resources/serviceAccountKey.json" 
+"**/serviceAccountKey.json" 
