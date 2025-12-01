@@ -2,121 +2,290 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Danh sách người dùng</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danh sách người dùng - Admin Panel</title>
     <style>
-        body { font-family: sans-serif; background: #f5f5f5; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ========== SIDEBAR ========== */
+        .sidebar {
+            width: 240px;
+            background: #fff;
+            border-right: 1px solid #e0e0e0;
+            padding: 20px;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: #667eea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .user-info h3 {
+            font-size: 14px;
+            color: #2d3748;
+            margin-bottom: 2px;
+            font-weight: 600;
+        }
+
+        .user-info p {
+            font-size: 12px;
+            color: #718096;
+            word-break: break-all;
+        }
+
+        .create-btn-sidebar {
+            width: 100%;
+            padding: 12px;
+            background: #4299e1;
+            color: white;
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 24px;
+            transition: background 0.3s;
+        }
+
+        .create-btn-sidebar:hover {
+            background: #3182ce;
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin-bottom: 2px;
+        }
+
+        .nav-link {
+            display: block;
+            padding: 12px 16px;
+            color: #4a5568;
+            text-decoration: none;
+            transition: all 0.2s;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .nav-link:hover {
+            background: #f7fafc;
+            color: #2d3748;
+        }
+
+        .nav-link.active {
+            background: #667eea;
+            color: white;
+        }
+
+        /* ========== MAIN CONTENT ========== */
+        .main-content {
+            margin-left: 240px;
+            flex: 1;
+            padding: 40px;
+        }
+
         .container {
-            max-width: 1200px; margin: 40px auto; padding: 24px;
-            background: #fff; border-radius: 8px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+            max-width: 1200px;
+            background: #fff;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
-        h1 { margin-top: 0; }
-        table {
-            width: 100%; border-collapse: collapse; margin-top: 16px;
-        }
-        th, td {
-            padding: 8px 10px; border-bottom: 1px solid #e0e0e0;
-            text-align: left; font-size: 14px;
-        }
-        th { background: #fafafa; font-weight: 600; }
+
         .top-bar {
-            display: flex; justify-content: space-between; align-items: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
         }
+
+        .top-bar h1 {
+            font-size: 28px;
+            color: #2d3748;
+            font-weight: 600;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        th {
+            background: #f7fafc;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        tbody tr:hover {
+            background: #f7fafc;
+        }
+
         .btn {
-            display: inline-block; padding: 8px 14px;
-            border-radius: 4px; text-decoration: none;
-            font-size: 14px; border: none; cursor: pointer;
+            display: inline-block;
+            padding: 8px 16px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
         }
+
         .btn-primary {
-            background: #007bff; color: #fff;
+            background: #667eea;
+            color: #fff;
         }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
         .btn-secondary {
-            background: #6c757d; color: #fff;
+            background: #718096;
+            color: #fff;
         }
+
+        .btn-secondary:hover {
+            background: #4a5568;
+        }
+
         .tag {
             display: inline-block;
-            padding: 2px 6px;
-            border-radius: 3px;
+            padding: 4px 8px;
             background: #e3f2fd;
             font-size: 12px;
             margin-right: 4px;
         }
+
         .badge {
             display: inline-block;
-            padding: 2px 6px;
-            border-radius: 3px;
+            padding: 4px 8px;
             font-size: 12px;
-            background: #eee;
+            font-weight: 500;
+            margin-right: 4px;
         }
-        .badge-admin { background: #d4edda; color: #155724; }
-        .badge-user { background: #cfe2ff; color: #084298; }
 
-        /* ============ MODAL CSS ============ */
+        .badge-admin {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-user {
+            background: #cfe2ff;
+            color: #084298;
+        }
+
+        /* ========== MODAL ========== */
         .modal-backdrop {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.4);
+            background: rgba(0, 0, 0, 0.5);
             justify-content: center;
             align-items: center;
-            z-index: 999;
+            z-index: 1000;
         }
+
         .modal {
             background: #fff;
-            border-radius: 8px;
-            padding: 20px;
+            padding: 24px;
             max-width: 600px;
-            width: 100%;
+            width: 90%;
             max-height: 90vh;
             overflow-y: auto;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
         }
+
         .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 12px;
+            margin-bottom: 20px;
         }
+
+        .modal-header h2 {
+            font-size: 20px;
+            color: #2d3748;
+        }
+
         .modal-body {
-            max-height: 70vh;
-            overflow-y: auto;
+            margin-bottom: 20px;
         }
+
         .modal-footer {
             display: flex;
             justify-content: flex-end;
             gap: 8px;
-            margin-top: 12px;
         }
+
         .field {
-            margin-bottom: 10px;
+            margin-bottom: 16px;
         }
+
         .field label {
             display: block;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
             font-weight: 600;
+            color: #2d3748;
+            font-size: 14px;
         }
+
         .field input[type="text"],
         .field input[type="email"],
         .field input[type="password"],
-        .field textarea {
+        .field textarea,
+        .field select {
             width: 100%;
-            padding: 6px 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+            padding: 8px 12px;
+            border: 1px solid #cbd5e0;
             font-size: 14px;
             box-sizing: border-box;
         }
+
         .field input[type="checkbox"] {
             margin-right: 6px;
         }
-        .field select {
-            width: 100%;
-            padding: 6px 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 14px;
-            box-sizing: border-box;
-        }
+
         .avatar {
             width: 40px;
             height: 40px;
@@ -124,6 +293,7 @@
             object-fit: cover;
             vertical-align: middle;
         }
+
         .avatar-placeholder {
             width: 40px;
             height: 40px;
@@ -137,6 +307,7 @@
             font-weight: 600;
             vertical-align: middle;
         }
+
         .avatar-large {
             width: 80px;
             height: 80px;
@@ -145,6 +316,7 @@
             display: block;
             margin: 0 auto;
         }
+
         .avatar-placeholder-large {
             width: 80px;
             height: 80px;
@@ -158,81 +330,151 @@
             font-weight: 600;
             margin: 0 auto;
         }
+
         .avatar-container {
             text-align: center;
             margin-bottom: 16px;
         }
+
         .help-text {
             font-size: 12px;
-            color: #666;
+            color: #718096;
             margin-top: 4px;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
         }
     </style>
 </head>
 <body>
-<div class="container">
-    <div class="top-bar">
-        <h1>Danh sách người dùng</h1>
-        <!-- Nút mở modal ADD -->
-        <button type="button" class="btn btn-primary" onclick="openAddModal()">
-            + Thêm người dùng
-        </button>
+<!-- ========== SIDEBAR ========== -->
+<aside class="sidebar">
+    <div class="user-profile">
+        <div class="user-avatar" th:text="${#strings.isEmpty(displayName) ? 'U' : displayName.substring(0,1).toUpperCase()}">U</div>
+        <div class="user-info">
+            <h3 th:text="${#strings.isEmpty(displayName) ? 'User' : displayName}">User Name</h3>
+            <p th:text="${uid != null ? (uid.length() > 15 ? uid.substring(0,15) + '...' : uid) : 'user@email.com'}">user@gmail.com</p>
+        </div>
     </div>
 
-    <table>
-        <thead>
-        <tr>
-            <th>Avatar</th>
-            <th>Email</th>
-            <th>Tên hiển thị</th>
-            <th>Vai trò</th>
-            <th>Ngày tạo</th>
-            <th>Đăng nhập cuối</th>
-            <th>Chi tiết</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:if="${#lists.isEmpty(users)}">
-            <td colspan="7">Chưa có người dùng nào.</td>
-        </tr>
-        <tr th:each="user : ${users}">
-            <td>
-                <img th:if="${user.photoURL}" 
-                     th:src="${user.photoURL}" 
-                     class="avatar" 
-                     alt="Avatar">
-                <div th:unless="${user.photoURL}" 
-                     class="avatar-placeholder"
-                     th:text="${#strings.substring(user.email ?: 'U', 0, 1).toUpperCase()}">
-                    U
-                </div>
-            </td>
-            <td th:text="${user.email}">user@example.com</td>
-            <td th:text="${user.displayName ?: 'N/A'}">John Doe</td>
-            <td>
-                <span th:each="role : ${user.roles}"
-                      th:classappend="${role == 'ADMIN' ? 'badge badge-admin' : 'badge badge-user'}"
-                      th:text="${role}">USER</span>
-            </td>
-            <td th:text="${user.createdAt > 0 ? #dates.format(new java.util.Date(user.createdAt), 'dd/MM/yyyy HH:mm') : 'N/A'}">01/01/2024</td>
-            <td th:text="${user.lastLoginAt > 0 ? #dates.format(new java.util.Date(user.lastLoginAt), 'dd/MM/yyyy HH:mm') : 'Chưa đăng nhập'}">01/01/2024</td>
-            <td>
-                <!-- Nút mở DETAIL modal, gắn uid vào data-uid -->
-                <button type="button"
-                        class="btn btn-primary"
-                        th:attr="data-uid=${user.uid}"
-                        onclick="openDetailModal(this)">
-                    Chi tiết
-                </button>
-            </td>
-        </tr>
-        </tbody>
-    </table>
+    <button class="create-btn-sidebar" onclick="alert('Tính năng đang phát triển')">
+        <span>+</span> Create New
+    </button>
 
-    <p style="margin-top:16px;">
-        <a href="/admin/dashboard">&larr; Quay lại Dashboard</a>
-    </p>
-</div>
+    <ul class="nav-menu">
+        <li class="nav-item">
+            <a href="/admin/dashboard" class="nav-link">
+                Dashboard
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/admin/profile" class="nav-link">
+                Profile
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/admin/exercises" class="nav-link">
+                Exercises
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/admin/workouts" class="nav-link">
+                Workouts
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/admin/collections" class="nav-link">
+                Collections
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/admin/users" class="nav-link active">
+                Users
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/admin/community" class="nav-link">
+                Community
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/me" class="nav-link" target="_blank">
+                JSON Info
+            </a>
+        </li>
+    </ul>
+</aside>
+
+<!-- ========== MAIN CONTENT ========== -->
+<main class="main-content">
+    <div class="container">
+        <div class="top-bar">
+            <h1>Danh sách người dùng</h1>
+            <button type="button" class="btn btn-primary" onclick="openAddModal()">
+                + Thêm người dùng
+            </button>
+        </div>
+
+        <table>
+            <thead>
+            <tr>
+                <th>Avatar</th>
+                <th>Email</th>
+                <th>Tên hiển thị</th>
+                <th>Vai trò</th>
+                <th>Ngày tạo</th>
+                <th>Đăng nhập cuối</th>
+                <th>Chi tiết</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:if="${#lists.isEmpty(users)}">
+                <td colspan="7">Chưa có người dùng nào.</td>
+            </tr>
+            <tr th:each="user : ${users}">
+                <td>
+                    <img th:if="${user.photoURL}"
+                         th:src="${user.photoURL}"
+                         class="avatar"
+                         alt="Avatar">
+                    <div th:unless="${user.photoURL}"
+                         class="avatar-placeholder"
+                         th:text="${#strings.substring(user.email ?: 'U', 0, 1).toUpperCase()}">
+                        U
+                    </div>
+                </td>
+                <td th:text="${user.email}">user@example.com</td>
+                <td th:text="${user.displayName ?: 'N/A'}">John Doe</td>
+                <td>
+                        <span th:each="role : ${user.roles}"
+                              th:classappend="${role == 'ADMIN' ? 'badge badge-admin' : 'badge badge-user'}"
+                              th:text="${role}">USER</span>
+                </td>
+                <td th:text="${user.createdAt > 0 ? #dates.format(new java.util.Date(user.createdAt), 'dd/MM/yyyy HH:mm') : 'N/A'}">01/01/2024</td>
+                <td th:text="${user.lastLoginAt > 0 ? #dates.format(new java.util.Date(user.lastLoginAt), 'dd/MM/yyyy HH:mm') : 'Chưa đăng nhập'}">01/01/2024</td>
+                <td>
+                    <button type="button"
+                            class="btn btn-primary"
+                            th:attr="data-uid=${user.uid}"
+                            onclick="openDetailModal(this)">
+                        Chi tiết
+                    </button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
 
 <!-- ============ MODAL THÊM NGƯỜI DÙNG ============ -->
 <div id="addModalBackdrop" class="modal-backdrop">
@@ -367,15 +609,14 @@
             return;
         }
 
-        // Build request object
         const roleValue = form.role.value || 'user';
-        const active = form.active.checked; // Get checkbox value
+        const active = form.active.checked;
 
         const request = {
             email: email,
             password: password,
             displayName: form.displayName.value.trim() || null,
-            roles: [roleValue], // Keep lowercase
+            roles: [roleValue],
             active: active
         };
 
@@ -394,7 +635,6 @@
                 return;
             }
 
-            // Success -> reload page to see new user
             window.location.reload();
         } catch (e) {
             console.error(e);
@@ -419,7 +659,6 @@
             const user = await resp.json();
             const form = document.getElementById('detailForm');
 
-            // Format dates
             const formatDate = (timestamp) => {
                 if (!timestamp || timestamp === 0) return 'Chưa đăng nhập';
                 const date = new Date(timestamp);
@@ -432,12 +671,10 @@
                 });
             };
 
-            // Fill form fields
             form.uid.value = user.uid || uid;
             form.email.value = user.email || '';
             form.displayName.value = user.displayName || '';
-            
-            // Display avatar
+
             const avatarImg = document.getElementById('detailAvatar');
             const avatarPlaceholder = document.getElementById('detailAvatarPlaceholder');
             if (user.photoURL) {
@@ -450,19 +687,16 @@
                 avatarPlaceholder.style.display = 'flex';
                 avatarImg.style.display = 'none';
             }
-            
-            // Set role dropdown - use first role or default to USER
+
             const userRoles = user.roles || [];
             const primaryRole = userRoles.length > 0 ? userRoles[0] : 'USER';
-            form.role.value = primaryRole.toLowerCase(); // Convert to lowercase to match dropdown values
-            
-            // Set active checkbox - default to true if not specified
+            form.role.value = primaryRole.toLowerCase();
+
             form.active.checked = user.active !== undefined ? user.active : true;
-            
+
             form.createdAt.value = formatDate(user.createdAt);
             form.lastLoginAt.value = formatDate(user.lastLoginAt);
 
-            // Show modal
             document.getElementById('detailModalBackdrop').style.display = 'flex';
         } catch (e) {
             console.error(e);
@@ -475,7 +709,6 @@
         document.getElementById('detailModalBackdrop').style.display = 'none';
     }
 
-    // Update roles and active status
     async function submitUpdate() {
         const form = document.getElementById('detailForm');
         const msg = document.getElementById('detailMessage');
@@ -488,11 +721,10 @@
         }
 
         const roleValue = form.role.value || 'user';
-        const roles = [roleValue]; // Keep lowercase
+        const roles = [roleValue];
         const active = form.active.checked;
 
         try {
-            // Update roles
             const rolesResp = await fetch('/api/admin/users/' + uid + '/roles', {
                 method: 'PATCH',
                 headers: {
@@ -506,7 +738,6 @@
                 return;
             }
 
-            // Update active status
             const activeResp = await fetch('/api/admin/users/' + uid + '/active', {
                 method: 'PATCH',
                 headers: {
@@ -522,8 +753,7 @@
 
             msg.style.color = 'green';
             msg.textContent = 'Cập nhật thành công!';
-            
-            // Reload after a short delay
+
             setTimeout(() => {
                 window.location.reload();
             }, 1000);
@@ -537,4 +767,3 @@
 
 </body>
 </html>
-
