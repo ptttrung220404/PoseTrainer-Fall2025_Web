@@ -98,7 +98,15 @@ public class AdminPageController {
     }
 
     @GetMapping("/community")
-    public String showCommunityList(Model model) throws ExecutionException, InterruptedException {
+    public String showCommunityPosts(Authentication auth, Model model,
+                                     @ModelAttribute(value = "displayName") String displayName)
+            throws ExecutionException, InterruptedException {
+
+        if (auth != null) {
+            model.addAttribute("uid", auth.getName());
+            model.addAttribute("displayName", displayName != null && !displayName.isEmpty() ? displayName : "Admin");
+        }
+
         model.addAttribute("posts", communityService.getAll());
         return "community-list";
     }
