@@ -559,38 +559,7 @@
             </button>
         </div>
 
-        <table>
-            <thead>
-            <tr>
-                <th>Title</th>
-                <th>Category</th>
-                <th>Public?</th>
-                <th>#Workouts</th>
-                <th>UpdatedAt</th>
-                <th>Actions</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:if="${#lists.isEmpty(collections)}">
-                <td colspan="6" style="text-align: center; color: #718096; padding: 24px;">
-                    Chưa có collection nào. Hãy tạo collection đầu tiên!
-                </td>
-            </tr>
-            <tr th:each="c : ${collections}">
-                <td th:text="${c.title}">Title</td>
-                <td><span class="badge" th:text="${c.category ?: 'N/A'}" style="background: #e2e8f0; color: #2d3748;">Category</span></td>
-                <td>
-                    <span th:if="${c.isPublic}" class="badge" style="background:#d4edda; color:#155724">✓ Public</span>
-                    <span th:unless="${c.isPublic}" class="badge" style="background:#f8d7da; color:#721c24">✕ Private</span>
-                </td>
-                <td th:text="${#lists.size(c.workoutTemplateIds ?: {})}">0</td>
-                <td th:text="${c.updatedAt > 0 ? #dates.format(new java.util.Date(c.updatedAt), 'dd/MM/yyyy HH:mm') : '-'}">-</td>
-                <td>
-                    <button class="btn btn-primary small" th:attr="onclick='openDetailModal(\'' + ${c.id} + '\')'">Chi tiết</button>
-                </td>
-            </tr>
-            </tbody>
-        </table>
+
 
         <p class="muted" style="margin-top:16px;">Tip: Click "Chi tiết" để mở modal sửa, upload thumbnail, chọn workout items.</p>
         <form class="row g-2 align-items-center mb-3" method="get">
@@ -682,63 +651,6 @@
     <p class="muted" style="margin-top:12px;">Tip: Click "Chi tiết" để mở modal sửa, upload thumbnail, chọn workout
         items.</p>
 </div>
-
-<!-- ADD COLLECTION MODAL -->
-<div id="addModal" class="modal-backdrop">
-    <div class="modal" role="dialog" aria-modal="true">
-        <div class="modal-header">
-            <h3>Thêm Collection</h3>
-            <button class="btn" onclick="closeAddModal()">✕</button>
-        </div>
-        <div class="modal-body">
-            <form id="addForm">
-                <div class="field">
-                    <label>Title</label>
-                    <input type="text" name="title" required>
-                </div>
-                <div class="field">
-                    <label>Slug (id) — optional</label>
-                    <input type="text" name="slug" placeholder="auto nếu bỏ trống">
-                </div>
-                <div class="field">
-                    <label>Description</label>
-                    <textarea name="description"></textarea>
-                </div>
-                <div class="field">
-                    <label>Category</label>
-                    <input type="text" name="category">
-                </div>
-                <!-- Workouts select + table -->
-                <div style="margin-top:10px; display:flex; gap:8px; align-items:center;"><select id="addWorkoutSelect"
-                                                                                                 style="flex:1">
-                    <!-- populated from workoutsList --> </select>
-                    <button type="button" class="btn btn-primary small" onclick="addWorkoutInAddModal()">+ Thêm</button>
-                </div>
-                <table class="items-table" id="addWorkoutTable" style="margin-top:12px;">
-                    <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Workout</th>
-                        <th>Action</th>
-                    </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-                <div class="field"><label>Thumbnail (ảnh)</label> <input type="file" id="addThumbnail" accept="image/*"
-                                                                         onchange="previewThumb('add')">
-                    <div><img id="addPreviewThumb" class="preview-thumb" style="display:none;"></div>
-                </div>
-                <div class="field"><label>Public?</label> <input type="checkbox" name="isPublic" checked></div>
-                <div class="field"><label>Tags (comma separated)</label> <input type="text" name="tags"></div>
-                <div id="addError" class="muted" style="color:red"></div>
-            </form>
-        </div>
-        <div class="modal-footer">
-            <button class="btn" onclick="closeAddModal()">Hủy</button>
-            <button class="btn btn-success" onclick="submitAddCollection()">Lưu</button>
-        </div>
-    </div>
-
     <!-- ADD COLLECTION MODAL -->
     <div id="addModal" class="modal-backdrop">
         <div class="modal">

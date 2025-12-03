@@ -538,6 +538,7 @@
                 padding: 8px;
             }
         }
+        }
     </style>
 </head>
 <body>
@@ -591,10 +592,7 @@
             </tr>
             </thead>
             <tbody>
-            <tr th:if="${#lists.isEmpty(users)}">
-                <td colspan="8" style="text-align: center; color: #718096; padding: 24px;">
-                    Chưa có người dùng nào. Hãy tạo người dùng đầu tiên!
-                </td>
+
             <tr th:if="${userPage.totalItems == 0}">
                 <td colspan="7">Chưa có người dùng nào.</td>
             </tr>

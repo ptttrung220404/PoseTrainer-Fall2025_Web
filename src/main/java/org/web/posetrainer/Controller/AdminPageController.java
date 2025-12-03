@@ -204,7 +204,7 @@ public class AdminPageController {
         return "user-profile";
     }
 
-}
+
     private List<Excercise> filterAndSortExercises(List<Excercise> source, String keyword, String sort) {
         SortOption option = resolveSort(sort, "updated", "desc");
         Comparator<Excercise> comparator = switch (option.field()) {
