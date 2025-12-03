@@ -435,9 +435,6 @@
             <button class="btn btn-success" onclick="openAddModal()">+ Thêm Collection</button>
         </div>
 
-
-
-        <p class="muted" style="margin-top:16px;">Tip: Click "Chi tiết" để mở modal sửa, upload thumbnail, chọn workout items.</p>
         <form class="row g-2 align-items-center mb-3" method="get">
             <input type="hidden" name="page" value="1">
             <input type="hidden" name="size" th:value="${collectionsPage.size}">
@@ -527,80 +524,96 @@
     <p class="muted" style="margin-top:12px;">Tip: Click "Chi tiết" để mở modal sửa, upload thumbnail, chọn workout
         items.</p>
 </div>
-    <!-- ADD COLLECTION MODAL -->
-    <div id="addModal" class="modal-backdrop">
-        <div class="modal">
-            <div class="modal-header">
-                <h3>Thêm Collection Mới</h3>
-                <button class="btn-close" onclick="closeAddModal()">✕</button>
-            </div>
 
-            <div class="modal-body">
-                <form id="addForm">
-                    <div class="form-grid">
-                        <div class="field form-grid-full">
-                            <label>Title *</label>
-                            <input type="text" name="title" placeholder="Nhập tên collection" required>
-                        </div>
+<!-- ADD COLLECTION MODAL -->
+<div id="addModal" class="modal-backdrop">
+    <div class="modal" role="dialog" aria-modal="true">
+        <div class="modal-header">
+            <h3>Thêm Collection</h3>
+            <button class="btn" onclick="closeAddModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <form id="addForm">
+                <div class="field">
+                    <label>Title</label>
+                    <input type="text" name="title" required>
+                </div>
+                <div class="field">
+                    <label>Slug (id) — optional</label>
+                    <input type="text" name="slug" placeholder="auto nếu bỏ trống">
+                </div>
+                <div class="field">
+                    <label>Description</label>
+                    <textarea name="description"></textarea>
+                </div>
+                <div class="field">
+                    <label>Category</label>
+                    <input type="text" name="category">
+                </div>
+                <!-- Workouts select + table -->
+                <div style="margin-top:10px; display:flex; gap:8px; align-items:center;"><select id="addWorkoutSelect"
+                                                                                                 style="flex:1">
+                    <!-- populated from workoutsList --> </select>
+                    <button type="button" class="btn btn-primary small" onclick="addWorkoutInAddModal()">+ Thêm</button>
+                </div>
+                <table class="items-table" id="addWorkoutTable" style="margin-top:12px;">
+                    <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Workout</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                <div class="field"><label>Thumbnail (ảnh)</label> <input type="file" id="addThumbnail" accept="image/*"
+                                                                         onchange="previewThumb('add')">
+                    <div><img id="addPreviewThumb" class="preview-thumb" style="display:none;"></div>
+                </div>
+                <div class="field"><label>Public?</label> <input type="checkbox" name="isPublic" checked></div>
+                <div class="field"><label>Tags (comma separated)</label> <input type="text" name="tags"></div>
+                <div id="addError" class="muted" style="color:red"></div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn" onclick="closeAddModal()">Hủy</button>
+            <button class="btn btn-success" onclick="submitAddCollection()">Lưu</button>
+        </div>
+    </div>
+</div>
 
-                        <div class="field">
-                            <label>Slug (ID)</label>
-                            <input type="text" name="slug" placeholder="auto nếu bỏ trống">
-                        </div>
-
-                        <div class="field">
-                            <label>Category</label>
-                            <input type="text" name="category" placeholder="VD: Beginner, Weight Loss...">
-                        </div>
-
-                        <div class="field form-grid-full">
-                            <label>Description</label>
-                            <textarea name="description" placeholder="Mô tả chi tiết về collection..."></textarea>
-                        </div>
-
-                        <div class="field">
-                            <label>Tags (comma separated)</label>
-                            <input type="text" name="tags" placeholder="beginner, fitness, home-workout">
-                        </div>
-
-                        <div class="field">
-                            <label>Public Status</label>
-                            <div class="checkbox-wrapper">
-                                <input type="checkbox" name="isPublic" id="addIsPublic" checked>
-                                <label for="addIsPublic" style="margin: 0; font-weight: normal;">Công khai cho mọi người</label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <hr class="section-divider">
-
-                    <h4 class="section-title">Thumbnail</h4>
-                    <div class="field">
-                        <label>Upload Thumbnail *</label>
-                        <input type="file" id="addThumbnail" accept="image/*" onchange="previewThumb('add')" required>
-                        <div class="thumbnail-container">
-                            <img id="addPreviewThumb" class="preview-thumb" style="display:none;">
-                            <p class="muted" id="addThumbPlaceholder">Chưa có ảnh. Vui lòng chọn file.</p>
-                        </div>
-                    </div>
-
-                    <hr class="section-divider">
-
-                    <h4 class="section-title">Danh sách Workouts</h4>
-
-                    <div class="workout-selector">
-                        <div class="workout-inputs">
-                            <div class="field" style="flex: 3;">
-                                <label>Chọn Workout</label>
-                                <select id="addWorkoutSelect">
-                                    <option value="">-- Chọn workout để thêm --</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label>&nbsp;</label>
-                                <button type="button" class="btn btn-primary" onclick="addWorkoutInAddModal()">+ Thêm</button>
-                            </div>
-                        </div>
+<!-- DETAIL / EDIT COLLECTION MODAL -->
+<div id="detailModal" class="modal-backdrop">
+    <div class="modal" role="dialog" aria-modal="true">
+        <div class="modal-header">
+            <h3>Chi tiết / Sửa Collection</h3>
+            <button class="btn" onclick="closeDetailModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <form id="detailForm">
+                <input type="hidden" name="id">
+                <div class="field">
+                    <label>Title</label>
+                    <input type="text" name="title">
+                </div>
+                <div class="field">
+                    <label>Slug (id)</label>
+                    <input type="text" name="slug" readonly>
+                </div>
+                <div class="field">
+                    <label>Description</label>
+                    <textarea name="description"></textarea>
+                </div>
+                <div class="field">
+                    <label>Category</label>
+                    <input type="text" name="category">
+                </div>
+                <div class="field">
+                    <label>Workouts (chọn nhiều)</label>
+                    <div style="margin-top:10px; display:flex; gap:8px; align-items:center;"><select
+                            id="detailWorkoutSelect" style="flex:1"> <!-- populated from workoutsList --> </select>
+                        <button type="button" class="btn btn-primary small" onclick="addWorkoutInDetailModal()">+ Thêm
+                        </button>
                     </div>
                     <table class="items-table" id="detailWorkoutTable" style="margin-top:12px;">
                         <thead>
