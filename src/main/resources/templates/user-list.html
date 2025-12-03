@@ -8,6 +8,7 @@
           crossorigin="anonymous">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Danh sách người dùng - Admin Panel</title>
+    <th:block th:replace="~{layouts/main :: styles}"></th:block>
     <style>
         * {
             margin: 0;
@@ -22,100 +23,6 @@
             min-height: 100vh;
         }
 
-        /* ========== SIDEBAR ========== */
-        .sidebar {
-            width: 240px;
-            background: #fff;
-            border-right: 1px solid #e0e0e0;
-            padding: 20px;
-            position: fixed;
-            height: 100vh;
-            overflow-y: auto;
-        }
-
-        .user-profile {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 24px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #e0e0e0;
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            background: #667eea;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 600;
-            font-size: 16px;
-        }
-
-        .user-info h3 {
-            font-size: 14px;
-            color: #2d3748;
-            margin-bottom: 2px;
-            font-weight: 600;
-        }
-
-        .user-info p {
-            font-size: 12px;
-            color: #718096;
-            word-break: break-all;
-        }
-
-        .create-btn-sidebar {
-            width: 100%;
-            padding: 12px;
-            background: #4299e1;
-            color: white;
-            border: none;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            margin-bottom: 24px;
-            transition: background 0.3s;
-        }
-
-        .create-btn-sidebar:hover {
-            background: #3182ce;
-        }
-
-        .nav-menu {
-            list-style: none;
-        }
-
-        .nav-item {
-            margin-bottom: 2px;
-        }
-
-        .nav-link {
-            display: block;
-            padding: 12px 16px;
-            color: #4a5568;
-            text-decoration: none;
-            transition: all 0.2s;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        .nav-link:hover {
-            background: #f7fafc;
-            color: #2d3748;
-        }
-
-        .nav-link.active {
-            background: #667eea;
-            color: white;
-        }
-
         /* ========== MAIN CONTENT ========== */
         .main-content {
             margin-left: 240px;
@@ -124,9 +31,10 @@
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             background: #fff;
             padding: 24px;
+            border-radius: 12px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
@@ -167,12 +75,19 @@
 
         .btn {
             display: inline-block;
-            padding: 8px 16px;
+            padding: 10px 20px;
             border: none;
+            border-radius: 6px;
             cursor: pointer;
             font-size: 14px;
             font-weight: 500;
             transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
         .btn-primary {
@@ -184,6 +99,24 @@
             background: #5568d3;
         }
 
+        .btn-success {
+            background: #48bb78;
+            color: #fff;
+        }
+
+        .btn-success:hover {
+            background: #38a169;
+        }
+
+        .btn-danger {
+            background: #f56565;
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            background: #e53e3e;
+        }
+
         .btn-secondary {
             background: #718096;
             color: #fff;
@@ -193,17 +126,15 @@
             background: #4a5568;
         }
 
-        .tag {
-            display: inline-block;
-            padding: 4px 8px;
-            background: #e3f2fd;
+        .small {
             font-size: 12px;
-            margin-right: 4px;
+            padding: 6px 12px;
         }
 
         .badge {
             display: inline-block;
-            padding: 4px 8px;
+            padding: 4px 10px;
+            border-radius: 4px;
             font-size: 12px;
             font-weight: 500;
             margin-right: 4px;
@@ -219,56 +150,191 @@
             color: #084298;
         }
 
-        /* ========== MODAL ========== */
+        .badge-active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        /* AVATAR STYLES */
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            vertical-align: middle;
+            border: 2px solid #e2e8f0;
+        }
+
+        .avatar-placeholder {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #c5c6ca 0%, #303f7a 100%);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            vertical-align: middle;
+        }
+
+        .avatar-large {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            display: block;
+            margin: 0 auto;
+            border: 4px solid #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .avatar-placeholder-large {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 40px;
+            font-weight: 600;
+            margin: 0 auto;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .avatar-container {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        /* MODAL - IMPROVED DESIGN */
         .modal-backdrop {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.6);
             justify-content: center;
             align-items: center;
             z-index: 1000;
+            backdrop-filter: blur(4px);
+            animation: fadeIn 0.2s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         .modal {
             background: #fff;
-            padding: 24px;
+            border-radius: 12px;
+            padding: 0;
             max-width: 600px;
             width: 90%;
             max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            padding: 24px 32px;
+            border-bottom: 1px solid #e2e8f0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
 
         .modal-header h2 {
+            font-size: 22px;
+            color: #fff;
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .modal-header .btn-close {
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-size: 20px;
-            color: #2d3748;
+            transition: all 0.2s;
+            padding: 0;
+        }
+
+        .modal-header .btn-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(90deg);
         }
 
         .modal-body {
-            margin-bottom: 20px;
+            padding: 32px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .modal-body::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .modal-body::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .modal-body::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 4px;
+        }
+
+        .modal-body::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0;
         }
 
         .modal-footer {
             display: flex;
             justify-content: flex-end;
-            gap: 8px;
+            gap: 12px;
+            padding: 20px 32px;
+            border-top: 1px solid #e2e8f0;
+            background: #f7fafc;
         }
 
+        /* FORM STYLING */
         .field {
-            margin-bottom: 16px;
+            margin-bottom: 20px;
         }
 
         .field label {
             display: block;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
             font-weight: 600;
             color: #2d3748;
             font-size: 14px;
@@ -280,72 +346,101 @@
         .field textarea,
         .field select {
             width: 100%;
-            padding: 8px 12px;
-            border: 1px solid #cbd5e0;
+            padding: 10px 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
             font-size: 14px;
-            box-sizing: border-box;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .field input[type="text"]:focus,
+        .field input[type="email"]:focus,
+        .field input[type="password"]:focus,
+        .field textarea:focus,
+        .field select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .field input[type="text"][readonly] {
+            background: #f7fafc;
+            cursor: not-allowed;
         }
 
         .field input[type="checkbox"] {
-            margin-right: 6px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            margin-right: 8px;
         }
 
-        .avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            object-fit: cover;
-            vertical-align: middle;
-        }
-
-        .avatar-placeholder {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #e0e0e0;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            color: #666;
-            font-size: 16px;
-            font-weight: 600;
-            vertical-align: middle;
-        }
-
-        .avatar-large {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            object-fit: cover;
-            display: block;
-            margin: 0 auto;
-        }
-
-        .avatar-placeholder-large {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            background: #e0e0e0;
+        .checkbox-wrapper {
             display: flex;
             align-items: center;
-            justify-content: center;
-            color: #666;
-            font-size: 32px;
-            font-weight: 600;
-            margin: 0 auto;
-        }
-
-        .avatar-container {
-            text-align: center;
-            margin-bottom: 16px;
+            gap: 8px;
+            padding: 12px;
+            background: #f7fafc;
+            border-radius: 6px;
+            border: 2px solid #e2e8f0;
         }
 
         .help-text {
-            font-size: 12px;
+            font-size: 13px;
             color: #718096;
-            margin-top: 4px;
+            margin-top: 6px;
         }
 
+        /* ERROR/SUCCESS MESSAGE */
+        .message {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-top: 16px;
+            font-size: 14px;
+        }
+
+        .message.error {
+            background: #fed7d7;
+            color: #c53030;
+            border-left: 4px solid #f56565;
+        }
+
+        .message.success {
+            background: #c6f6d5;
+            color: #22543d;
+            border-left: 4px solid #48bb78;
+        }
+
+        /* USER INFO GRID */
+        .user-info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .info-item {
+            background: #f7fafc;
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 3px solid #667eea;
+        }
+
+        .info-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .info-value {
+            font-size: 14px;
+            color: #2d3748;
+            font-weight: 500;
+        }
         .pagination-bar {
             display: flex;
             flex-wrap: wrap;
@@ -400,78 +495,60 @@
                 position: relative;
             }
 
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
             .main-content {
                 margin-left: 0;
                 padding: 20px;
+            }
+
+            .modal {
+                width: 95%;
+                max-height: 95vh;
+            }
+
+            .modal-body {
+                padding: 20px;
+            }
+
+            .modal-header,
+            .modal-footer {
+                padding: 16px 20px;
+            }
+
+            .top-bar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .top-bar .btn {
+                width: 100%;
+            }
+
+            .user-info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            th, td {
+                padding: 8px;
             }
         }
     </style>
 </head>
 <body>
-<!-- ========== SIDEBAR ========== -->
-<aside class="sidebar">
-    <div class="user-profile">
-        <div class="user-avatar" th:text="${#strings.isEmpty(displayName) ? 'U' : displayName.substring(0,1).toUpperCase()}">U</div>
-        <div class="user-info">
-            <h3 th:text="${#strings.isEmpty(displayName) ? 'User' : displayName}">User Name</h3>
-            <p th:text="${uid != null ? (uid.length() > 15 ? uid.substring(0,15) + '...' : uid) : 'user@email.com'}">user@gmail.com</p>
-        </div>
-    </div>
-
-    <button class="create-btn-sidebar" onclick="alert('Tính năng đang phát triển')">
-        <span>+</span> Create New
-    </button>
-
-    <ul class="nav-menu">
-        <li class="nav-item">
-            <a href="/admin/dashboard" class="nav-link">
-                Dashboard
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="/admin/profile" class="nav-link">
-                Profile
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="/admin/exercises" class="nav-link">
-                Exercises
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="/admin/workouts" class="nav-link">
-                Workouts
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="/admin/collections" class="nav-link">
-                Collections
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="/admin/users" class="nav-link active">
-                Users
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="/admin/community" class="nav-link">
-                Community
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="/me" class="nav-link" target="_blank">
-                JSON Info
-            </a>
-        </li>
-    </ul>
-</aside>
+<div th:replace="~{layouts/main :: sidebar(displayName=${displayName}, uid=${uid}, currentPage='users')}"></div>
 
 <!-- ========== MAIN CONTENT ========== -->
 <main class="main-content">
     <div class="container">
         <div class="top-bar">
             <h1>Danh sách người dùng</h1>
-            <button type="button" class="btn btn-primary" onclick="openAddModal()">
+            <button type="button" class="btn btn-success" onclick="openAddModal()">
                 + Thêm người dùng
             </button>
         </div>
@@ -507,12 +584,17 @@
                 <th>Email</th>
                 <th>Tên hiển thị</th>
                 <th>Vai trò</th>
+                <th>Trạng thái</th>
                 <th>Ngày tạo</th>
                 <th>Đăng nhập cuối</th>
-                <th>Chi tiết</th>
+                <th>Actions</th>
             </tr>
             </thead>
             <tbody>
+            <tr th:if="${#lists.isEmpty(users)}">
+                <td colspan="8" style="text-align: center; color: #718096; padding: 24px;">
+                    Chưa có người dùng nào. Hãy tạo người dùng đầu tiên!
+                </td>
             <tr th:if="${userPage.totalItems == 0}">
                 <td colspan="7">Chưa có người dùng nào.</td>
             </tr>
@@ -531,15 +613,19 @@
                 <td th:text="${user.email}">user@example.com</td>
                 <td th:text="${user.displayName ?: 'N/A'}">John Doe</td>
                 <td>
-                        <span th:each="role : ${user.roles}"
-                              th:classappend="${role == 'ADMIN' ? 'badge badge-admin' : 'badge badge-user'}"
-                              th:text="${role}">USER</span>
+                    <span th:each="role : ${user.roles}"
+                          th:classappend="${role == 'ADMIN' ? 'badge badge-admin' : 'badge badge-user'}"
+                          th:text="${role}">USER</span>
+                </td>
+                <td>
+                    <span th:if="${user.active}" class="badge badge-active">Active</span>
+                    <span th:unless="${user.active}" class="badge badge-inactive">Inactive</span>
                 </td>
                 <td th:text="${user.createdAt > 0 ? #dates.format(new java.util.Date(user.createdAt), 'dd/MM/yyyy HH:mm') : 'N/A'}">01/01/2024</td>
                 <td th:text="${user.lastLoginAt > 0 ? #dates.format(new java.util.Date(user.lastLoginAt), 'dd/MM/yyyy HH:mm') : 'Chưa đăng nhập'}">01/01/2024</td>
                 <td>
                     <button type="button"
-                            class="btn btn-primary"
+                            class="btn btn-primary small"
                             th:attr="data-uid=${user.uid}"
                             onclick="openDetailModal(this)">
                         Chi tiết
@@ -588,45 +674,45 @@
 <div id="addModalBackdrop" class="modal-backdrop">
     <div class="modal">
         <div class="modal-header">
-            <h2>Thêm người dùng</h2>
-            <button class="btn btn-secondary" onclick="closeAddModal()">✕</button>
+            <h2>Thêm người dùng mới</h2>
+            <button class="btn-close" onclick="closeAddModal()">✕</button>
         </div>
         <div class="modal-body">
             <form id="addForm">
                 <div class="field">
                     <label>Email *</label>
-                    <input type="email" name="email" required>
+                    <input type="email" name="email" placeholder="user@example.com" required>
                 </div>
                 <div class="field">
                     <label>Mật khẩu *</label>
-                    <input type="password" name="password" required minlength="6">
-                    <div class="help-text">Tối thiểu 6 ký tự</div>
+                    <input type="password" name="password" placeholder="Tối thiểu 6 ký tự" required minlength="6">
+                    <div class="help-text">Mật khẩu phải có ít nhất 6 ký tự</div>
                 </div>
                 <div class="field">
                     <label>Tên hiển thị</label>
-                    <input type="text" name="displayName">
+                    <input type="text" name="displayName" placeholder="Nhập tên hiển thị">
                 </div>
                 <div class="field">
                     <label>Vai trò *</label>
                     <select name="role" required>
-                        <option value="user">USER</option>
-                        <option value="admin">ADMIN</option>
+                        <option value="user">USER - Người dùng thông thường</option>
+                        <option value="admin">ADMIN - Quản trị viên</option>
                     </select>
-                    <div class="help-text">Chọn vai trò cho người dùng</div>
+                    <div class="help-text">Chọn quyền truy cập cho người dùng</div>
                 </div>
                 <div class="field">
-                    <label>
-                        <input type="checkbox" name="active" checked>
-                        Tài khoản hoạt động
-                    </label>
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" name="active" id="addActive" checked>
+                        <label for="addActive" style="margin: 0; font-weight: normal;">Tài khoản hoạt động</label>
+                    </div>
                     <div class="help-text">Bỏ chọn để tạo tài khoản bị khóa</div>
                 </div>
             </form>
-            <div id="addMessage" style="color: red; margin-top: 8px;"></div>
+            <div id="addMessage" class="message error" style="display: none;"></div>
         </div>
         <div class="modal-footer">
             <button class="btn btn-secondary" onclick="closeAddModal()">Hủy</button>
-            <button class="btn btn-primary" onclick="submitAdd()">Lưu</button>
+            <button class="btn btn-success" onclick="submitAdd()">Tạo người dùng</button>
         </div>
     </div>
 </div>
@@ -636,14 +722,15 @@
     <div class="modal">
         <div class="modal-header">
             <h2>Chi tiết người dùng</h2>
-            <button class="btn btn-secondary" onclick="closeDetailModal()">✕</button>
+            <button class="btn-close" onclick="closeDetailModal()">✕</button>
         </div>
         <div class="modal-body">
+            <div class="avatar-container">
+                <img id="detailAvatar" class="avatar-large" style="display: none;" alt="Avatar">
+                <div id="detailAvatarPlaceholder" class="avatar-placeholder-large" style="display: none;">U</div>
+            </div>
+
             <form id="detailForm">
-                <div class="avatar-container">
-                    <img id="detailAvatar" class="avatar-large" style="display: none;" alt="Avatar">
-                    <div id="detailAvatarPlaceholder" class="avatar-placeholder-large" style="display: none;">U</div>
-                </div>
                 <div class="field">
                     <label>UID</label>
                     <input type="text" name="uid" readonly>
@@ -662,58 +749,79 @@
                         <option value="user">USER</option>
                         <option value="admin">ADMIN</option>
                     </select>
-                    <div class="help-text">Có thể cập nhật vai trò</div>
+                    <div class="help-text">Có thể cập nhật vai trò của người dùng</div>
                 </div>
                 <div class="field">
-                    <label>
-                        <input type="checkbox" name="active">
-                        Tài khoản hoạt động
-                    </label>
-                    <div class="help-text">Bỏ chọn để khóa tài khoản</div>
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" name="active" id="detailActive">
+                        <label for="detailActive" style="margin: 0; font-weight: normal;">Tài khoản hoạt động</label>
+                    </div>
+                    <div class="help-text">Bỏ chọn để khóa tài khoản người dùng</div>
                 </div>
-                <div class="field">
-                    <label>Ngày tạo</label>
-                    <input type="text" name="createdAt" readonly>
-                </div>
-                <div class="field">
-                    <label>Đăng nhập cuối</label>
-                    <input type="text" name="lastLoginAt" readonly>
+
+                <div class="user-info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Ngày tạo</div>
+                        <div class="info-value" id="createdAtDisplay">-</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Đăng nhập cuối</div>
+                        <div class="info-value" id="lastLoginAtDisplay">-</div>
+                    </div>
                 </div>
             </form>
-            <div id="detailMessage" style="color: red; margin-top: 8px;"></div>
+            <div id="detailMessage" class="message" style="display: none;"></div>
         </div>
         <div class="modal-footer">
             <button class="btn btn-secondary" onclick="closeDetailModal()">Đóng</button>
-            <button class="btn btn-primary" onclick="submitUpdate()">Lưu</button>
+            <button class="btn btn-primary" onclick="submitUpdate()">Lưu thay đổi</button>
         </div>
     </div>
 </div>
 
 <script>
+    function showMessage(elementId, message, isError = true) {
+        const el = document.getElementById(elementId);
+        if (!el) return;
+
+        el.textContent = message;
+        el.className = isError ? 'message error' : 'message success';
+        el.style.display = 'block';
+
+        if (!isError) {
+            setTimeout(() => {
+                el.style.display = 'none';
+            }, 3000);
+        }
+    }
+
     // ================== ADD MODAL ==================
     function openAddModal() {
         document.getElementById('addModalBackdrop').style.display = 'flex';
-        document.getElementById('addMessage').textContent = '';
         document.getElementById('addForm').reset();
+        const msg = document.getElementById('addMessage');
+        msg.style.display = 'none';
     }
+
     function closeAddModal() {
         document.getElementById('addModalBackdrop').style.display = 'none';
     }
 
     async function submitAdd() {
         const form = document.getElementById('addForm');
-        const msg = document.getElementById('addMessage');
-        msg.textContent = '';
+        const msgEl = document.getElementById('addMessage');
+        msgEl.style.display = 'none';
 
         const email = form.email.value.trim();
         const password = form.password.value.trim();
+
         if (!email || !password) {
-            msg.textContent = 'Email và mật khẩu là bắt buộc';
+            showMessage('addMessage', 'Email và mật khẩu là bắt buộc', true);
             return;
         }
 
         if (password.length < 6) {
-            msg.textContent = 'Mật khẩu tối thiểu 6 ký tự';
+            showMessage('addMessage', 'Mật khẩu phải có ít nhất 6 ký tự', true);
             return;
         }
 
@@ -739,27 +847,27 @@
 
             if (!resp.ok) {
                 const errorData = await resp.json().catch(() => ({}));
-                msg.textContent = 'Tạo người dùng thất bại: ' + (errorData.message || 'HTTP ' + resp.status);
+                showMessage('addMessage', 'Tạo người dùng thất bại: ' + (errorData.message || 'HTTP ' + resp.status), true);
                 return;
             }
 
             window.location.reload();
         } catch (e) {
             console.error(e);
-            msg.textContent = 'Có lỗi kết nối khi tạo người dùng';
+            showMessage('addMessage', 'Có lỗi kết nối khi tạo người dùng', true);
         }
     }
 
     // ================== DETAIL / EDIT MODAL ==================
     async function openDetailModal(btn) {
         const uid = btn.dataset.uid;
-        const msg = document.getElementById('detailMessage');
-        msg.textContent = '';
+        const msgEl = document.getElementById('detailMessage');
+        msgEl.style.display = 'none';
 
         try {
             const resp = await fetch('/api/admin/users/' + uid);
             if (!resp.ok) {
-                msg.textContent = 'Không tải được dữ liệu (HTTP ' + resp.status + ')';
+                showMessage('detailMessage', 'Không tải được dữ liệu (HTTP ' + resp.status + ')', true);
                 document.getElementById('detailModalBackdrop').style.display = 'flex';
                 return;
             }
@@ -768,7 +876,7 @@
             const form = document.getElementById('detailForm');
 
             const formatDate = (timestamp) => {
-                if (!timestamp || timestamp === 0) return 'Chưa đăng nhập';
+                if (!timestamp || timestamp === 0) return 'Chưa có dữ liệu';
                 const date = new Date(timestamp);
                 return date.toLocaleString('vi-VN', {
                     day: '2-digit',
@@ -802,13 +910,15 @@
 
             form.active.checked = user.active !== undefined ? user.active : true;
 
-            form.createdAt.value = formatDate(user.createdAt);
-            form.lastLoginAt.value = formatDate(user.lastLoginAt);
+            document.getElementById('createdAtDisplay').textContent = formatDate(user.createdAt);
+            document.getElementById('lastLoginAtDisplay').textContent = user.lastLoginAt && user.lastLoginAt > 0
+                ? formatDate(user.lastLoginAt)
+                : 'Chưa đăng nhập';
 
             document.getElementById('detailModalBackdrop').style.display = 'flex';
         } catch (e) {
             console.error(e);
-            msg.textContent = 'Có lỗi kết nối khi tải dữ liệu';
+            showMessage('detailMessage', 'Có lỗi kết nối khi tải dữ liệu', true);
             document.getElementById('detailModalBackdrop').style.display = 'flex';
         }
     }
@@ -819,12 +929,12 @@
 
     async function submitUpdate() {
         const form = document.getElementById('detailForm');
-        const msg = document.getElementById('detailMessage');
-        msg.textContent = '';
+        const msgEl = document.getElementById('detailMessage');
+        msgEl.style.display = 'none';
 
         const uid = form.uid.value;
         if (!uid) {
-            msg.textContent = 'Thiếu UID người dùng';
+            showMessage('detailMessage', 'Thiếu UID người dùng', true);
             return;
         }
 
@@ -842,7 +952,7 @@
             });
 
             if (!rolesResp.ok) {
-                msg.textContent = 'Cập nhật vai trò thất bại (HTTP ' + rolesResp.status + ')';
+                showMessage('detailMessage', 'Cập nhật vai trò thất bại (HTTP ' + rolesResp.status + ')', true);
                 return;
             }
 
@@ -855,20 +965,18 @@
             });
 
             if (!activeResp.ok) {
-                msg.textContent = 'Cập nhật trạng thái thất bại (HTTP ' + activeResp.status + ')';
+                showMessage('detailMessage', 'Cập nhật trạng thái thất bại (HTTP ' + activeResp.status + ')', true);
                 return;
             }
 
-            msg.style.color = 'green';
-            msg.textContent = 'Cập nhật thành công!';
+            showMessage('detailMessage', 'Cập nhật thành công!', false);
 
             setTimeout(() => {
                 window.location.reload();
-            }, 1000);
+            }, 1500);
         } catch (e) {
             console.error(e);
-            msg.style.color = 'red';
-            msg.textContent = 'Có lỗi kết nối khi cập nhật';
+            showMessage('detailMessage', 'Có lỗi kết nối khi cập nhật', true);
         }
     }
 </script>
