@@ -8,7 +8,6 @@
           crossorigin="anonymous">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản lý Bài đăng Cộng đồng - Admin Panel</title>
-    <th:block th:replace="~{layouts/main :: styles}"></th:block>
     <style>
         * {
             margin: 0;
@@ -458,10 +457,65 @@
             }
         }
     </style>
-    </style>
 </head>
 <body>
-<div th:replace="~{layouts/main :: sidebar(displayName=${displayName}, uid=${uid}, currentPage='community')}"></div>
+<!-- ========== SIDEBAR ========== -->
+<aside class="sidebar">
+    <div class="user-profile">
+        <div class="user-avatar" th:text="${#strings.isEmpty(displayName) ? 'U' : displayName.substring(0,1).toUpperCase()}">U</div>
+        <div class="user-info">
+            <h3 th:text="${#strings.isEmpty(displayName) ? 'User' : displayName}">User Name</h3>
+            <p th:text="${uid != null ? (uid.length() > 15 ? uid.substring(0,15) + '...' : uid) : 'user@email.com'}">user@gmail.com</p>
+        </div>
+    </div>
+
+    <button class="create-btn-sidebar" onclick="alert('Tính năng đang phát triển')">
+        <span>+</span> Create New
+    </button>
+
+    <ul class="nav-menu">
+        <li class="nav-item">
+            <a href="/admin/dashboard" class="nav-link">
+                Dashboard
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/admin/profile" class="nav-link">
+                Profile
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/admin/exercises" class="nav-link">
+                Exercises
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/admin/workouts" class="nav-link">
+                Workouts
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/admin/collections" class="nav-link">
+                Collections
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/admin/users" class="nav-link">
+                Users
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/admin/community" class="nav-link active">
+                Community
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/me" class="nav-link" target="_blank">
+                JSON Info
+            </a>
+        </li>
+    </ul>
+</aside>
 
 <!-- ========== MAIN CONTENT ========== -->
 <main class="main-content">
