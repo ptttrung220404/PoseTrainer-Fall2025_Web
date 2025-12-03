@@ -7,7 +7,6 @@
           integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4Dd3BTDjf4mxj9A5kHtQ/"
           crossorigin="anonymous">
     <title>Collections Manager</title>
-    <th:block th:replace="~{layouts/main :: styles}"></th:block>
     <style>
         * {
             margin: 0;
@@ -20,6 +19,100 @@
             background: #f5f5f5;
             display: flex;
             min-height: 100vh;
+        }
+
+        /* ========== SIDEBAR ========== */
+        .sidebar {
+            width: 240px;
+            background: #fff;
+            border-right: 1px solid #e0e0e0;
+            padding: 20px;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: #667eea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .user-info h3 {
+            font-size: 14px;
+            color: #2d3748;
+            margin-bottom: 2px;
+            font-weight: 600;
+        }
+
+        .user-info p {
+            font-size: 12px;
+            color: #718096;
+            word-break: break-all;
+        }
+
+        .create-btn-sidebar {
+            width: 100%;
+            padding: 12px;
+            background: #4299e1;
+            color: white;
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 24px;
+            transition: background 0.3s;
+        }
+
+        .create-btn-sidebar:hover {
+            background: #3182ce;
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin-bottom: 2px;
+        }
+
+        .nav-link {
+            display: block;
+            padding: 12px 16px;
+            color: #4a5568;
+            text-decoration: none;
+            transition: all 0.2s;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .nav-link:hover {
+            background: #f7fafc;
+            color: #2d3748;
+        }
+
+        .nav-link.active {
+            background: #667eea;
+            color: white;
         }
 
         /* ========== MAIN CONTENT ========== */
@@ -74,14 +167,12 @@
 
         .btn {
             display: inline-block;
-            padding: 10px 20px;
+            padding: 8px 16px;
             border: none;
-            border-radius: 6px;
             cursor: pointer;
             font-size: 14px;
             font-weight: 500;
             transition: all 0.2s;
-            text-decoration: none;
         }
 
         .btn-primary {
@@ -91,8 +182,6 @@
 
         .btn-primary:hover {
             background: #5568d3;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
         }
 
         .btn-success {
@@ -102,8 +191,6 @@
 
         .btn-success:hover {
             background: #38a169;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(72, 187, 120, 0.3);
         }
 
         .btn-warning {
@@ -113,8 +200,6 @@
 
         .btn-warning:hover {
             background: #dd6b20;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(237, 137, 54, 0.3);
         }
 
         .btn-danger {
@@ -124,8 +209,6 @@
 
         .btn-danger:hover {
             background: #e53e3e;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(245, 101, 101, 0.3);
         }
 
         .btn-secondary {
@@ -137,159 +220,67 @@
             background: #4a5568;
         }
 
-        .btn-light {
-            background: #e2e8f0;
-            color: #2d3748;
-        }
-
-        .btn-light:hover {
-            background: #cbd5e0;
-        }
-
         .small {
-            font-size: 12px;
-            padding: 6px 12px;
+            font-size: 13px;
+            padding: 6px 10px;
         }
 
         .badge {
             display: inline-block;
-            padding: 4px 10px;
-            border-radius: 4px;
+            padding: 4px 8px;
             font-size: 12px;
             font-weight: 500;
         }
 
-        /* MODAL - IMPROVED DESIGN */
         .modal-backdrop {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.6);
+            background: rgba(0, 0, 0, 0.5);
             justify-content: center;
             align-items: center;
             z-index: 1000;
-            backdrop-filter: blur(4px);
-            animation: fadeIn 0.2s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
         }
 
         .modal {
             background: #fff;
-            border-radius: 12px;
-            padding: 0;
-            max-width: 960px;
+            padding: 24px;
+            max-width: 880px;
             width: 90%;
             max-height: 90vh;
-            overflow: hidden;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            animation: slideUp 0.3s ease;
-            display: flex;
-            flex-direction: column;
-        }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
         }
 
         .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 24px 32px;
-            border-bottom: 1px solid #e2e8f0;
-            background: linear-gradient(135deg, #c5c6ca 0%, #303f7a 100%);
+            margin-bottom: 20px;
         }
 
         .modal-header h3 {
-            font-size: 22px;
-            color: #fff;
-            margin: 0;
-            font-weight: 600;
-        }
-
-        .modal-header .btn-close {
-            background: rgba(255, 255, 255, 0.2);
-            color: #fff;
-            border: none;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             font-size: 20px;
-            transition: all 0.2s;
-            padding: 0;
-        }
-
-        .modal-header .btn-close:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: rotate(90deg);
+            color: #2d3748;
         }
 
         .modal-body {
-            padding: 32px;
-            overflow-y: auto;
-            flex: 1;
-        }
-
-        .modal-body::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .modal-body::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-
-        .modal-body::-webkit-scrollbar-thumb {
-            background: #cbd5e0;
-            border-radius: 4px;
-        }
-
-        .modal-body::-webkit-scrollbar-thumb:hover {
-            background: #a0aec0;
+            margin-bottom: 20px;
         }
 
         .modal-footer {
             display: flex;
             justify-content: flex-end;
-            gap: 12px;
-            padding: 20px 32px;
-            border-top: 1px solid #e2e8f0;
-            background: #f7fafc;
-        }
-
-        /* FORM STYLING */
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 24px;
-        }
-
-        .form-grid-full {
-            grid-column: 1 / -1;
+            gap: 8px;
         }
 
         .field {
-            margin-bottom: 0;
+            margin-bottom: 16px;
         }
 
         .field label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             font-weight: 600;
             color: #2d3748;
             font-size: 14px;
@@ -297,126 +288,19 @@
 
         .field input[type="text"],
         .field input[type="number"],
-        .field input[type="file"],
         .field textarea,
         .field select {
             width: 100%;
-            padding: 10px 14px;
-            border: 2px solid #e2e8f0;
-            border-radius: 6px;
+            padding: 8px 12px;
+            border: 1px solid #cbd5e0;
             font-size: 14px;
-            transition: all 0.2s;
-            font-family: inherit;
         }
 
-        .field input[type="text"]:focus,
-        .field input[type="number"]:focus,
-        .field textarea:focus,
-        .field select:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .field textarea {
-            resize: vertical;
-            min-height: 80px;
-        }
-
-        .field input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-            margin-right: 8px;
-        }
-
-        .checkbox-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        /* SECTION DIVIDER */
-        .section-divider {
-            margin: 32px 0;
-            border: none;
-            border-top: 2px solid #e2e8f0;
-        }
-
-        .section-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #2d3748;
-            margin-bottom: 20px;
-            padding-bottom: 12px;
-            border-bottom: 2px solid #667eea;
-        }
-
-        /* WORKOUT SELECTOR */
-        .workout-selector {
-            background: #f7fafc;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-
-        .workout-inputs {
-            display: flex;
-            gap: 12px;
-            align-items: end;
-        }
-
-        .workout-inputs .field {
-            margin-bottom: 0;
-            flex: 1;
-        }
-
-        /* TABLE IMPROVEMENTS */
-        .items-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        .items-table th,
-        .items-table td {
-            padding: 12px;
-            border-bottom: 1px solid #e2e8f0;
-            text-align: left;
+        .muted {
+            color: #718096;
             font-size: 13px;
         }
 
-        .items-table th {
-            background: #667eea;
-            color: #fff;
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 12px;
-            letter-spacing: 0.5px;
-        }
-
-        .items-table tbody tr:hover {
-            background: #f7fafc;
-        }
-
-        .items-table tbody tr:last-child td {
-            border-bottom: none;
-        }
-
-        .item-actions {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-        }
-
-        .item-actions button {
-            margin: 0 !important;
-        }
-
-        /* THUMBNAIL PREVIEW */
         .pagination-bar {
             display: flex;
             flex-wrap: wrap;
@@ -465,78 +349,16 @@
         }
 
         .preview-thumb {
-            max-width: 200px;
-            max-height: 200px;
-            object-fit: cover;
-            border-radius: 8px;
-            margin-top: 12px;
-            border: 2px solid #e2e8f0;
-        }
-
-        .thumbnail-container {
-            background: #f7fafc;
-            padding: 16px;
-            border-radius: 8px;
-            text-align: center;
-        }
-
-        /* ERROR MESSAGE */
-        .error-message {
-            background: #fed7d7;
-            color: #c53030;
-            padding: 12px 16px;
-            border-radius: 6px;
-            margin-top: 16px;
-            font-size: 14px;
-            display: none;
-        }
-
-        .error-message.show {
+            max-width: 160px;
             display: block;
+            margin-top: 6px;
         }
 
-        .success-message {
-            background: #c6f6d5;
-            color: #22543d;
-            padding: 12px 16px;
-            border-radius: 6px;
-            margin-top: 16px;
-            font-size: 14px;
-        }
-
-        .muted {
-            color: #718096;
-            font-size: 13px;
-        }
-
-        /* RESPONSIVE */
         @media (max-width: 768px) {
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .workout-inputs {
-                flex-direction: column;
-            }
-
-            .modal {
-                width: 95%;
-                max-height: 95vh;
-            }
-
-            .modal-body {
-                padding: 20px;
-            }
-
-            .modal-header,
-            .modal-footer {
-                padding: 16px 20px;
-            }
-
-            .top-bar {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 12px;
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
             }
 
             .main-content {
@@ -547,16 +369,70 @@
     </style>
 </head>
 <body>
-<div th:replace="~{layouts/main :: sidebar(displayName=${displayName}, uid=${uid}, currentPage='collections')}"></div>
+<!-- ========== SIDEBAR ========== -->
+<aside class="sidebar">
+    <div class="user-profile">
+        <div class="user-avatar" th:text="${#strings.isEmpty(displayName) ? 'U' : displayName.substring(0,1).toUpperCase()}">U</div>
+        <div class="user-info">
+            <h3 th:text="${#strings.isEmpty(displayName) ? 'User' : displayName}">User Name</h3>
+            <p th:text="${uid != null ? (uid.length() > 15 ? uid.substring(0,15) + '...' : uid) : 'user@email.com'}">user@gmail.com</p>
+        </div>
+    </div>
+
+    <button class="create-btn-sidebar" onclick="alert('Tính năng đang phát triển')">
+        <span>+</span> Create New
+    </button>
+
+    <ul class="nav-menu">
+        <li class="nav-item">
+            <a href="/admin/dashboard" class="nav-link">
+                Dashboard
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/admin/profile" class="nav-link">
+                Profile
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/admin/exercises" class="nav-link">
+                Exercises
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/admin/workouts" class="nav-link">
+                Workouts
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/admin/collections" class="nav-link active">
+                Collections
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/admin/users" class="nav-link">
+                Users
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/admin/community" class="nav-link">
+                Community
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/me" class="nav-link" target="_blank">
+                JSON Info
+            </a>
+        </li>
+    </ul>
+</aside>
 
 <!-- ========== MAIN CONTENT ========== -->
 <main class="main-content">
     <div class="container">
         <div class="top-bar">
-            <h1>Collections Manager</h1>
-            <button class="btn btn-success" onclick="openAddModal()">
-                <span style="font-size: 16px;">+</span> Thêm Collection
-            </button>
+            <h1>Collections</h1>
+            <button class="btn btn-success" onclick="openAddModal()">+ Thêm Collection</button>
         </div>
 
 
@@ -726,134 +602,38 @@
                             </div>
                         </div>
                     </div>
-
-                    <table class="items-table" id="addWorkoutTable">
+                    <table class="items-table" id="detailWorkoutTable" style="margin-top:12px;">
                         <thead>
                         <tr>
-                            <th style="width: 50px;">#</th>
+                            <th>#</th>
                             <th>Workout</th>
-                            <th style="width: 180px;">Actions</th>
+                            <th>Action</th>
                         </tr>
                         </thead>
                         <tbody></tbody>
                     </table>
-
-                    <div id="addError" class="error-message"></div>
-                </form>
-            </div>
-
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeAddModal()">Hủy</button>
-                <button class="btn btn-success" onclick="submitAddCollection()">Lưu Collection</button>
-            </div>
+                    <div class="field"><label>Current Thumbnail</label>
+                        <div><img id="detailPreviewThumb" class="preview-thumb" style="display:none;"></div>
+                    </div>
+                    <div class="field"><label>Upload new thumbnail</label> <input type="file" id="detailThumbnail"
+                                                                                  accept="image/*"
+                                                                                  onchange="previewThumb('detail')">
+                    </div>
+                    <div class="field"><label>Public?</label> <input type="checkbox" name="isPublic"></div>
+                    <div class="field"><label>Tags (comma separated)</label> <input type="text" name="tags"></div>
+                    <div id="detailError" class="muted" style="color:red"></div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn" onclick="closeDetailModal()">Đóng</button>
+            <button class="btn btn-warning" onclick="submitUpdateCollection()">Lưu Info</button>
+            <button class="btn btn-primary" onclick="uploadThumbnail()">Upload Thumbnail</button>
+            <button class="btn btn-danger" onclick="deleteCollection()">Xóa</button>
         </div>
     </div>
-
-    <!-- DETAIL / EDIT COLLECTION MODAL -->
-    <div id="detailModal" class="modal-backdrop">
-        <div class="modal">
-            <div class="modal-header">
-                <h3>Chi tiết / Sửa Collection</h3>
-                <button class="btn-close" onclick="closeDetailModal()">✕</button>
-            </div>
-
-            <div class="modal-body">
-                <form id="detailForm">
-                    <input type="hidden" name="id">
-
-                    <div class="form-grid">
-                        <div class="field form-grid-full">
-                            <label>Title</label>
-                            <input type="text" name="title">
-                        </div>
-
-                        <div class="field">
-                            <label>Slug (ID)</label>
-                            <input type="text" name="slug" readonly style="background: #f7fafc;">
-                        </div>
-
-                        <div class="field">
-                            <label>Category</label>
-                            <input type="text" name="category">
-                        </div>
-
-                        <div class="field form-grid-full">
-                            <label>Description</label>
-                            <textarea name="description"></textarea>
-                        </div>
-
-                        <div class="field">
-                            <label>Tags (comma separated)</label>
-                            <input type="text" name="tags">
-                        </div>
-
-                        <div class="field">
-                            <label>Public Status</label>
-                            <div class="checkbox-wrapper">
-                                <input type="checkbox" name="isPublic" id="detailIsPublic">
-                                <label for="detailIsPublic" style="margin: 0; font-weight: normal;">Công khai cho mọi người</label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <hr class="section-divider">
-
-                    <h4 class="section-title">Thumbnail</h4>
-                    <div class="field">
-                        <label>Current Thumbnail</label>
-                        <div class="thumbnail-container">
-                            <img id="detailPreviewThumb" class="preview-thumb" style="display:none;">
-                            <p class="muted" id="detailThumbPlaceholder">Chưa có ảnh.</p>
-                        </div>
-                    </div>
-
-                    <div class="field">
-                        <label>Upload New Thumbnail</label>
-                        <input type="file" id="detailThumbnail" accept="image/*" onchange="previewThumb('detail')">
-                    </div>
-
-                    <hr class="section-divider">
-
-                    <h4 class="section-title">Danh sách Workouts</h4>
-
-                    <div class="workout-selector">
-                        <div class="workout-inputs">
-                            <div class="field" style="flex: 3;">
-                                <label>Chọn Workout</label>
-                                <select id="detailWorkoutSelect">
-                                    <option value="">-- Chọn workout để thêm --</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label>&nbsp;</label>
-                                <button type="button" class="btn btn-primary" onclick="addWorkoutInDetailModal()">+ Thêm</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <table class="items-table" id="detailWorkoutTable">
-                        <thead>
-                        <tr>
-                            <th style="width: 50px;">#</th>
-                            <th>Workout</th>
-                            <th style="width: 180px;">Actions</th>
-                        </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-
-                    <div id="detailError" class="error-message"></div>
-                </form>
-            </div>
-
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeDetailModal()">Đóng</button>
-                <button class="btn btn-warning" onclick="submitUpdateCollection()">Lưu Info</button>
-                <button class="btn btn-primary" onclick="uploadThumbnail()">Upload Thumbnail</button>
-                <button class="btn btn-danger" onclick="deleteCollection()">Xóa Collection</button>
-            </div>
-        </div>
-    </div>
+</div>
+    <p class="muted" style="margin-top:16px;">Tip: Click "Chi tiết" để mở modal sửa, upload thumbnail, chọn workout items.</p>
 </main>
 
 <script>
@@ -866,7 +646,12 @@
 
     // ---------- boot ----------
     window.addEventListener('load', () => {
+        // Load workouts list for dropdowns (from server or API)
         loadWorkouts();
+        const addThumb = q('#addThumbnail');
+        const detailThumb = q('#detailThumbnail');
+        addThumb?.addEventListener('change', () => previewThumb('add'));
+        detailThumb?.addEventListener('change', () => previewThumb('detail'));
     });
 
     // ---------- helpers ----------
@@ -893,15 +678,6 @@
         return fetch(url, opts);
     }
 
-    function showError(elementId, message) {
-        const el = q('#' + elementId);
-        if (el) {
-            el.textContent = message;
-            el.classList.add('show');
-            setTimeout(() => el.classList.remove('show'), 5000);
-        }
-    }
-
     // ---------- load workouts ----------
     async function loadWorkouts() {
         try {
@@ -922,7 +698,7 @@
         const detailSel = q('#detailWorkoutSelect');
         [addSel, detailSel].forEach(sel => {
             if (!sel) return;
-            sel.innerHTML = '<option value="">-- Chọn workout để thêm --</option>';
+            sel.innerHTML = '<option value="">-- Chọn workout --</option>';
             workoutsList.forEach(w => {
                 const opt = document.createElement('option');
                 opt.value = w.id;
@@ -932,15 +708,15 @@
         });
     }
 
+    // Collections are now loaded from server via Thymeleaf, no need to load via JS
+
     // ---------- ADD MODAL ----------
     function openAddModal() {
         addWorkoutItems = [];
         q('#addForm').reset();
         q('#addError').textContent = '';
-        q('#addError').classList.remove('show');
         renderAddWorkoutTable();
         q('#addPreviewThumb').style.display = 'none';
-        q('#addThumbPlaceholder').style.display = 'block';
         q('#addModal').style.display = 'flex';
     }
 
@@ -952,18 +728,16 @@
         const sel = q('#addWorkoutSelect');
         const workoutId = sel?.value;
         if (!workoutId) {
-            showError('addError', 'Vui lòng chọn workout trước');
+            q('#addError').textContent = 'Chọn workout trước';
             return;
         }
         if (addWorkoutItems.some(it => it.workoutId === workoutId)) {
-            showError('addError', 'Workout đã tồn tại trong danh sách');
+            q('#addError').textContent = 'Workout đã tồn tại trong danh sách';
             return;
         }
         addWorkoutItems.push({workoutId});
         q('#addError').textContent = '';
-        q('#addError').classList.remove('show');
         renderAddWorkoutTable();
-        sel.value = '';
     }
 
     function moveAddWorkout(i, dir) {
@@ -981,12 +755,6 @@
     function renderAddWorkoutTable() {
         const tbody = q('#addWorkoutTable tbody');
         if (!tbody) return;
-
-        if (addWorkoutItems.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#718096; padding: 20px;">Chưa có workout nào. Hãy thêm workout vào collection.</td></tr>';
-            return;
-        }
-
         tbody.innerHTML = '';
         addWorkoutItems.forEach((item, idx) => {
             const w = workoutsList.find(wk => wk.id === item.workoutId);
@@ -995,10 +763,10 @@
             tr.innerHTML = `
                 <td>${idx + 1}</td>
                 <td>${escapeHtml(title)}</td>
-                <td class="item-actions">
-                    <button class="btn btn-warning small" onclick="moveAddWorkout(${idx}, -1)" title="Di chuyển lên">↑</button>
-                    <button class="btn btn-warning small" onclick="moveAddWorkout(${idx}, 1)" title="Di chuyển xuống">↓</button>
-                    <button class="btn btn-danger small" onclick="removeAddWorkout(${idx})" title="Xóa">Del</button>
+                <td>
+                    <button class="btn btn-warning small" onclick="moveAddWorkout(${idx}, -1)">↑</button>
+                    <button class="btn btn-warning small" onclick="moveAddWorkout(${idx}, 1)">↓</button>
+                    <button class="btn btn-danger small" onclick="removeAddWorkout(${idx})">Del</button>
                 </td>
             `;
             tbody.appendChild(tr);
@@ -1008,52 +776,46 @@
     async function submitAddCollection() {
         const form = q('#addForm');
         q('#addError').textContent = '';
-        q('#addError').classList.remove('show');
-
         const title = form.title.value.trim();
         if (!title) {
-            showError('addError', 'Title là bắt buộc');
+            q('#addError').textContent = 'Title bắt buộc';
             return;
         }
-
         const thumbFile = q('#addThumbnail').files[0];
         if (!thumbFile) {
-            showError('addError', 'Vui lòng chọn thumbnail');
+            q('#addError').textContent = 'Vui lòng chọn thumbnail';
             return;
         }
-
         const payload = {
             title,
             slug: form.slug.value.trim() || undefined,
             description: form.description.value.trim(),
             category: form.category.value.trim(),
-            workoutTemplateIds: addWorkoutItems.map(it => it.workoutId),
+            workoutTemplateIds: addWorkoutItems.map((it, idx) => it.workoutId),
             isPublic: !!form.isPublic.checked,
             tags: (form.tags.value || '').split(',').map(s => s.trim()).filter(Boolean),
             updatedAt: Date.now()
         };
-
         try {
             const fd = new FormData();
             fd.append('data', new Blob([JSON.stringify(payload)], {type: 'application/json'}));
             fd.append('thumbnail', thumbFile);
-
             const resp = await httpFetch('/api/admin/collections/create', {
                 method: 'POST',
                 body: fd
             });
-
             if (!resp.ok) {
                 const text = await resp.text();
-                showError('addError', 'Tạo thất bại: ' + text);
+                q('#addError').textContent = 'Tạo thất bại (HTTP ' + resp.status + ') ' + text;
                 return;
             }
-
+            await resp.json();
             closeAddModal();
-            window.location.reload();
+            addWorkoutItems = [];
+            window.location.reload(); // Reload page to refresh list
         } catch (e) {
             console.error(e);
-            showError('addError', 'Lỗi khi tạo collection');
+            q('#addError').textContent = 'Lỗi khi tạo collection';
         }
     }
 
@@ -1061,7 +823,6 @@
     function openDetailModal(id) {
         currentEditingId = id;
         q('#detailError').textContent = '';
-        q('#detailError').classList.remove('show');
         q('#detailModal').style.display = 'flex';
         loadCollectionDetail(id);
     }
@@ -1075,12 +836,11 @@
         try {
             const resp = await httpFetch('/api/admin/collections/' + id);
             if (!resp.ok) {
-                showError('detailError', 'Không lấy được collection');
+                q('#detailError').textContent = 'Không lấy được collection';
                 return;
             }
             const c = await resp.json();
             const form = q('#detailForm');
-
             form.id.value = c.id || id;
             form.title.value = c.title || '';
             form.slug.value = c.slug || c.id || '';
@@ -1093,21 +853,19 @@
                 ? c.workoutTemplateIds.map(workoutId => ({workoutId}))
                 : [];
             renderDetailWorkoutTable();
+            populateWorkoutSelects(); // ensure options exist even if loadWorkouts finished earlier
 
             const img = q('#detailPreviewThumb');
-            const placeholder = q('#detailThumbPlaceholder');
             if (c.thumbnailUrl) {
                 img.src = c.thumbnailUrl;
                 img.style.display = 'block';
-                if (placeholder) placeholder.style.display = 'none';
             } else {
                 img.removeAttribute('src');
                 img.style.display = 'none';
-                if (placeholder) placeholder.style.display = 'block';
             }
         } catch (e) {
             console.error(e);
-            showError('detailError', 'Lỗi khi tải chi tiết');
+            q('#detailError').textContent = 'Lỗi khi tải chi tiết';
         }
     }
 
@@ -1115,18 +873,16 @@
         const sel = q('#detailWorkoutSelect');
         const workoutId = sel?.value;
         if (!workoutId) {
-            showError('detailError', 'Vui lòng chọn workout để thêm');
+            q('#detailError').textContent = 'Chọn workout để thêm';
             return;
         }
         if (detailWorkoutItems.some(it => it.workoutId === workoutId)) {
-            showError('detailError', 'Workout đã trong danh sách');
+            q('#detailError').textContent = 'Workout đã trong danh sách';
             return;
         }
         detailWorkoutItems.push({workoutId});
         q('#detailError').textContent = '';
-        q('#detailError').classList.remove('show');
         renderDetailWorkoutTable();
-        sel.value = '';
     }
 
     function moveDetailWorkout(i, dir) {
@@ -1144,12 +900,6 @@
     function renderDetailWorkoutTable() {
         const tbody = q('#detailWorkoutTable tbody');
         if (!tbody) return;
-
-        if (detailWorkoutItems.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#718096; padding: 20px;">Chưa có workout nào. Hãy thêm workout vào collection.</td></tr>';
-            return;
-        }
-
         tbody.innerHTML = '';
         detailWorkoutItems.forEach((item, idx) => {
             const w = workoutsList.find(wk => wk.id === item.workoutId);
@@ -1158,10 +908,10 @@
             tr.innerHTML = `
                 <td>${idx + 1}</td>
                 <td>${escapeHtml(title)}</td>
-                <td class="item-actions">
-                    <button class="btn btn-warning small" onclick="moveDetailWorkout(${idx}, -1)" title="Di chuyển lên">↑</button>
-                    <button class="btn btn-warning small" onclick="moveDetailWorkout(${idx}, 1)" title="Di chuyển xuống">↓</button>
-                    <button class="btn btn-danger small" onclick="removeDetailWorkout(${idx})" title="Xóa">Del</button>
+                <td>
+                    <button class="btn btn-warning small" onclick="moveDetailWorkout(${idx}, -1)">↑</button>
+                    <button class="btn btn-warning small" onclick="moveDetailWorkout(${idx}, 1)">↓</button>
+                    <button class="btn btn-danger small" onclick="removeDetailWorkout(${idx})">Del</button>
                 </td>
             `;
             tbody.appendChild(tr);
@@ -1170,10 +920,9 @@
 
     async function submitUpdateCollection() {
         if (!currentEditingId) {
-            showError('detailError', 'Missing id');
+            q('#detailError').textContent = 'Missing id';
             return;
         }
-
         const form = q('#detailForm');
         const payload = {
             title: form.title.value.trim(),
@@ -1184,96 +933,100 @@
             tags: (form.tags.value || '').split(',').map(s => s.trim()).filter(Boolean),
             updatedAt: Date.now()
         };
-
         try {
             const resp = await httpFetch('/api/admin/collections/' + currentEditingId, {
                 method: 'PUT',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(payload)
             });
-
             if (!resp.ok) {
-                showError('detailError', 'Cập nhật thất bại');
+                q('#detailError').textContent = 'Cập nhật thất bại';
                 return;
             }
-
-            window.location.reload();
+            window.location.reload(); // Reload page to refresh list
+            q('#detailError').style.color = 'green';
+            q('#detailError').textContent = 'Cập nhật thành công';
+            setTimeout(() => {
+                q('#detailError').style.color = 'red';
+                q('#detailError').textContent = '';
+            }, 1500);
         } catch (e) {
             console.error(e);
-            showError('detailError', 'Lỗi khi cập nhật');
+            q('#detailError').textContent = 'Lỗi khi cập nhật';
         }
     }
 
     async function uploadThumbnail() {
         if (!currentEditingId) {
-            showError('detailError', 'Missing id');
+            q('#detailError').textContent = 'Missing id';
             return;
         }
-
         const file = q('#detailThumbnail').files[0];
         if (!file) {
-            showError('detailError', 'Vui lòng chọn file trước');
+            q('#detailError').textContent = 'Chọn file trước';
             return;
         }
-
         q('#detailError').textContent = '';
-        q('#detailError').classList.remove('show');
+            await maybeUploadThumbnail(currentEditingId, 'detail');
+        window.location.reload(); // Reload page to refresh list
+    }
 
+    async function maybeUploadThumbnail(id, mode) {
+        const input = mode === 'add' ? q('#addThumbnail') : q('#detailThumbnail');
+        const file = input?.files?.[0];
+        if (!file) return;
         const fd = new FormData();
         fd.append('thumbnail', file);
-
         try {
-            const resp = await httpFetch('/api/admin/collections/' + currentEditingId + '/thumbnail', {
+            const resp = await httpFetch('/api/admin/collections/' + id + '/thumbnail', {
                 method: 'PUT',
                 body: fd
             });
-
             if (!resp.ok) {
-                showError('detailError', 'Upload thumbnail thất bại');
+                console.warn('Thumbnail upload failed', resp.status);
+                q('#detailError').textContent = 'Upload thumbnail thất bại';
                 return;
             }
-
             const data = await resp.json();
-            if (data.thumbnailUrl) {
+            if (mode === 'detail' && data.thumbnailUrl) {
                 const img = q('#detailPreviewThumb');
-                const placeholder = q('#detailThumbPlaceholder');
                 img.src = data.thumbnailUrl;
                 img.style.display = 'block';
-                if (placeholder) placeholder.style.display = 'none';
+            } else if (mode === 'add' && data.thumbnailUrl) {
+                const img = q('#addPreviewThumb');
+                img.src = data.thumbnailUrl;
+                img.style.display = 'block';
             }
-
-            window.location.reload();
+            q('#detailError').style.color = 'green';
+            q('#detailError').textContent = 'Upload thumbnail thành công';
+            setTimeout(() => {
+                q('#detailError').style.color = 'red';
+                q('#detailError').textContent = '';
+            }, 1500);
         } catch (e) {
             console.error(e);
-            showError('detailError', 'Lỗi khi upload thumbnail');
+            q('#detailError').textContent = 'Lỗi khi upload thumbnail';
         }
     }
 
     function previewThumb(mode) {
         const input = mode === 'add' ? q('#addThumbnail') : q('#detailThumbnail');
         const img = mode === 'add' ? q('#addPreviewThumb') : q('#detailPreviewThumb');
-        const placeholder = mode === 'add' ? q('#addThumbPlaceholder') : q('#detailThumbPlaceholder');
-
         if (!input || !img) return;
-
         const file = input.files[0];
         if (!file) {
             img.removeAttribute('src');
             img.style.display = 'none';
-            if (placeholder) placeholder.style.display = 'block';
             return;
         }
-
         img.src = URL.createObjectURL(file);
         img.style.display = 'block';
-        if (placeholder) placeholder.style.display = 'none';
     }
 
     // ---------- DELETE ----------
     async function deleteCollection() {
         if (!currentEditingId) return;
-        if (!confirm('Bạn có chắc muốn xóa collection này? Hành động này không thể hoàn tác.')) return;
-
+        if (!confirm('Bạn có chắc muốn xóa collection này?')) return;
         try {
             const resp = await httpFetch('/api/admin/collections/' + currentEditingId, {method: 'DELETE'});
             if (!resp.ok) {
@@ -1281,7 +1034,7 @@
                 return;
             }
             closeDetailModal();
-            window.location.reload();
+            window.location.reload(); // Reload page to refresh list
         } catch (e) {
             console.error(e);
             alert('Lỗi khi xóa');

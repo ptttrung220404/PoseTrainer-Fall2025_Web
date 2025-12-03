@@ -172,33 +172,16 @@ public class AdminPageController {
         model.addAttribute("sort", sort);
         return "community-list";
     }
-
     @GetMapping("/profile")
-    public String showProfile(Authentication auth, Model model,
-                              @ModelAttribute(value = "displayName") String displayName) {
+    public String showProfile(Authentication auth, Model model) {
         if (auth == null || !auth.isAuthenticated()) {
             return "redirect:/login";
         }
 
         String uid = auth.getName();
-        model.addAttribute("uid", uid);
-
         userService.getUserByUid(uid).ifPresentOrElse(
-                user -> {
-                    model.addAttribute("user", user);
-                    String userDisplayName = user.getDisplayName();
-                    if (userDisplayName != null && !userDisplayName.trim().isEmpty()) {
-                        model.addAttribute("displayName", userDisplayName.trim());
-                    } else if (displayName != null && !displayName.trim().isEmpty()) {
-                        model.addAttribute("displayName", displayName);
-                    } else {
-                        model.addAttribute("displayName", "Admin");
-                    }
-                },
-                () -> {
-                    model.addAttribute("error", "Không tìm thấy thông tin người dùng");
-                    model.addAttribute("displayName", displayName != null && !displayName.isEmpty() ? displayName : "Admin");
-                }
+                user -> model.addAttribute("user", user),
+                () -> model.addAttribute("error", "Không tìm thấy thông tin người dùng")
         );
 
         return "user-profile";
