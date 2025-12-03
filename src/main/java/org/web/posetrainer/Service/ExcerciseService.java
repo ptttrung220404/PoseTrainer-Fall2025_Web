@@ -3,6 +3,7 @@ import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.*;
 import com.google.firebase.cloud.FirestoreClient;
 import org.springframework.stereotype.Service;
+import org.web.posetrainer.DTO.PagedResponse;
 import org.web.posetrainer.Entity.Excercise;
 
 import java.util.ArrayList;
@@ -54,6 +55,10 @@ public class ExcerciseService {
         }
         return result;
     }
+
+    public PagedResponse<Excercise> getPaged(int page, int size) throws ExecutionException, InterruptedException {
+        return PagedResponse.of(getAll(), page, size);
+    }
     public void updateExcercise(String id, Excercise excercise)
             throws ExecutionException, InterruptedException {
 
@@ -75,16 +80,22 @@ public class ExcerciseService {
                 .set(updates, SetOptions.merge())
                 .get();
     }
-    public void updateExcerciseMedia(String id, Excercise.Media media)
+    public void updateExcerciseMediaPartial(String id, Map<String, Object> mediaUpdates)
             throws ExecutionException, InterruptedException {
 
         Map<String, Object> updates = new HashMap<>();
-        updates.put("media", media);
+
+        // update từng field trong media.*
+        for (var entry : mediaUpdates.entrySet()) {
+            updates.put("media." + entry.getKey(), entry.getValue());
+        }
+
         updates.put("updatedAt", System.currentTimeMillis());
 
-        firestore.collection(COLLECTION_NAME)
+        firestore.collection("exercises")
                 .document(id)
-                .set(updates, SetOptions.merge())
+                .update(updates)
                 .get();
     }
+
 }

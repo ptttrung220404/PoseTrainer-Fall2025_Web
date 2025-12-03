@@ -48,7 +48,7 @@ public class SecurityConfig {
                         .requestMatchers("/health", "/actuator/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/me").authenticated()
-
+                        .requestMatchers("/").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(firebaseFilter, UsernamePasswordAuthenticationFilter.class)

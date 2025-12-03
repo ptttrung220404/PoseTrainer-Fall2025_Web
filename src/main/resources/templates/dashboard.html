@@ -17,6 +17,8 @@
             padding: 24px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             margin-bottom: 24px;
+            display: flex;
+            align-items: flex-start;
         }
 
         .meta-info p {
@@ -64,22 +66,113 @@
                 padding: 20px;
             }
         }
+        .card {
+            width: auto;
+            background: #ffffff;
+            border: 3px solid #000;                 /* Viền đen 3px */
+            border-radius: 12px;                    /* Bo góc */
+            box-shadow: 6px 6px 0px #2d3748;           /* Hiệu ứng 3D nổi */
+            padding: 20px;
+            transition: transform 0.1s ease-in-out, box-shadow 0.1s ease-in-out;
+            height: auto;
+        }
+
+        /* Hiệu ứng hover để nổi mạnh hơn */
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 10px 10px 0px #000;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .card h2 {
+            font-size: 36px;
+            font-weight: bold;
+            margin: 0;
+        }
+
     </style>
 </head>
 <body>
 <div th:replace="~{layouts/main :: sidebar(displayName=${displayName}, uid=${uid}, currentPage='dashboard')}"></div>
+<!-- Sidebar -->
+<aside class="sidebar">
+    <div class="user-profile">
+        <div class="user-avatar" th:text="${#strings.isEmpty(displayName) ? 'U' : displayName.substring(0,1).toUpperCase()}">U</div>
+        <div class="user-info">
+            <h3 th:text="${#strings.isEmpty(displayName) ? 'User' : displayName}">User Name</h3>
+            <p th:text="${uid != null ? (uid.length() > 15 ? uid.substring(0,15) + '...' : uid) : 'user@email.com'}">user@gmail.com</p>
+        </div>
+    </div>
+
+    <button class="create-btn" onclick="alert('Tính năng đang phát triển')">
+        <span>+</span> Create New
+    </button>
+
+    <ul class="nav-menu">
+        <li class="nav-item">
+            <a href="/admin/dashboard" class="nav-link active">
+                Dashboard
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/admin/profile" class="nav-link">
+                Profile
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/admin/exercises" class="nav-link">
+                Exercises
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/admin/workouts" class="nav-link">
+                Workouts
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/admin/collections" class="nav-link">
+                Collections
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/admin/users" class="nav-link">
+                Users
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/admin/community" class="nav-link">
+                Community
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/me" class="nav-link"  target="_blank">
+                JSON Info
+            </a>
+        </li>
+    </ul>
+</aside>
 
 <main class="main-content">
     <div class="content-box">
-        <h1>Xin chào</h1>
+        <h1>ADMIN DASHBOARD</h1>
 
         <div class="meta-info" th:if="${uid}">
-            <p><strong>UID:</strong> <span th:text="${uid}">dfafaghwejrownmos</span></p>
-            <p><strong>Roles:</strong></p>
-            <ul class="roles-list">
-                <li th:each="r : ${roles}" th:text="${r}">ROLE_ADMIN</li>
-            </ul>
+
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Total Users</h5>
+                    <h2 th:text="${totalUsers}">0</h2>
+                </div>
+            </div>
+
         </div>
+
+
 
         <p class="welcome-text">Đây là trang sau khi đăng nhập thành công. Sử dụng menu bên trái để điều hướng đến các chức năng quản lý.</p>
     </div>

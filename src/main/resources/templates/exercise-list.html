@@ -1,7 +1,12 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+          integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4Dd3BTDjf4mxj9A5kHtQ/"
+          crossorigin="anonymous">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Danh sách bài tập - Admin Panel</title>
     <th:block th:replace="~{layouts/main :: styles}"></th:block>
@@ -30,6 +35,7 @@
             padding: 24px;
             border-radius: 12px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         .top-bar {
@@ -50,7 +56,8 @@
             border-collapse: collapse;
         }
 
-        th, td {
+        th,
+        td {
             padding: 12px;
             border-bottom: 1px solid #e0e0e0;
             text-align: left;
@@ -169,6 +176,7 @@
             position: fixed;
             inset: 0;
             background: rgba(0, 0, 0, 0.6);
+            background: rgba(0, 0, 0, 0.5);
             justify-content: center;
             align-items: center;
             z-index: 1000;
@@ -204,6 +212,8 @@
                 opacity: 1;
                 transform: translateY(0);
             }
+            overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
         }
 
         .modal-header {
@@ -414,6 +424,59 @@
             color: #22543d;
             border-left: 4px solid #48bb78;
         }
+        .pagination-bar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-top: 16px;
+            padding-top: 12px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .pagination-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .page-btn {
+            padding: 6px 14px;
+            border: 1px solid #cbd5e0;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #2d3748;
+            font-size: 14px;
+            background: #fff;
+        }
+
+        .page-btn:hover {
+            background: #edf2f7;
+        }
+
+        .page-btn.disabled {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        .page-status {
+            font-weight: 500;
+            color: #2d3748;
+        }
+
+        .page-size-form {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
 
         /* RESPONSIVE */
         @media (max-width: 768px) {
@@ -452,11 +515,76 @@
         }
     </style>
 </head>
+
 <body>
 <div th:replace="~{layouts/main :: sidebar(displayName=${displayName}, uid=${uid}, currentPage='exercises')}"></div>
 
 <main class="main-content">
     <div class="container">
+    <!-- ========== SIDEBAR ========== -->
+    <aside class="sidebar">
+        <div class="user-profile">
+            <div class="user-avatar"
+                th:text="${#strings.isEmpty(displayName) ? 'U' : displayName.substring(0,1).toUpperCase()}">U</div>
+            <div class="user-info">
+                <h3 th:text="${#strings.isEmpty(displayName) ? 'User' : displayName}">User Name</h3>
+                <p
+                    th:text="${uid != null ? (uid.length() > 15 ? uid.substring(0,15) + '...' : uid) : 'user@email.com'}">
+                    user@gmail.com</p>
+            </div>
+        </div>
+
+        <button class="create-btn-sidebar" onclick="alert('Tính năng đang phát triển')">
+            <span>+</span> Create New
+        </button>
+
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a href="/admin/dashboard" class="nav-link">
+                    Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/admin/profile" class="nav-link">
+                    Profile
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/admin/exercises" class="nav-link active">
+                    Exercises
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/admin/workouts" class="nav-link">
+                    Workouts
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/admin/collections" class="nav-link">
+                    Collections
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/admin/users" class="nav-link">
+                    Users
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/admin/community" class="nav-link">
+                    Community
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/me" class="nav-link" target="_blank">
+                    JSON Info
+                </a>
+            </li>
+        </ul>
+    </aside>
+
+    <!-- ========== MAIN CONTENT ========== -->
+    <main class="main-content">
+        <div class="container">
         <div class="top-bar">
             <h1>Danh sách bài tập</h1>
             <button type="button" class="btn btn-success" onclick="openAddModal()">
@@ -620,6 +748,180 @@
                         <input type="text" name="name">
                     </div>
 
+        <form class="row g-2 align-items-center mb-3" method="get">
+            <input type="hidden" name="page" value="1">
+            <input type="hidden" name="size" th:value="${exercisePage.size}">
+            <div class="col-md-4">
+                <input type="text" class="form-control" name="keyword" placeholder="Tìm theo tên hoặc slug"
+                       th:value="${keyword}">
+            </div>
+            <div class="col-md-4">
+                <select class="form-select" name="sort">
+                    <option value="updated_desc" th:selected="${sort == 'updated_desc'}">Mới cập nhật</option>
+                    <option value="updated_asc" th:selected="${sort == 'updated_asc'}">Cũ đến mới</option>
+                    <option value="name_asc" th:selected="${sort == 'name_asc'}">Tên A-Z</option>
+                    <option value="name_desc" th:selected="${sort == 'name_desc'}">Tên Z-A</option>
+                    <option value="level_asc" th:selected="${sort == 'level_asc'}">Cấp độ A-Z</option>
+                </select>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <button class="btn btn-primary" type="submit">Áp dụng</button>
+                <a class="btn btn-outline-secondary ms-2" th:href="@{/admin/exercises}">Reset</a>
+            </div>
+        </form>
+
+        <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Tên</th>
+                        <th>Cấp độ</th>
+                        <th>Nhóm cơ</th>
+                        <th>Tag</th>
+                        <th>Public?</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${exercisePage.totalItems == 0}">
+                        <td colspan="6">Chưa có bài tập nào.</td>
+                    </tr>
+                    <tr th:each="ex : ${exercisePage.items}">
+                        <td th:text="${ex.name}">Push Up</td>
+                        <td>
+                            <span class="badge" th:text="${ex.level}">beginner</span>
+                        </td>
+                        <td>
+                            <span class="tag" th:each="m : ${ex.muscles}" th:text="${m}">chest</span>
+                        </td>
+                        <td>
+                            <span class="tag" th:each="t : ${ex.tags}" th:text="${t}">tag</span>
+                        </td>
+                        <td>
+                            <span th:if="${ex.isPublic}" class="badge badge-public">Public</span>
+                            <span th:if="${!ex.isPublic}" class="badge badge-private">Private</span>
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-primary" th:attr="data-id=${ex.id}"
+                                onclick="openDetailModal(this)">
+                                Chi tiết
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+            <div class="pagination-bar">
+                <div class="pagination-info muted"
+                    th:text="${exercisePage.totalItems > 0 ? 'Hiển thị ' + exercisePage.fromItem + '-' + exercisePage.toItem + ' trên ' + exercisePage.totalItems + ' bài tập' : 'Không có bài tập'}">
+                    Hiển thị 0-0 trên 0 bài tập
+                </div>
+                <div class="pagination-controls">
+                <a class="page-btn" th:classappend="${!exercisePage.hasPrev} ? ' disabled'"
+                    th:href="@{/admin/exercises(page=${exercisePage.page - 1},size=${exercisePage.size},keyword=${keyword},sort=${sort})}">
+                        ‹ Trước
+                    </a>
+                    <span class="page-status"
+                        th:text="'Trang ' + ${exercisePage.page} + ' / ' + ${exercisePage.totalPages}">Trang 1 /
+                        1</span>
+                    <a class="page-btn" th:classappend="${!exercisePage.hasNext} ? ' disabled'"
+                    th:href="@{/admin/exercises(page=${exercisePage.page + 1},size=${exercisePage.size},keyword=${keyword},sort=${sort})}">
+                        Sau ›
+                    </a>
+                </div>
+                <form class="page-size-form" method="get">
+                    <input type="hidden" name="page" value="1">
+                <input type="hidden" name="keyword" th:value="${keyword}">
+                <input type="hidden" name="sort" th:value="${sort}">
+                    <label for="exerciseSize">Mỗi trang</label>
+                <input type="number" id="exerciseSize" name="size" min="1"
+                    class="form-control form-control-sm"
+                    th:value="${exercisePage.size != null ? exercisePage.size : 10}"
+                    style="max-width:120px"
+                    onchange="this.form.submit()" />
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- ========== MODAL THÊM BÀI TẬP ========== -->
+    <div id="addModalBackdrop" class="modal-backdrop">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Thêm bài tập</h2>
+                <button class="btn btn-secondary" onclick="closeAddModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <form id="addForm">
+                    <div class="field">
+                        <label>Tên bài tập</label>
+                        <input type="text" name="name" required>
+                    </div>
+                    <div class="field">
+                        <label>Slug</label>
+                        <input type="text" name="slug" required>
+                    </div>
+                    <div class="field">
+                        <label>Cấp độ (level)</label>
+                        <input type="text" name="level" placeholder="beginner / intermediate / advanced">
+                    </div>
+                    <div class="field">
+                        <label>Nhóm cơ (muscles, cách nhau bằng dấu phẩy)</label>
+                        <input type="text" name="muscles" placeholder="chest,triceps">
+                    </div>
+                    <div class="field">
+                        <label>Tag (cách nhau bằng dấu phẩy)</label>
+                        <input type="text" name="tags" placeholder="bodyweight,push">
+                    </div>
+                    <div class="field">
+                        <label>Public?</label>
+                        <input type="checkbox" name="isPublic" checked> Public
+                    </div>
+                    <div class="field">
+                        <label>Video demo</label>
+                        <input type="file" id="addVideo" name="video" accept="video/*">
+                    </div>
+                    <div class="field">
+                        <label>Sets</label>
+                        <input type="number" name="sets" value="3">
+                    </div>
+                    <div class="field">
+                        <label>Reps</label>
+                        <input type="number" name="reps" value="12">
+                    </div>
+                    <div class="field">
+                        <label>Rest (sec)</label>
+                        <input type="number" name="restSec" value="60">
+                    </div>
+                    <div class="field">
+                        <label>Độ khó (difficulty)</label>
+                        <input type="text" name="difficulty" value="medium">
+                    </div>
+                </form>
+                <div id="addMessage" style="color: red; margin-top: 8px;"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeAddModal()">Hủy</button>
+                <button class="btn btn-primary" onclick="submitAdd()">Lưu</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== MODAL CHI TIẾT / SỬA ========== -->
+    <div id="detailModalBackdrop" class="modal-backdrop">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Chi tiết bài tập</h2>
+                <button class="btn btn-secondary" onclick="closeDetailModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <form id="detailForm">
+                    <input type="hidden" name="id">
+
+                    <div class="field">
+                        <label>Tên bài tập</label>
+                        <input type="text" name="name">
+                    </div>
                     <div class="field">
                         <label>Slug</label>
                         <input type="text" name="slug">
@@ -683,8 +985,49 @@
                         <small>Preview thumbnail hiện tại</small>
                         <img id="previewThumb" style="display:none; max-width: 100%;">
                         <p id="noThumbText" style="color: #718096; font-size: 14px; display: none;">Chưa có thumbnail</p>
+                    <div class="field">
+                        <label>Cấp độ (level)</label>
+                        <input type="text" name="level">
                     </div>
-                </div>
+                    <div class="field">
+                        <label>Nhóm cơ (muscles)</label>
+                        <input type="text" name="muscles">
+                    </div>
+                    <div class="field">
+                        <label>Tag</label>
+                        <input type="text" name="tags">
+                    </div>
+                    <div class="field">
+                        <label>Public?</label>
+                        <input type="checkbox" name="isPublic"> Public
+                    </div>
+
+                    <div class="field">
+                        <label>Video demo URL</label>
+                        <input type="text" name="demoVideoUrl" readonly>
+                    </div>
+
+                    <div class="field">
+                        <label>Video demo mới</label>
+                        <input type="file" id="detailVideo" name="video" accept="video/*">
+                    </div>
+                    <div class="field">
+                        <label>Thumbnail mới</label>
+                        <input type="file" id="detailThumb" name="thumbnail" accept="image/*">
+                    </div>
+
+                    <div class="preview-media">
+                        <div>
+                            <small>Preview video hiện tại:</small>
+                            <video id="previewVideo" controls
+                                style="margin-top:4px; display:none; max-width: 250px;"></video>
+                        </div>
+
+                        <div style="margin-top: 12px;">
+                            <small>Preview thumbnail hiện tại:</small>
+                            <img id="previewThumb" style="margin-top:4px; display:none; max-width: 150px;">
+                        </div>
+                    </div>
 
             </form>
             <div id="detailMessage" class="message" style="display: none;"></div>
@@ -763,26 +1106,31 @@
 
         const videoFile = document.getElementById('addVideo').files[0];
         let fetchOptions;
+                </form>
+                <div id="detailMessage" style="color: red; margin-top: 8px;"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeDetailModal()">Đóng</button>
+                <button class="btn btn-primary" onclick="submitUpdate()">Lưu thay đổi</button>
+                <button class="btn btn-primary" onclick="submitMediaUpdate()">Cập nhật media</button>
+            </div>
+        </div>
+    </div>
 
-        try {
-            if (videoFile) {
-                const fd = new FormData();
-                fd.append('data', new Blob([JSON.stringify(excercise)], { type: 'application/json' }));
-                fd.append('video', videoFile);
+    <script>
+        // ================== ADD MODAL ==================
+        function openAddModal() {
+            document.getElementById('addModalBackdrop').style.display = 'flex';
+            document.getElementById('addMessage').textContent = '';
+        }
+        function closeAddModal() {
+            document.getElementById('addModalBackdrop').style.display = 'none';
+        }
 
-                fetchOptions = {
-                    method: 'POST',
-                    body: fd
-                };
-            } else {
-                fetchOptions = {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(excercise)
-                };
-            }
+        async function submitAdd() {
+            const form = document.getElementById('addForm');
+            const msg = document.getElementById('addMessage');
+            msg.textContent = '';
 
             const resp = await fetch('/api/admin/exercises', fetchOptions);
             if (!resp.ok) {
@@ -844,8 +1192,59 @@
                     pv.removeAttribute('src');
                     pv.style.display = 'none';
                     noVideoText.style.display = 'block';
-                }
+            const name = form.name.value.trim();
+            const slug = form.slug.value.trim();
+            if (!name || !slug) {
+                msg.textContent = 'Tên và slug là bắt buộc';
+                return;
             }
+
+            const muscles = form.muscles.value
+                ? form.muscles.value.split(',').map(s => s.trim()).filter(s => s)
+                : [];
+            const tags = form.tags.value
+                ? form.tags.value.split(',').map(s => s.trim()).filter(s => s)
+                : [];
+
+            const excercise = {
+                name: name,
+                slug: slug,
+                level: form.level.value || 'beginner',
+                muscles: muscles,
+                tags: tags,
+                equipment: [],
+                category: [],
+                isPublic: form.isPublic.checked,
+                defaultConfig: {
+                    sets: parseInt(form.sets.value || '3', 10),
+                    reps: parseInt(form.reps.value || '10', 10),
+                    restSec: parseInt(form.restSec.value || '60', 10),
+                    difficulty: form.difficulty.value || 'medium'
+                }
+            };
+
+            const videoFile = document.getElementById('addVideo').files[0];
+            let fetchOptions;
+
+            try {
+                if (videoFile) {
+                    const fd = new FormData();
+                    fd.append('data', new Blob([JSON.stringify(excercise)], { type: 'application/json' }));
+                    fd.append('video', videoFile);
+
+                    fetchOptions = {
+                        method: 'POST',
+                        body: fd
+                    };
+                } else {
+                    fetchOptions = {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(excercise)
+                    };
+                }
 
             const pt = document.getElementById('previewThumb');
             const noThumbText = document.getElementById('noThumbText');
@@ -858,8 +1257,18 @@
                     pt.removeAttribute('src');
                     pt.style.display = 'none';
                     noThumbText.style.display = 'block';
+                const resp = await fetch('/api/admin/exercises', fetchOptions);
+                if (!resp.ok) {
+                    msg.textContent = 'Tạo bài tập thất bại (HTTP ' + resp.status + ')';
+                    return;
                 }
+
+                window.location.reload();
+            } catch (e) {
+                console.error(e);
+                msg.textContent = 'Có lỗi kết nối khi tạo bài tập';
             }
+        }
 
             const detailVideo = document.getElementById('detailVideo');
             const detailThumb = document.getElementById('detailThumb');
@@ -917,7 +1326,76 @@
             if (!resp.ok) {
                 showMessage('detailMessage', 'Cập nhật thất bại (HTTP ' + resp.status + ')', true);
                 return;
+        // ================== DETAIL / EDIT MODAL ==================
+        async function openDetailModal(btn) {
+            const id = btn.dataset.id;
+            const msg = document.getElementById('detailMessage');
+            msg.textContent = '';
+
+            try {
+                const resp = await fetch('/api/admin/exercises/' + id);
+                if (!resp.ok) {
+                    msg.textContent = 'Không tải được dữ liệu (HTTP ' + resp.status + ')';
+                    document.getElementById('detailModalBackdrop').style.display = 'flex';
+                    return;
+                }
+
+                const ex = await resp.json();
+                const form = document.getElementById('detailForm');
+                const $ = (sel) => form.querySelector(sel);
+
+                const idInput = $('[name=id]');
+                const nameInput = $('[name=name]');
+                const slugInput = $('[name=slug]');
+                const levelInput = $('[name=level]');
+                const musclesInput = $('[name=muscles]');
+                const tagsInput = $('[name=tags]');
+                const isPublicInput = $('[name=isPublic]');
+                const demoVideoUrlInput = $('[name=demoVideoUrl]');
+
+                if (idInput) idInput.value = ex.id || id;
+                if (nameInput) nameInput.value = ex.name || '';
+                if (slugInput) slugInput.value = ex.slug || '';
+                if (levelInput) levelInput.value = ex.level || '';
+                if (musclesInput) musclesInput.value = (ex.muscles || []).join(',');
+                if (tagsInput) tagsInput.value = (ex.tags || []).join(',');
+                if (isPublicInput) isPublicInput.checked = !!ex.isPublic;
+                if (demoVideoUrlInput) demoVideoUrlInput.value = ex.media?.demoVideoUrl || '';
+
+                const pv = document.getElementById('previewVideo');
+                if (pv) {
+                    if (ex.media?.demoVideoUrl) {
+                        pv.src = ex.media.demoVideoUrl;
+                        pv.style.display = 'block';
+                    } else {
+                        pv.removeAttribute('src');
+                        pv.style.display = 'none';
+                    }
+                }
+
+                const pt = document.getElementById('previewThumb');
+                if (pt) {
+                    if (ex.media?.thumbnailUrl) {
+                        pt.src = ex.media.thumbnailUrl;
+                        pt.style.display = 'block';
+                    } else {
+                        pt.removeAttribute('src');
+                        pt.style.display = 'none';
+                    }
+                }
+
+                const detailVideo = document.getElementById('detailVideo');
+                const detailThumb = document.getElementById('detailThumb');
+                if (detailVideo) detailVideo.value = '';
+                if (detailThumb) detailThumb.value = '';
+
+                document.getElementById('detailModalBackdrop').style.display = 'flex';
+            } catch (e) {
+                console.error(e);
+                msg.textContent = 'Có lỗi kết nối khi tải dữ liệu';
+                document.getElementById('detailModalBackdrop').style.display = 'flex';
             }
+        }
 
             showMessage('detailMessage', 'Cập nhật thành công!', false);
             setTimeout(() => {
@@ -926,8 +1404,9 @@
         } catch (e) {
             console.error(e);
             showMessage('detailMessage', 'Có lỗi kết nối khi cập nhật', true);
+        function closeDetailModal() {
+            document.getElementById('detailModalBackdrop').style.display = 'none';
         }
-    }
 
     async function submitMediaUpdate() {
         const form = document.getElementById('detailForm');
@@ -939,24 +1418,70 @@
             showMessage('detailMessage', 'Thiếu ID bài tập', true);
             return;
         }
+        async function submitUpdate() {
+            const form = document.getElementById('detailForm');
+            const msg = document.getElementById('detailMessage');
+            msg.textContent = '';
 
-        const video = document.getElementById('detailVideo').files[0];
-        const thumb = document.getElementById('detailThumb').files[0];
+            const id = form.id.value;
+            if (!id) {
+                msg.textContent = 'Thiếu ID bài tập';
+                return;
+            }
+
+            const muscles = form.muscles.value
+                ? form.muscles.value.split(',').map(s => s.trim()).filter(s => s)
+                : [];
+            const tags = form.tags.value
+                ? form.tags.value.split(',').map(s => s.trim()).filter(s => s)
+                : [];
+
+            const payload = {
+                name: form.name.value,
+                slug: form.slug.value,
+                level: form.level.value,
+                muscles: muscles,
+                tags: tags,
+                isPublic: form.isPublic.checked
+            };
+
+            try {
+                const resp = await fetch('/api/admin/exercises/' + id, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
 
         if (!video && !thumb) {
             showMessage('detailMessage', 'Hãy chọn video hoặc thumbnail để cập nhật', true);
             return;
+                if (!resp.ok) {
+                    msg.textContent = 'Cập nhật thất bại (HTTP ' + resp.status + ')';
+                    return;
+                }
+
+                window.location.reload();
+            } catch (e) {
+                console.error(e);
+                msg.textContent = 'Có lỗi kết nối khi cập nhật';
+            }
         }
 
-        const fd = new FormData();
-        if (video) fd.append('video', video);
-        if (thumb) fd.append('thumbnail', thumb);
+        async function submitMediaUpdate() {
+            const form = document.getElementById('detailForm');
+            const msg = document.getElementById('detailMessage');
+            msg.textContent = '';
 
-        try {
-            const resp = await fetch('/api/admin/exercises/' + id + '/media', {
-                method: 'PUT',
-                body: fd
-            });
+            const id = form.id.value;
+            if (!id) {
+                msg.textContent = 'Thiếu ID bài tập';
+                return;
+            }
+
+            const video = document.getElementById('detailVideo').files[0];
+            const thumb = document.getElementById('detailThumb').files[0];
 
             if (!resp.ok) {
                 showMessage('detailMessage', 'Cập nhật media thất bại (HTTP ' + resp.status + ')', true);
@@ -972,8 +1497,25 @@
                     pv.src = data.videoUrl;
                     pv.style.display = 'block';
                     noVideoText.style.display = 'none';
-                }
+            if (!video && !thumb) {
+                msg.textContent = 'Hãy chọn video hoặc thumbnail để cập nhật';
+                return;
             }
+
+            const fd = new FormData();
+            if (video) fd.append('video', video);
+            if (thumb) fd.append('thumbnail', thumb);
+
+            try {
+                const resp = await fetch('/api/admin/exercises/' + id + '/media', {
+                    method: 'PUT',
+                    body: fd
+                });
+
+                if (!resp.ok) {
+                    msg.textContent = 'Cập nhật media thất bại (HTTP ' + resp.status + ')';
+                    return;
+                }
 
             showMessage('detailMessage', 'Cập nhật media thành công!', false);
             document.getElementById('detailVideo').value = '';
@@ -981,9 +1523,28 @@
         } catch (e) {
             console.error(e);
             showMessage('detailMessage', 'Có lỗi kết nối khi cập nhật media', true);
+                const data = await resp.json();
+                if (data.videoUrl) {
+                    form.demoVideoUrl.value = data.videoUrl;
+                    const pv = document.getElementById('previewVideo');
+                    if (pv) {
+                        pv.src = data.videoUrl;
+                        pv.style.display = 'block';
+                    }
+                }
+
+                msg.style.color = 'green';
+                msg.textContent = 'Cập nhật media thành công!';
+                document.getElementById('detailVideo').value = '';
+                document.getElementById('detailThumb').value = '';
+            } catch (e) {
+                console.error(e);
+                msg.style.color = 'red';
+                msg.textContent = 'Có lỗi kết nối khi cập nhật media';
+            }
         }
-    }
-</script>
+    </script>
 
 </body>
+
 </html>
