@@ -8,6 +8,7 @@
           crossorigin="anonymous">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản lý Bài đăng Cộng đồng - Admin Panel</title>
+    <th:block th:replace="~{layouts/main :: styles}"></th:block>
     <style>
         * {
             margin: 0;
@@ -388,6 +389,29 @@
             font-size: 13px;
         }
 
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #a0aec0;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+
+            .posts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
         .pagination-bar {
             display: flex;
             flex-wrap: wrap;
@@ -440,22 +464,7 @@
             color: #a0aec0;
         }
 
-        @media (max-width: 768px) {
-            .sidebar {
-                width: 100%;
-                height: auto;
-                position: relative;
-            }
 
-            .main-content {
-                margin-left: 0;
-                padding: 20px;
-            }
-
-            .posts-grid {
-                grid-template-columns: 1fr;
-            }
-        }
     </style>
 </head>
 <body>
