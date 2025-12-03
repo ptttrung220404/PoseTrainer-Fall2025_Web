@@ -3,6 +3,7 @@ import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.*;
 import com.google.firebase.cloud.FirestoreClient;
 import org.springframework.stereotype.Service;
+import org.web.posetrainer.DTO.PagedResponse;
 import org.web.posetrainer.Entity.Excercise;
 
 import java.util.ArrayList;
@@ -53,6 +54,10 @@ public class ExcerciseService {
             }
         }
         return result;
+    }
+
+    public PagedResponse<Excercise> getPaged(int page, int size) throws ExecutionException, InterruptedException {
+        return PagedResponse.of(getAll(), page, size);
     }
     public void updateExcercise(String id, Excercise excercise)
             throws ExecutionException, InterruptedException {
