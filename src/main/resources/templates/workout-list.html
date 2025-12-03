@@ -544,273 +544,283 @@
 
         <p class="muted" style="margin-top:16px;">Tip: Click "Chi tiết" để mở modal sửa, thêm/xóa/reorder exercise.</p>
     </div>
-    <div id="addModal" class="modal-backdrop">
-        <div class="modal" role="dialog" aria-modal="true">
-            <div class="modal-header">
-                <h3>Thêm Workout Template</h3>
-                <button class="btn" onclick="closeAddModal()">✕</button>
-            </div>
+<!-- ========== ADD WORKOUT MODAL ========== -->
+<div id="addModal" class="modal-backdrop">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>Thêm Workout Template</h3>
+            <button class="btn-close" onclick="closeAddModal()">✕</button>
+        </div>
 
-            <div class="modal-body">
-                <form id="addForm">
-                    <div class="field">
-                        <label>Title</label>
-                        <label>
-                            <input type="text" name="title" required>
-                        </label>
+        <div class="modal-body">
+            <form id="addForm">
+                <div class="form-grid">
+                    <div class="field form-grid-full">
+                        <label>Title *</label>
+                        <input type="text" name="title" placeholder="Nhập tên workout" required>
                     </div>
 
                     <div class="field">
                         <label>Slug (unique id)</label>
-                        <label>
-                            <input type="text" name="slug" placeholder="auto nếu bỏ trống">
-                        </label>
-                    </div>
-
-                    <div class="field">
-                        <label>Description</label>
-                        <label>
-                            <textarea name="description"></textarea>
-                        </label>
+                        <input type="text" name="slug" placeholder="auto nếu bỏ trống">
                     </div>
 
                     <div class="field">
                         <label>Level</label>
-                        <label>
-                            <select name="level">
-                                <option value="easy">easy</option>
-                                <option value="medium">medium</option>
-                                <option value="hard">hard</option>
-                            </select>
-                        </label>
+                        <select name="level">
+                            <option value="easy">Easy - Dễ</option>
+                            <option value="medium" selected>Medium - Trung bình</option>
+                            <option value="hard">Hard - Khó</option>
+                        </select>
                     </div>
 
                     <div class="field">
-                        <label>Estimated Duration (minutes)</label>
-                        <label>
-                            <input type="number" name="estDurationMin" value="30">
-                        </label>
+                        <label>Estimated Duration (phút)</label>
+                        <input type="number" name="estDurationMin" value="30" min="0">
                     </div>
+
                     <div class="field">
                         <label>Goal Fit</label>
-                        <label>
-                            <select name="goalFit">
-                                <option value="general_fitness">General Fitness</option>
-                                <option value="muscle_gain">Muscle Gain</option>
-                                <option value="fat_loss">Fat Loss</option>
-                            </select>
-                        </label>
-                    </div>
-
-                    <div class="field">
-                        <label>Focus</label>
-                        <label>
-                            <select name="focus" multiple style="height:80px;">
-                                <option value="upper">Upper</option>
-                                <option value="lower">Lower</option>
-                                <option value="fullbody">Full Body</option>
-                                <option value="core">Core</option>
-                            </select>
-                        </label>
-                    </div>
-
-                    <div class="field">
-                        <label>Public?</label>
-                        <label>
-                            <input type="checkbox" name="isPublic" checked>
-                        </label> Public
-                    </div>
-
-                    <hr>
-
-                    <div class="field">
-                        <label>Chọn exercise để thêm vào workout</label>
-                        <label for="addExerciseSelect"></label><select id="addExerciseSelect">
-                        <option value="">-- Chọn exercise --</option>
-                    </select>
-                    </div>
-
-                    <div style="display:flex; gap:8px;">
-                        <div style="flex:1;">
-                            <label>Sets</label>
-                            <label for="add_sets"></label><input type="number" id="add_sets" value="3">
-                        </div>
-                        <div style="flex:1;">
-                            <label>Reps</label>
-                            <label for="add_reps"></label><input type="number" id="add_reps" value="10">
-                        </div>
-                        <div style="width:120px;">
-                            <label>Rest (s)</label>
-                            <label for="add_rest"></label><input type="number" id="add_rest" value="60">
-                        </div>
-                        <div style="width:140px;">
-                            <label>Difficulty</label>
-                            <label for="add_diff"></label><select id="add_diff">
-                            <option>easy</option>
-                            <option>medium</option>
-                            <option>hard</option>
+                        <select name="goalFit">
+                            <option value="general_fitness">General Fitness</option>
+                            <option value="muscle_gain">Muscle Gain</option>
+                            <option value="fat_loss">Fat Loss</option>
                         </select>
+                    </div>
+
+                    <div class="field form-grid-full">
+                        <label>Description</label>
+                        <textarea name="description" placeholder="Mô tả chi tiết về workout..."></textarea>
+                    </div>
+
+                    <div class="field">
+                        <label>Focus (Multiple select)</label>
+                        <select name="focus" multiple style="height:120px;">
+                            <option value="upper">Upper Body</option>
+                            <option value="lower">Lower Body</option>
+                            <option value="fullbody">Full Body</option>
+                            <option value="core">Core</option>
+                        </select>
+                    </div>
+
+                    <div class="field">
+                        <label>Public Status</label>
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" name="isPublic" id="addIsPublic" checked>
+                            <label for="addIsPublic" style="margin: 0; font-weight: normal;">Công khai cho mọi người</label>
                         </div>
                     </div>
+                </div>
 
-                    <div style="margin-top:10px;">
-                        <button type="button" class="btn btn-primary" onclick="addItemInAddModal()">+ Thêm vào danh sách
-                        </button>
+                <hr class="section-divider">
+
+                <h4 class="section-title">Danh sách Exercises</h4>
+
+                <div class="exercise-selector">
+                    <div class="exercise-inputs">
+                        <div class="field">
+                            <label>Chọn Exercise</label>
+                            <select id="addExerciseSelect">
+                                <option value="">-- Chọn exercise --</option>
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label>Sets</label>
+                            <input type="number" id="add_sets" value="3" min="1">
+                        </div>
+
+                        <div class="field">
+                            <label>Reps</label>
+                            <input type="number" id="add_reps" value="10" min="1">
+                        </div>
+
+                        <div class="field">
+                            <label>Rest (s)</label>
+                            <input type="number" id="add_rest" value="60" min="0">
+                        </div>
+
+                        <div class="field">
+                            <label>Difficulty</label>
+                            <select id="add_diff">
+                                <option value="easy">Easy</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="hard">Hard</option>
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label>&nbsp;</label>
+                            <button type="button" class="btn btn-primary" onclick="addItemInAddModal()" style="width: 100%;">+ Thêm</button>
+                        </div>
                     </div>
+                </div>
 
-                    <div style="margin-top:12px;">
-                        <table class="items-table" id="addItemsTable">
-                            <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Exercise</th>
-                                <th>Sets</th>
-                                <th>Reps</th>
-                                <th>Rest</th>
-                                <th>Diff</th>
-                                <th>Action</th>
-                            </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
+                <table class="items-table" id="addItemsTable">
+                    <thead>
+                    <tr>
+                        <th style="width: 50px;">#</th>
+                        <th>Exercise</th>
+                        <th style="width: 80px;">Sets</th>
+                        <th style="width: 80px;">Reps</th>
+                        <th style="width: 80px;">Rest</th>
+                        <th style="width: 100px;">Diff</th>
+                        <th style="width: 180px;">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
 
-                    <div id="addError" class="muted" style="color:red; margin-top:8px;"></div>
-                </form>
-            </div>
+                <div id="addError" class="error-message"></div>
+            </form>
+        </div>
 
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeAddModal()">Hủy</button>
-                <button class="btn btn-success" onclick="submitAddWorkout()">Lưu</button>
-            </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeAddModal()">Hủy</button>
+            <button class="btn btn-success" onclick="submitAddWorkout()">Lưu Workout</button>
         </div>
     </div>
+</div>
 
-    <!-- ========== DETAIL / EDIT MODAL ========== -->
-    <div id="detailModal" class="modal-backdrop">
-        <div class="modal" role="dialog" aria-modal="true">
-            <div class="modal-header">
-                <h3>Chi tiết / Sửa Workout</h3>
-                <button class="btn" onclick="closeDetailModal()">✕</button>
-            </div>
+<!-- ========== DETAIL / EDIT MODAL ========== -->
+<div id="detailModal" class="modal-backdrop">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>Chi tiết / Sửa Workout</h3>
+            <button class="btn-close" onclick="closeDetailModal()">✕</button>
+        </div>
 
-            <div class="modal-body">
-                <form id="detailForm">
-
-
-                    <div class="field">
+        <div class="modal-body">
+            <form id="detailForm">
+                <div class="form-grid">
+                    <div class="field form-grid-full">
                         <label>Title</label>
                         <input type="text" name="title">
                     </div>
 
                     <div class="field">
                         <label>Slug (id)</label>
-                        <input type="text" name="slug" readonly>
+                        <input type="text" name="slug" readonly style="background: #f7fafc;">
                     </div>
-                    <div class="field">
-                        <label>Description</label>
-                        <label>
-                            <textarea name="description"></textarea>
-                        </label>
-                    </div>
+
                     <div class="field">
                         <label>Level</label>
                         <select name="level">
-                            <option value="easy">easy</option>
-                            <option value="medium">medium</option>
-                            <option value="hard">hard</option>
+                            <option value="easy">Easy - Dễ</option>
+                            <option value="medium">Medium - Trung bình</option>
+                            <option value="hard">Hard - Khó</option>
                         </select>
                     </div>
+
                     <div class="field">
-                        <label>Estimated Duration (minutes)</label>
-                        <label>
-                            <input type="number" name="estDurationMin" value="30">
-                        </label>
+                        <label>Estimated Duration (phút)</label>
+                        <input type="number" name="estDurationMin" value="30" min="0">
                     </div>
+
                     <div class="field">
                         <label>Goal Fit</label>
-                        <label>
-                            <select name="goalFit">
-                                <option value="general_fitness">General Fitness</option>
-                                <option value="muscle_gain">Muscle Gain</option>
-                                <option value="fat_loss">Fat Loss</option>
-                            </select>
-                        </label>
+                        <select name="goalFit">
+                            <option value="general_fitness">General Fitness</option>
+                            <option value="muscle_gain">Muscle Gain</option>
+                            <option value="fat_loss">Fat Loss</option>
+                        </select>
+                    </div>
+
+                    <div class="field form-grid-full">
+                        <label>Description</label>
+                        <textarea name="description"></textarea>
                     </div>
 
                     <div class="field">
-                        <label>Focus</label>
-                        <label>
-                            <select name="focus" multiple style="height:80px;">
-                                <option value="upper">Upper</option>
-                                <option value="lower">Lower</option>
-                                <option value="fullbody">Full Body</option>
-                                <option value="core">Core</option>
-                            </select>
-                        </label>
+                        <label>Focus (Multiple select)</label>
+                        <select name="focus" multiple style="height:120px;">
+                            <option value="upper">Upper Body</option>
+                            <option value="lower">Lower Body</option>
+                            <option value="fullbody">Full Body</option>
+                            <option value="core">Core</option>
+                        </select>
                     </div>
+
                     <div class="field">
-                        <label>Public?</label>
-                        <input type="checkbox" name="isPublic"> Public
+                        <label>Public Status</label>
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" name="isPublic" id="detailIsPublic">
+                            <label for="detailIsPublic" style="margin: 0; font-weight: normal;">Công khai cho mọi người</label>
+                        </div>
                     </div>
+                </div>
 
-                    <hr>
+                <hr class="section-divider">
 
-                    <h4>Danh sách exercises</h4>
+                <h4 class="section-title">📋 Danh sách Exercises</h4>
 
-                    <div style="display:flex; gap:8px; align-items:flex-end;">
-                        <div style="flex:1;">
-                            <label>Chọn exercise</label>
+                <div class="exercise-selector">
+                    <div class="exercise-inputs">
+                        <div class="field">
+                            <label>Chọn Exercise</label>
                             <select id="detailExerciseSelect">
                                 <option value="">-- Chọn exercise --</option>
                             </select>
                         </div>
-                        <div style="width:90px;"><label>Sets</label><input id="detail_sets" type="number" value="3"></div>
-                        <div style="width:90px;"><label>Reps</label><input id="detail_reps" type="number" value="10"></div>
-                        <div style="width:90px;"><label>Rest</label><input id="detail_rest" type="number" value="60"></div>
-                        <div style="width:120px;">
+
+                        <div class="field">
+                            <label>Sets</label>
+                            <input id="detail_sets" type="number" value="3" min="1">
+                        </div>
+
+                        <div class="field">
+                            <label>Reps</label>
+                            <input id="detail_reps" type="number" value="10" min="1">
+                        </div>
+
+                        <div class="field">
+                            <label>Rest (s)</label>
+                            <input id="detail_rest" type="number" value="60" min="0">
+                        </div>
+
+                        <div class="field">
                             <label>Diff</label>
                             <select id="detail_diff">
-                                <option>easy</option>
-                                <option>medium</option>
-                                <option>hard</option>
+                                <option value="easy">Easy</option>
+                                <option value="medium">Medium</option>
+                                <option value="hard">Hard</option>
                             </select>
                         </div>
-                        <div>
-                            <button type="button" class="btn btn-primary" onclick="addItemInDetailModal()">+ Add</button>
+
+                        <div class="field">
+                            <label>&nbsp;</label>
+                            <button type="button" class="btn btn-primary" onclick="addItemInDetailModal()" style="width: 100%;">+ Add</button>
                         </div>
                     </div>
+                </div>
 
-                    <div style="margin-top:12px;">
-                        <table class="items-table" id="detailItemsTable">
-                            <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Exercise</th>
-                                <th>Sets</th>
-                                <th>Reps</th>
-                                <th>Rest</th>
-                                <th>Diff</th>
-                                <th style="width:160px">Actions</th>
-                            </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
+                <table class="items-table" id="detailItemsTable">
+                    <thead>
+                    <tr>
+                        <th style="width: 50px;">#</th>
+                        <th>Exercise</th>
+                        <th style="width: 80px;">Sets</th>
+                        <th style="width: 80px;">Reps</th>
+                        <th style="width: 80px;">Rest</th>
+                        <th style="width: 100px;">Diff</th>
+                        <th style="width: 220px;">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
 
-                    <div id="detailError" class="muted" style="color:red; margin-top:8px;"></div>
-                </form>
-            </div>
+                <div id="detailError" class="error-message"></div>
+            </form>
+        </div>
 
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="closeDetailModal()">Đóng</button>
-                <button type="button" class="btn btn-warning" onclick="submitItemsUpdate()">Lưu Items</button>
-                <button type="button" class="btn btn-primary" onclick="submitWorkoutUpdate()">Lưu Info</button>
-                <button type="button" class="btn btn-danger" onclick="deleteWorkout()">Xóa Workout</button>
-            </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeDetailModal()">Đóng</button>
+            <button type="button" class="btn btn-warning" onclick="submitItemsUpdate()">Lưu Items</button>
+            <button type="button" class="btn btn-primary" onclick="submitWorkoutUpdate()">Lưu Info</button>
+            <button type="button" class="btn btn-danger" onclick="deleteWorkout()">Xóa Workout</button>
         </div>
     </div>
-</main>
+</div>
 
 <script>
     // ---------- state ----------
