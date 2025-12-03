@@ -2,50 +2,300 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Đăng nhập</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập - Pose Trainer</title>
     <style>
-        body { font-family: sans-serif; background: #f5f5f5; }
-        .login-box {
-            max-width: 400px; margin: 80px auto; padding: 24px;
-            background: #ffffff; border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        .login-box h1 { margin-top: 0; text-align: center; }
-        .field { margin-bottom: 16px; }
-        label { display: block; margin-bottom: 4px; font-weight: 600; }
-        input[type="email"], input[type="password"] {
-            width: 100%; padding: 8px 10px;
-            border-radius: 4px; border: 1px solid #ccc;
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #c5c6ca 0%, #303f7a 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
         }
-        button {
-            width: 100%; padding: 10px;
-            border: none; border-radius: 4px;
-            background: #007bff; color: #fff; font-size: 15px;
+
+        .login-container {
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            padding: 48px 40px;
+            max-width: 420px;
+            width: 100%;
+        }
+
+        .logo-container {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .logo {
+            width: 64px;
+            height: 64px;
+            background: #d9deea;
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+
+        .logo svg {
+            width: 32px;
+            height: 32px;
+            fill: white;
+        }
+
+        .brand-name {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 8px;
+        }
+
+        .brand-tagline {
+            font-size: 14px;
+            color: #718096;
+            margin-bottom: 32px;
+        }
+
+        .error-message {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            border-left: 4px solid #fc8181;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .form-group input[type="email"],
+        .form-group input[type="password"],
+        .form-group input[type="text"] {
+            width: 100%;
+            padding: 12px 16px;
+            padding-right: 45px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+            background: #f7fafc;
+        }
+
+        .form-group input[type="email"]:focus,
+        .form-group input[type="password"]:focus,
+        .form-group input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #718096;
+            padding: 4px;
+        }
+
+        .password-toggle:hover {
+            color: #2d3748;
+        }
+
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            font-size: 14px;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #4a5568;
+        }
+
+        .remember-me input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
             cursor: pointer;
         }
-        button:hover { opacity: .9; }
-        .error { color: #d9534f; margin-bottom: 12px; text-align: center; }
+
+        .forgot-password {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .forgot-password:hover {
+            text-decoration: underline;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .submit-btn:hover {
+            background: #5568d3;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .security-notice {
+            margin-top: 24px;
+            padding: 12px 16px;
+            background: #e6fffa;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-left: 4px solid #38b2ac;
+        }
+
+        .security-icon {
+            color: #38b2ac;
+            font-size: 18px;
+        }
+
+        .security-text {
+            font-size: 13px;
+            color: #2d3748;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 32px 24px;
+            }
+
+            .brand-name {
+                font-size: 24px;
+            }
+
+            .form-options {
+                flex-direction: column;
+                gap: 12px;
+                align-items: flex-start;
+            }
+        }
     </style>
 </head>
 <body>
-<div class="login-box">
-    <h1>Đăng nhập</h1>
+<div class="login-container">
+    <!-- Logo & Branding -->
+    <div class="logo-container">
+        <div class="logo">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+            </svg>
+        </div>
+        <h1 class="brand-name">Pose Trainer</h1>
+        <p class="brand-tagline">Access your account securely</p>
+    </div>
 
-    <div th:if="${error}" class="error" th:text="${error}"></div>
+    <!-- Error Message -->
+    <div th:if="${error}" class="error-message" th:text="${error}"></div>
 
+    <!-- Login Form -->
     <form th:action="@{/login}" th:object="${loginRequest}" method="post">
-        <div class="field">
-            <label>Email</label>
-            <input type="email" th:field="*{email}" required/>
+        <!-- Email Field -->
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email"
+                   id="email"
+                   th:field="*{email}"
+                   placeholder="your@email.com"
+                   required
+                   autocomplete="email"/>
         </div>
 
-        <div class="field">
-            <label>Mật khẩu</label>
-            <input type="password" th:field="*{password}" required/>
+        <!-- Password Field -->
+        <div class="form-group">
+            <label for="password">Password</label>
+            <div class="input-wrapper">
+                <input type="password"
+                       id="password"
+                       th:field="*{password}"
+                       placeholder="••••••••"
+                       required
+                       autocomplete="current-password"/>
+                <span class="password-toggle" onclick="togglePassword()">
+                        <svg id="eye-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                    </span>
+            </div>
         </div>
 
-        <button type="submit">Đăng nhập</button>
+        <!-- Form Options -->
+        <div class="form-options">
+            <label class="remember-me">
+                <input type="checkbox" name="remember" id="remember">
+                <span>Remember this device</span>
+            </label>
+            <a href="#" class="forgot-password">Reset password</a>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="submit-btn">Sign In</button>
     </form>
+
 </div>
+
+<script>
+    function togglePassword() {
+        const passwordInput = document.getElementById('password');
+        const eyeIcon = document.getElementById('eye-icon');
+
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            eyeIcon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
+        } else {
+            passwordInput.type = 'password';
+            eyeIcon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+        }
+    }
+</script>
 </body>
 </html>

@@ -2,175 +2,466 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="utf-8">
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+          integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4Dd3BTDjf4mxj9A5kHtQ/"
+          crossorigin="anonymous">
     <title>Collections Manager</title>
     <style>
-        /* (Reuse style from your workouts page) */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             background: #f5f5f5;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ========== SIDEBAR ========== */
+        .sidebar {
+            width: 240px;
+            background: #fff;
+            border-right: 1px solid #e0e0e0;
+            padding: 20px;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: #667eea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .user-info h3 {
+            font-size: 14px;
+            color: #2d3748;
+            margin-bottom: 2px;
+            font-weight: 600;
+        }
+
+        .user-info p {
+            font-size: 12px;
+            color: #718096;
+            word-break: break-all;
+        }
+
+        .create-btn-sidebar {
+            width: 100%;
+            padding: 12px;
+            background: #4299e1;
+            color: white;
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 24px;
+            transition: background 0.3s;
+        }
+
+        .create-btn-sidebar:hover {
+            background: #3182ce;
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin-bottom: 2px;
+        }
+
+        .nav-link {
+            display: block;
+            padding: 12px 16px;
+            color: #4a5568;
+            text-decoration: none;
+            transition: all 0.2s;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .nav-link:hover {
+            background: #f7fafc;
+            color: #2d3748;
+        }
+
+        .nav-link.active {
+            background: #667eea;
+            color: white;
+        }
+
+        /* ========== MAIN CONTENT ========== */
+        .main-content {
+            margin-left: 240px;
+            flex: 1;
+            padding: 40px;
         }
 
         .container {
-            max-width: 1100px;
-            margin: 28px auto;
-            padding: 22px;
+            max-width: 1200px;
             background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
         h1 {
-            margin-top: 0;
+            font-size: 28px;
+            color: #2d3748;
+            font-weight: 600;
+            margin-bottom: 24px;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 12px;
         }
 
         th, td {
-            padding: 8px 10px;
+            padding: 12px;
             border-bottom: 1px solid #e0e0e0;
             text-align: left;
             font-size: 14px;
         }
 
         th {
-            background: #fafafa;
+            background: #f7fafc;
             font-weight: 600;
+            color: #2d3748;
+        }
+
+        tbody tr:hover {
+            background: #f7fafc;
         }
 
         .top-bar {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 12px;
+            margin-bottom: 24px;
         }
 
         .btn {
             display: inline-block;
-            padding: 8px 14px;
-            border-radius: 4px;
-            text-decoration: none;
-            font-size: 14px;
+            padding: 8px 16px;
             border: none;
             cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
         }
 
         .btn-primary {
-            background: #007bff;
+            background: #667eea;
             color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
         }
 
         .btn-success {
-            background: #28a745;
+            background: #48bb78;
             color: #fff;
+        }
+
+        .btn-success:hover {
+            background: #38a169;
         }
 
         .btn-warning {
-            background: #ffc107;
-            color: #000;
+            background: #ed8936;
+            color: #fff;
+        }
+
+        .btn-warning:hover {
+            background: #dd6b20;
         }
 
         .btn-danger {
-            background: #dc3545;
+            background: #f56565;
             color: #fff;
+        }
+
+        .btn-danger:hover {
+            background: #e53e3e;
+        }
+
+        .btn-secondary {
+            background: #718096;
+            color: #fff;
+        }
+
+        .btn-secondary:hover {
+            background: #4a5568;
         }
 
         .small {
             font-size: 13px;
-            padding: 6px 8px;
+            padding: 6px 10px;
         }
 
         .badge {
             display: inline-block;
-            padding: 2px 6px;
-            border-radius: 3px;
+            padding: 4px 8px;
             font-size: 12px;
-            background: #eee;
+            font-weight: 500;
         }
 
         .modal-backdrop {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.45);
+            background: rgba(0, 0, 0, 0.5);
             justify-content: center;
             align-items: center;
-            z-index: 999;
+            z-index: 1000;
         }
 
         .modal {
             background: #fff;
-            border-radius: 8px;
-            padding: 18px;
+            padding: 24px;
             max-width: 880px;
-            width: 96%;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
         }
 
         .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            font-size: 20px;
+            color: #2d3748;
         }
 
         .modal-body {
-            max-height: 65vh;
-            overflow: auto;
+            margin-bottom: 20px;
         }
 
         .modal-footer {
             display: flex;
             justify-content: flex-end;
             gap: 8px;
-            margin-top: 12px;
         }
 
         .field {
-            margin-bottom: 10px;
+            margin-bottom: 16px;
         }
 
         .field label {
             display: block;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
             font-weight: 600;
+            color: #2d3748;
+            font-size: 14px;
         }
 
-        .field input[type="text"], .field input[type="number"], .field textarea, .field select {
+        .field input[type="text"],
+        .field input[type="number"],
+        .field textarea,
+        .field select {
             width: 100%;
-            padding: 7px 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+            padding: 8px 12px;
+            border: 1px solid #cbd5e0;
             font-size: 14px;
         }
 
         .muted {
-            color: #666;
+            color: #718096;
             font-size: 13px;
+        }
+
+        .pagination-bar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-top: 16px;
+            padding-top: 12px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .pagination-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .page-btn {
+            padding: 6px 14px;
+            border: 1px solid #cbd5e0;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #2d3748;
+            font-size: 14px;
+            background: #fff;
+        }
+
+        .page-btn:hover {
+            background: #edf2f7;
+        }
+
+        .page-btn.disabled {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        .page-status {
+            font-weight: 500;
+            color: #2d3748;
+        }
+
+        .page-size-form {
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
         .preview-thumb {
             max-width: 160px;
             display: block;
             margin-top: 6px;
-            border-radius: 6px;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
         }
     </style>
 </head>
 <body>
-<div class="container">
-    <div class="top-bar">
-        <h1>Collections</h1>
-        <div>
-            <button class="btn btn-success" onclick="openAddModal()">+ Thêm Collection</button>
-            <a href="/admin/dashboard" class="btn small" style="background:#f0f0f0">⟵ Quay lại</a>
+<!-- ========== SIDEBAR ========== -->
+<aside class="sidebar">
+    <div class="user-profile">
+        <div class="user-avatar" th:text="${#strings.isEmpty(displayName) ? 'U' : displayName.substring(0,1).toUpperCase()}">U</div>
+        <div class="user-info">
+            <h3 th:text="${#strings.isEmpty(displayName) ? 'User' : displayName}">User Name</h3>
+            <p th:text="${uid != null ? (uid.length() > 15 ? uid.substring(0,15) + '...' : uid) : 'user@email.com'}">user@gmail.com</p>
         </div>
     </div>
 
-    <table>
+    <button class="create-btn-sidebar" onclick="alert('Tính năng đang phát triển')">
+        <span>+</span> Create New
+    </button>
+
+    <ul class="nav-menu">
+        <li class="nav-item">
+            <a href="/admin/dashboard" class="nav-link">
+                Dashboard
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/admin/profile" class="nav-link">
+                Profile
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/admin/exercises" class="nav-link">
+                Exercises
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/admin/workouts" class="nav-link">
+                Workouts
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/admin/collections" class="nav-link active">
+                Collections
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/admin/users" class="nav-link">
+                Users
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/admin/community" class="nav-link">
+                Community
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/me" class="nav-link" target="_blank">
+                JSON Info
+            </a>
+        </li>
+    </ul>
+</aside>
+
+<!-- ========== MAIN CONTENT ========== -->
+<main class="main-content">
+    <div class="container">
+        <div class="top-bar">
+            <h1>Collections</h1>
+            <button class="btn btn-success" onclick="openAddModal()">+ Thêm Collection</button>
+        </div>
+
+
+
+        <p class="muted" style="margin-top:16px;">Tip: Click "Chi tiết" để mở modal sửa, upload thumbnail, chọn workout items.</p>
+        <form class="row g-2 align-items-center mb-3" method="get">
+            <input type="hidden" name="page" value="1">
+            <input type="hidden" name="size" th:value="${collectionsPage.size}">
+            <div class="col-md-4">
+                <input type="text" class="form-control" name="keyword" placeholder="Tìm theo tên hoặc category"
+                       th:value="${keyword}">
+            </div>
+            <div class="col-md-4">
+                <select class="form-select" name="sort">
+                    <option value="updated_desc" th:selected="${sort == 'updated_desc'}">Mới cập nhật</option>
+                    <option value="updated_asc" th:selected="${sort == 'updated_asc'}">Cũ đến mới</option>
+                    <option value="title_asc" th:selected="${sort == 'title_asc'}">Tên A-Z</option>
+                    <option value="title_desc" th:selected="${sort == 'title_desc'}">Tên Z-A</option>
+                    <option value="category_asc" th:selected="${sort == 'category_asc'}">Category A-Z</option>
+                </select>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <button class="btn btn-primary" type="submit">Áp dụng</button>
+                <a class="btn btn-outline-secondary ms-2" th:href="@{/admin/collections}">Reset</a>
+            </div>
+        </form>
+
+    <div class="table-responsive">
+    <table class="table table-striped table-hover align-middle">
         <thead>
         <tr>
             <th>Title</th>
@@ -182,10 +473,10 @@
         </tr>
         </thead>
         <tbody>
-        <tr th:if="${#lists.isEmpty(collections)}">
+        <tr th:if="${collectionsPage.totalItems == 0}">
             <td colspan="6">Chưa có collection nào.</td>
         </tr>
-        <tr th:each="c : ${collections}">
+        <tr th:each="c : ${collectionsPage.items}">
             <td th:text="${c.title}">Title</td>
             <td th:text="${c.category ?: ''}">Category</td>
             <td>
@@ -200,99 +491,116 @@
         </tr>
         </tbody>
     </table>
+    </div>
+    <div class="pagination-bar">
+        <div class="pagination-info muted"
+             th:text="${collectionsPage.totalItems > 0 ? 'Hiển thị ' + collectionsPage.fromItem + '-' + collectionsPage.toItem + ' trên ' + collectionsPage.totalItems + ' collection' : 'Không có collection'}">
+            Hiển thị 0-0 trên 0 collection
+        </div>
+        <div class="pagination-controls">
+            <a class="page-btn"
+               th:classappend="${!collectionsPage.hasPrev} ? ' disabled'"
+               th:href="@{/admin/collections(page=${collectionsPage.page - 1},size=${collectionsPage.size},keyword=${keyword},sort=${sort})}">
+                ‹ Trước
+            </a>
+            <span class="page-status"
+                  th:text="'Trang ' + ${collectionsPage.page} + ' / ' + ${collectionsPage.totalPages}">Trang 1 / 1</span>
+            <a class="page-btn"
+               th:classappend="${!collectionsPage.hasNext} ? ' disabled'"
+               th:href="@{/admin/collections(page=${collectionsPage.page + 1},size=${collectionsPage.size},keyword=${keyword},sort=${sort})}">
+                Sau ›
+            </a>
+        </div>
+        <form class="page-size-form" method="get">
+            <input type="hidden" name="page" value="1">
+            <input type="hidden" name="keyword" th:value="${keyword}">
+            <input type="hidden" name="sort" th:value="${sort}">
+            <label for="collectionsSize">Mỗi trang</label>
+            <input type="number" id="collectionsSize" name="size" min="1"
+                   class="form-control form-control-sm"
+                   th:value="${collectionsPage.size != null ? collectionsPage.size : 10}"
+                   style="max-width:120px"
+                   onchange="this.form.submit()" />
+                
+        </form>
+    </div>
     <p class="muted" style="margin-top:12px;">Tip: Click "Chi tiết" để mở modal sửa, upload thumbnail, chọn workout
         items.</p>
 </div>
+    <!-- ADD COLLECTION MODAL -->
+    <div id="addModal" class="modal-backdrop">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Thêm Collection Mới</h3>
+                <button class="btn-close" onclick="closeAddModal()">✕</button>
+            </div>
 
-<!-- ADD COLLECTION MODAL -->
-<div id="addModal" class="modal-backdrop">
-    <div class="modal" role="dialog" aria-modal="true">
-        <div class="modal-header">
-            <h3>Thêm Collection</h3>
-            <button class="btn" onclick="closeAddModal()">✕</button>
-        </div>
-        <div class="modal-body">
-            <form id="addForm">
-                <div class="field">
-                    <label>Title</label>
-                    <input type="text" name="title" required>
-                </div>
-                <div class="field">
-                    <label>Slug (id) — optional</label>
-                    <input type="text" name="slug" placeholder="auto nếu bỏ trống">
-                </div>
-                <div class="field">
-                    <label>Description</label>
-                    <textarea name="description"></textarea>
-                </div>
-                <div class="field">
-                    <label>Category</label>
-                    <input type="text" name="category">
-                </div>
-                <!-- Workouts select + table -->
-                <div style="margin-top:10px; display:flex; gap:8px; align-items:center;"><select id="addWorkoutSelect"
-                                                                                                 style="flex:1">
-                    <!-- populated from workoutsList --> </select>
-                    <button type="button" class="btn btn-primary small" onclick="addWorkoutInAddModal()">+ Thêm</button>
-                </div>
-                <table class="items-table" id="addWorkoutTable" style="margin-top:12px;">
-                    <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Workout</th>
-                        <th>Action</th>
-                    </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-                <div class="field"><label>Thumbnail (ảnh)</label> <input type="file" id="addThumbnail" accept="image/*"
-                                                                         onchange="previewThumb('add')">
-                    <div><img id="addPreviewThumb" class="preview-thumb" style="display:none;"></div>
-                </div>
-                <div class="field"><label>Public?</label> <input type="checkbox" name="isPublic" checked></div>
-                <div class="field"><label>Tags (comma separated)</label> <input type="text" name="tags"></div>
-                <div id="addError" class="muted" style="color:red"></div>
-            </form>
-        </div>
-        <div class="modal-footer">
-            <button class="btn" onclick="closeAddModal()">Hủy</button>
-            <button class="btn btn-success" onclick="submitAddCollection()">Lưu</button>
-        </div>
-    </div>
-</div>
+            <div class="modal-body">
+                <form id="addForm">
+                    <div class="form-grid">
+                        <div class="field form-grid-full">
+                            <label>Title *</label>
+                            <input type="text" name="title" placeholder="Nhập tên collection" required>
+                        </div>
 
-<!-- DETAIL / EDIT COLLECTION MODAL -->
-<div id="detailModal" class="modal-backdrop">
-    <div class="modal" role="dialog" aria-modal="true">
-        <div class="modal-header">
-            <h3>Chi tiết / Sửa Collection</h3>
-            <button class="btn" onclick="closeDetailModal()">✕</button>
-        </div>
-        <div class="modal-body">
-            <form id="detailForm">
-                <input type="hidden" name="id">
-                <div class="field">
-                    <label>Title</label>
-                    <input type="text" name="title">
-                </div>
-                <div class="field">
-                    <label>Slug (id)</label>
-                    <input type="text" name="slug" readonly>
-                </div>
-                <div class="field">
-                    <label>Description</label>
-                    <textarea name="description"></textarea>
-                </div>
-                <div class="field">
-                    <label>Category</label>
-                    <input type="text" name="category">
-                </div>
-                <div class="field">
-                    <label>Workouts (chọn nhiều)</label>
-                    <div style="margin-top:10px; display:flex; gap:8px; align-items:center;"><select
-                            id="detailWorkoutSelect" style="flex:1"> <!-- populated from workoutsList --> </select>
-                        <button type="button" class="btn btn-primary small" onclick="addWorkoutInDetailModal()">+ Thêm
-                        </button>
+                        <div class="field">
+                            <label>Slug (ID)</label>
+                            <input type="text" name="slug" placeholder="auto nếu bỏ trống">
+                        </div>
+
+                        <div class="field">
+                            <label>Category</label>
+                            <input type="text" name="category" placeholder="VD: Beginner, Weight Loss...">
+                        </div>
+
+                        <div class="field form-grid-full">
+                            <label>Description</label>
+                            <textarea name="description" placeholder="Mô tả chi tiết về collection..."></textarea>
+                        </div>
+
+                        <div class="field">
+                            <label>Tags (comma separated)</label>
+                            <input type="text" name="tags" placeholder="beginner, fitness, home-workout">
+                        </div>
+
+                        <div class="field">
+                            <label>Public Status</label>
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" name="isPublic" id="addIsPublic" checked>
+                                <label for="addIsPublic" style="margin: 0; font-weight: normal;">Công khai cho mọi người</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="section-divider">
+
+                    <h4 class="section-title">Thumbnail</h4>
+                    <div class="field">
+                        <label>Upload Thumbnail *</label>
+                        <input type="file" id="addThumbnail" accept="image/*" onchange="previewThumb('add')" required>
+                        <div class="thumbnail-container">
+                            <img id="addPreviewThumb" class="preview-thumb" style="display:none;">
+                            <p class="muted" id="addThumbPlaceholder">Chưa có ảnh. Vui lòng chọn file.</p>
+                        </div>
+                    </div>
+
+                    <hr class="section-divider">
+
+                    <h4 class="section-title">Danh sách Workouts</h4>
+
+                    <div class="workout-selector">
+                        <div class="workout-inputs">
+                            <div class="field" style="flex: 3;">
+                                <label>Chọn Workout</label>
+                                <select id="addWorkoutSelect">
+                                    <option value="">-- Chọn workout để thêm --</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label>&nbsp;</label>
+                                <button type="button" class="btn btn-primary" onclick="addWorkoutInAddModal()">+ Thêm</button>
+                            </div>
+                        </div>
                     </div>
                     <table class="items-table" id="detailWorkoutTable" style="margin-top:12px;">
                         <thead>
@@ -325,6 +633,8 @@
         </div>
     </div>
 </div>
+    <p class="muted" style="margin-top:16px;">Tip: Click "Chi tiết" để mở modal sửa, upload thumbnail, chọn workout items.</p>
+</main>
 
 <script>
     // ---------- state ----------

@@ -4,6 +4,7 @@ import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.QuerySnapshot;
 import org.springframework.stereotype.Service;
+import org.web.posetrainer.DTO.PagedResponse;
 import org.web.posetrainer.Entity.User;
 
 import java.util.ArrayList;
@@ -69,6 +70,10 @@ public class UserService {
             }
         }
         return result;
+    }
+
+    public PagedResponse<User> getPaged(int page, int size) throws ExecutionException, InterruptedException {
+        return PagedResponse.of(getAll(), page, size);
     }
 
     public boolean updateUser(String uid, User updatedUser) throws ExecutionException, InterruptedException {

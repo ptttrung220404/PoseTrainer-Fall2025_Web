@@ -34,7 +34,7 @@ public class WorkoutsTemplatesController {
 
     @GetMapping
     public List<WorkoutTemplate> getAll() throws ExecutionException, InterruptedException {
-        return WorkoutsTemplatesService.getAll();
+        return workoutsTemplatesService.getAll();
     }
 
     @PostMapping(value = "/create", consumes = MediaType.APPLICATION_JSON_VALUE)

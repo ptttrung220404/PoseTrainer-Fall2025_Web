@@ -3,8 +3,8 @@ import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.*;
 import com.google.firebase.cloud.FirestoreClient;
 import org.springframework.stereotype.Service;
+import org.web.posetrainer.DTO.PagedResponse;
 import org.web.posetrainer.Entity.Collections;
-import org.web.posetrainer.Entity.WorkoutTemplate;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -12,7 +12,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
 
 @Service
 public class CollectionsService {
@@ -62,6 +61,10 @@ public class CollectionsService {
             }
         }
         return list;
+    }
+
+    public PagedResponse<Collections> getPaged(int page, int size) throws ExecutionException, InterruptedException {
+        return PagedResponse.of(getAll(), page, size);
     }
     public Collections getById(String docId) throws Exception {
         DocumentSnapshot snap = db()
