@@ -568,7 +568,7 @@
                 <td th:text="${w.updatedAt > 0 ? #dates.format(new java.util.Date(w.updatedAt), 'dd/MM/yyyy HH:mm') : '-'}">-</td>
                 <td>
                     <button class="btn btn-primary small" th:attr="onclick='openDetailModal(\'' + ${w.id} + '\')'">Chi tiết</button>
-                    <button class="btn small" th:attr="onclick='openAddModalWithClone(\'' + ${w.id} + '\')'">Duplicate</button>
+
                 </td>
             </tr>
             </tbody>
@@ -679,6 +679,16 @@
 
                 <hr class="section-divider">
 
+                <div class="field">
+                    <label>Upload Thumbnail *</label>
+                    <input type="file" id="addThumbnail" accept="image/*" onchange="previewThumb('add')" required>
+                    <div class="thumbnail-container">
+                        <img id="addPreviewThumb" class="preview-thumb" style="display:none;">
+                        <p class="muted" id="addThumbPlaceholder">Chưa có ảnh. Vui lòng chọn file.</p>
+                    </div>
+                </div>
+
+                <hr class="section-divider">
                 <h4 class="section-title">Danh sách Exercises</h4>
 
                 <div class="exercise-selector">
@@ -816,6 +826,21 @@
                 </div>
 
                 <hr class="section-divider">
+                <h4 class="section-title">Thumbnail</h4>
+                <div class="field">
+                    <label>Current Thumbnail</label>
+                    <div class="thumbnail-container">
+                        <img id="detailPreviewThumb" class="preview-thumb" style="display:none;">
+                        <p class="muted" id="detailThumbPlaceholder">Chưa có ảnh.</p>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label>Upload New Thumbnail</label>
+                    <input type="file" id="detailThumbnail" accept="image/*" onchange="previewThumb('detail')">
+                </div>
+
+                <hr class="section-divider">
 
                 <h4 class="section-title">📋 Danh sách Exercises</h4>
 
@@ -882,6 +907,7 @@
             <button type="button" class="btn btn-secondary" onclick="closeDetailModal()">Đóng</button>
             <button type="button" class="btn btn-warning" onclick="submitItemsUpdate()">Lưu Items</button>
             <button type="button" class="btn btn-primary" onclick="submitWorkoutUpdate()">Lưu Info</button>
+            <button class="btn btn-primary" onclick="uploadThumbnail()">Upload Thumbnail</button>
             <button type="button" class="btn btn-danger" onclick="deleteWorkout()">Xóa Workout</button>
         </div>
     </div>
@@ -907,6 +933,10 @@
     // ---------- boot: load exercises for dropdowns ----------
     window.addEventListener('load', () => {
         loadExercises();
+        const addThumb = q('#addThumbnail');
+        const detailThumb = q('#detailThumbnail');
+        addThumb?.addEventListener('change', () => previewThumb('add'));
+        detailThumb?.addEventListener('change', () => previewThumb('detail'));
         // Workouts are now loaded from server via Thymeleaf, no need to load via JS
     });
 
@@ -962,37 +992,7 @@
     }
 
     // open add modal but prefill by cloning existing workout
-    async function openAddModalWithClone(id) {
-        try {
-            const resp = await fetch('/api/admin/workouts/' + id);
-            if (!resp.ok) {
-                alert('Cannot load workout to clone');
-                return;
-            }
-            const w = await resp.json();
 
-            // prefill
-            q('#addForm [name=title]').value = (w.title || w.name) + ' (copy)';
-            q('#addForm [name=slug]').value = ''; // new slug
-            q('#addForm [name=level]').value = w.level || 'medium';
-            q('#addForm [name=isPublic]').checked = !!w.isPublic;
-
-            addItems = (w.items || []).map(it => ({
-                exerciseId: it.exerciseId,
-                sets: it.configOverride?.sets ?? (it.sets ?? 3),
-                reps: it.configOverride?.reps ?? (it.reps ?? 10),
-                restSec: it.configOverride?.restSec ?? (it.restSec ?? 60),
-                difficulty: it.configOverride?.difficulty ?? (it.difficulty ?? 'medium')
-            }));
-            renderAddItemsTable();
-
-            q('#addError').textContent = '';
-            q('#addModal').style.display = 'flex';
-        } catch (e) {
-            console.error(e);
-            alert('Lỗi khi clone');
-        }
-    }
 
     function closeAddModal() {
         q('#addModal').style.display = 'none';
@@ -1060,6 +1060,11 @@
             q('#addError').textContent = 'Title bắt buộc';
             return;
         }
+        const thumbFile = q('#addThumbnail').files[0];
+        if (!thumbFile) {
+            q('#addError').textContent = 'Vui lòng chọn thumbnail';
+            return;
+        }
         const slug = q('#addForm [name=slug]').value.trim();
         const level = q('#addForm [name=level]').value;
         const isPublic = q('#addForm [name=isPublic]').checked;
@@ -1085,23 +1090,27 @@
             estDurationMin: parseInt(q('#addForm [name=estDurationMin]').value || '0'),
             goalFit: q('#addForm [name=goalFit]').value,
             focus: Array.from(q('#addForm [name=focus]').selectedOptions).map(o => o.value),
-            createdBy: q('#addForm [name=createdBy]').value.trim(),
-            version: parseInt(q('#addForm [name=version]').value || '1'),
+            // createdBy: q('#addForm [name=createdBy]').value.trim(),
+            // version: parseInt(q('#addForm [name=version]').value || '1'),
             items: items,
             updatedAt: Date.now()
         };
 
         try {
+            const fd = new FormData();
+            fd.append('data', new Blob([JSON.stringify(payload)], {type: 'application/json'}));
+            fd.append('thumbnail', thumbFile);
             const resp = await fetch('/api/admin/workouts/create', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(payload)
+
+                body: fd
             });
             if (!resp.ok) {
                 const text = await resp.text();
                 q('#addError').textContent = 'Tạo thất bại (HTTP ' + resp.status + ') ' + text;
                 return;
             }
+            await resp.json();
             closeAddModal();
             window.location.reload(); // Reload page to refresh list
         } catch (e) {
@@ -1156,6 +1165,14 @@
             }));
 
             renderDetailItemsTable();
+            const img = q('#detailPreviewThumb');
+            if (w.thumbnailUrl) {
+                img.src = w.thumbnailUrl;
+                img.style.display = 'block';
+            } else {
+                img.removeAttribute('src');
+                img.style.display = 'none';
+            }
         } catch (e) {
             console.error(e);
             q('#detailError').textContent = 'Lỗi khi tải chi tiết';
@@ -1364,7 +1381,78 @@
 
     // ---------- small util: refresh lists ----------
     // (already implemented above: loadWorkouts, loadExercises)
-
+    function previewThumb(mode) {
+        const input = mode === 'add' ? q('#addThumbnail') : q('#detailThumbnail');
+        const img = mode === 'add' ? q('#addPreviewThumb') : q('#detailPreviewThumb');
+        if (!input || !img) return;
+        const file = input.files[0];
+        if (!file) {
+            img.removeAttribute('src');
+            img.style.display = 'none';
+            return;
+        }
+        img.src = URL.createObjectURL(file);
+        img.style.display = 'block';
+    }
+    async function uploadThumbnail() {
+        if (!currentEditingId) {
+            q('#detailError').textContent = 'Missing id';
+            return;
+        }
+        const file = q('#detailThumbnail').files[0];
+        if (!file) {
+            q('#detailError').textContent = 'Chọn file trước';
+            return;
+        }
+        q('#detailError').textContent = '';
+        await maybeUploadThumbnail(currentEditingId, 'detail');
+         window.location.reload(); // Reload page to refresh list
+    }
+    async function httpFetch(url, options = {}) {
+        const opts = {...options, credentials: 'include'};
+        if (options.headers) {
+            opts.headers = options.headers;
+        }
+        return fetch(url, opts);
+    }
+    async function maybeUploadThumbnail(id, mode) {
+        const input = mode === 'add' ? q('#addThumbnail') : q('#detailThumbnail');
+        const file = input?.files?.[0];
+        if (!file) return;
+        const fd = new FormData();
+        fd.append('thumbnail', file);
+        try {
+            const resp = await httpFetch('/api/admin/workouts/' + id + '/thumbnail', {
+                method: 'PUT',
+                body: fd
+            });
+            if (!resp.ok) {
+                console.warn('Thumbnail upload failed', resp.status);
+                q('#detailError').textContent = 'Upload thumbnail thất bại';
+                return;
+            }
+            const data = await resp.json();
+            if (mode === 'detail' && data.thumbnailUrl) {
+                const img = q('#detailPreviewThumb');
+                img.src = data.thumbnailUrl;
+                img.style.display = 'block';
+            } else if (mode === 'add' && data.thumbnailUrl) {
+                const img = q('#addPreviewThumb');
+                img.src = data.thumbnailUrl;
+                img.style.display = 'block';
+            }
+            q('#detailError').style.color = 'green';
+            q('#detailError').textContent = 'Upload thumbnail thành công';
+            setTimeout(() => {
+                q('#detailError').style.color = 'red';
+                q('#detailError').textContent = '';
+            }, 1500);
+        } catch (e) {
+            console.error(e);
+            q('#detailError').textContent = 'Lỗi khi upload thumbnail';
+        }
+    }
 </script>
+</main>
 </body>
 </html>

@@ -50,11 +50,34 @@ public class FirebaseStorageService {
         }
 
         Bucket bucket = StorageClient.getInstance().bucket(bucketName);
+
         String basePath = "collections/" + collectionId + "/";
 
         // Tên file cố định như Exercise
         String objectName = basePath + "thumbnail.jpg";
 
+        // Upload lên Firebase Storage
+        bucket.create(objectName, thumbnail.getBytes(), thumbnail.getContentType());
+
+        // Trả về public media link
+        return buildDownloadUrl(objectName);
+    }
+    public String uploadWorkoutThumbnail(String WorkoutTemplateId, MultipartFile thumbnail)
+            throws IOException {
+
+        if (thumbnail == null || thumbnail.isEmpty()) {
+            return null;
+        }
+        System.out.println(">>> Thumbnail ContentType = " + thumbnail.getContentType());
+        System.out.println(">>> Thumbnail OriginalName = " + thumbnail.getOriginalFilename());
+        Bucket bucket = StorageClient.getInstance().bucket(bucketName);
+        System.out.println("Bucket: " + bucket.getName());
+
+        String basePath = "workouts_templates/" + WorkoutTemplateId + "/";
+
+        // Tên file cố định như Exercise
+        String objectName = basePath + "thumbnail.jpg";
+        System.out.println(">>> Uploading to path: " + objectName);
         // Upload lên Firebase Storage
         bucket.create(objectName, thumbnail.getBytes(), thumbnail.getContentType());
 
