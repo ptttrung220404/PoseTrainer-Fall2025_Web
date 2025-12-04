@@ -468,63 +468,8 @@
     </style>
 </head>
 <body>
-<!-- ========== SIDEBAR ========== -->
-<aside class="sidebar">
-    <div class="user-profile">
-        <div class="user-avatar" th:text="${#strings.isEmpty(displayName) ? 'U' : displayName.substring(0,1).toUpperCase()}">U</div>
-        <div class="user-info">
-            <h3 th:text="${#strings.isEmpty(displayName) ? 'User' : displayName}">User Name</h3>
-            <p th:text="${uid != null ? (uid.length() > 15 ? uid.substring(0,15) + '...' : uid) : 'user@email.com'}">user@gmail.com</p>
-        </div>
-    </div>
 
-    <button class="create-btn-sidebar" onclick="alert('Tính năng đang phát triển')">
-        <span>+</span> Create New
-    </button>
-
-    <ul class="nav-menu">
-        <li class="nav-item">
-            <a href="/admin/dashboard" class="nav-link">
-                Dashboard
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="/admin/profile" class="nav-link">
-                Profile
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="/admin/exercises" class="nav-link">
-                Exercises
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="/admin/workouts" class="nav-link">
-                Workouts
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="/admin/collections" class="nav-link">
-                Collections
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="/admin/users" class="nav-link">
-                Users
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="/admin/community" class="nav-link active">
-                Community
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="/me" class="nav-link" target="_blank">
-                JSON Info
-            </a>
-        </li>
-    </ul>
-</aside>
+<div th:replace="~{layouts/main :: sidebar(displayName=${displayName}, uid=${uid}, currentPage='community')}"></div>
 
 <!-- ========== MAIN CONTENT ========== -->
 <main class="main-content">
@@ -533,27 +478,40 @@
             <h1>Quản lý Bài đăng Cộng đồng</h1>
         </div>
 
-        <form class="row g-2 align-items-center mb-3" method="get">
-            <input type="hidden" name="page" value="1">
-            <input type="hidden" name="size" th:value="${communityPage.size}">
-            <div class="col-md-4">
-                <input type="text" class="form-control" name="keyword" placeholder="Tìm theo tác giả hoặc nội dung"
-                       th:value="${keyword}">
-            </div>
-            <div class="col-md-4">
-                <select class="form-select" name="sort">
-                    <option value="created_desc" th:selected="${sort == 'created_desc'}">Mới nhất</option>
-                    <option value="created_asc" th:selected="${sort == 'created_asc'}">Cũ nhất</option>
-                    <option value="author_asc" th:selected="${sort == 'author_asc'}">Tác giả A-Z</option>
-                    <option value="likes_desc" th:selected="${sort == 'likes_desc'}">Nhiều lượt thích</option>
-                    <option value="comments_desc" th:selected="${sort == 'comments_desc'}">Nhiều bình luận</option>
-                </select>
-            </div>
-            <div class="col-md-4 text-md-end">
-                <button class="btn btn-primary" type="submit">Áp dụng</button>
-                <a class="btn btn-outline-secondary ms-2" th:href="@{/admin/community}">Reset</a>
-            </div>
-        </form>
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <form method="get" action="/admin/community">
+                <input type="hidden" name="page" value="1">
+                <input type="hidden" name="size" th:value="${communityPage.size}">
+
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label class="filter-label">Tìm theo tác giả hoặc nội dung</label>
+                        <input
+                                type="text"
+                                name="keyword"
+                                class="search-input"
+                                placeholder="Nhập từ khóa để tìm kiếm..."
+                                th:value="${keyword}"
+                        />
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Sắp xếp theo</label>
+                        <select name="sort" class="filter-select">
+                            <option value="created_desc" th:selected="${sort == 'created_desc'}">Mới nhất</option>
+                            <option value="created_asc" th:selected="${sort == 'created_asc'}">Cũ nhất</option>
+                            <option value="author_asc" th:selected="${sort == 'author_asc'}">Tác giả A-Z</option>
+                            <option value="likes_desc" th:selected="${sort == 'likes_desc'}">Nhiều lượt thích</option>
+                            <option value="comments_desc" th:selected="${sort == 'comments_desc'}">Nhiều bình luận</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="filter-actions">
+                    <button type="submit" class="filter-btn filter-btn-primary">Áp dụng</button>
+                    <a href="/admin/community" class="filter-btn filter-btn-secondary">Reset</a>
+                </div>
+            </form>
+        </div>
 
         <div class="posts-grid" th:if="${communityPage.totalItems > 0}">
             <div class="post-card" th:each="post : ${communityPage.items}">
@@ -633,7 +591,7 @@
                        th:value="${communityPage.size != null ? communityPage.size : 10}"
                        style="max-width:120px"
                        onchange="this.form.submit()" />
-                
+
             </form>
         </div>
     </div>
