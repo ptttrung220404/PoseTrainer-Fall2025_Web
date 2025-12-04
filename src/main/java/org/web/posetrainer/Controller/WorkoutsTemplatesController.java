@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.web.posetrainer.Entity.Collections;
 import org.web.posetrainer.Entity.Excercise;
 import org.web.posetrainer.Entity.WorkoutTemplate;
 import org.web.posetrainer.Service.ExcerciseService;
@@ -26,10 +27,12 @@ public class WorkoutsTemplatesController {
 
     private final WorkoutsTemplatesService workoutsTemplatesService;
     private final FirebaseStorageService storageService;
+    private final FirebaseStorageService firebaseStorageService;
 
-    public WorkoutsTemplatesController(WorkoutsTemplatesService workoutsTemplatesService, FirebaseStorageService storageService) {
+    public WorkoutsTemplatesController(WorkoutsTemplatesService workoutsTemplatesService, FirebaseStorageService storageService, FirebaseStorageService firebaseStorageService) {
         this.workoutsTemplatesService = workoutsTemplatesService;
         this.storageService = storageService;
+        this.firebaseStorageService = firebaseStorageService;
     }
 
     @GetMapping
@@ -37,13 +40,21 @@ public class WorkoutsTemplatesController {
         return workoutsTemplatesService.getAll();
     }
 
-    @PostMapping(value = "/create", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> createWorkout(@RequestBody WorkoutTemplate request, Principal principal) throws Exception {
+    @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> createWorkout(@RequestPart("data") WorkoutTemplate request,
+                                           @RequestPart(value = "thumbnail", required = false) MultipartFile thumbnail,
+                                           Principal principal) throws Exception {
 
         String adminId = principal.getName();
         request.setCreatedBy(adminId);
         String id = workoutsTemplatesService.createWorkout(request);
-        return ResponseEntity.ok(Map.of("id", id));
+        String thumbnailUrl = null;
+        if (thumbnail != null && !thumbnail.isEmpty()) {
+            thumbnailUrl = firebaseStorageService.uploadWorkoutThumbnail(id, thumbnail);
+            workoutsTemplatesService.updateWorkoutThumbnail(id, thumbnailUrl);
+        }
+
+        return ResponseEntity.ok(Map.of("id", id,"thumbnailUrl", thumbnailUrl));
     }
 
     @GetMapping("/{docId}")
@@ -90,7 +101,28 @@ public class WorkoutsTemplatesController {
                     .body(Map.of("error", e.getMessage()));
         }
     }
+    @PutMapping(value = "/{docId}/thumbnail", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> updateThumbnail(@PathVariable String docId, @RequestPart("thumbnail") MultipartFile thumbnail) {
+        System.out.println(">>> ENTER updateThumbnail, docId = " + docId);
+        try {
+            if (thumbnail == null || thumbnail.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Thumbnail file is required"));
+            }
+            System.out.println(">>> Thumbnail OK: " + thumbnail.getOriginalFilename());
 
+            WorkoutTemplate existing = workoutsTemplatesService.getWorkout(docId);
+            if (existing == null) {
+                return ResponseEntity.notFound().build();
+            }
+            String thumbnailUrl = firebaseStorageService.uploadWorkoutThumbnail(docId, thumbnail);
+            workoutsTemplatesService.updateWorkoutThumbnail(docId, thumbnailUrl);
+            System.out.println(">>> DONE updateThumbnail: " + thumbnailUrl);
+            return ResponseEntity.ok(Map.of("id", docId, "thumbnailUrl", thumbnailUrl));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
+        }
+    }
     @PutMapping("/{docId}/items")
     public ResponseEntity<?> updateWorkoutItems(
             @PathVariable String docId,

@@ -29,11 +29,7 @@ public class CollectionsController {
     }
 
     @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> createCollection(
-            @RequestPart("data") Collections request,
-            @RequestPart(value = "thumbnail", required = false) MultipartFile thumbnail,
-            Principal principal
-    ) throws Exception {
+    public ResponseEntity<?> createCollection(@RequestPart("data") Collections request, @RequestPart(value = "thumbnail", required = false) MultipartFile thumbnail, Principal principal) throws Exception {
 
         String adminId = principal.getName();
         request.setCreatedBy(adminId);
@@ -50,10 +46,7 @@ public class CollectionsController {
             collectionsService.updateCollectionThumbnail(id, thumbnailUrl);
         }
 
-        return ResponseEntity.ok(Map.of(
-                "id", id,
-                "thumbnailUrl", thumbnailUrl
-        ));
+        return ResponseEntity.ok(Map.of("id", id, "thumbnailUrl", thumbnailUrl));
     }
 
     @GetMapping("/{docId}")
@@ -66,16 +59,12 @@ public class CollectionsController {
 
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(500)
-                    .body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
         }
     }
 
     @PutMapping(value = "/{docId}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> updateCollection(
-            @PathVariable String docId,
-            @RequestBody Collections request
-    ) {
+    public ResponseEntity<?> updateCollection(@PathVariable String docId, @RequestBody Collections request) {
         try {
             Collections existing = collectionsService.getById(docId);
             if (existing == null) {
@@ -93,20 +82,15 @@ public class CollectionsController {
             return ResponseEntity.ok(existing);
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(500)
-                    .body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
         }
     }
 
     @PutMapping(value = "/{docId}/thumbnail", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> updateThumbnail(
-            @PathVariable String docId,
-            @RequestPart("thumbnail") MultipartFile thumbnail
-    ) {
+    public ResponseEntity<?> updateThumbnail(@PathVariable String docId, @RequestPart("thumbnail") MultipartFile thumbnail) {
         try {
             if (thumbnail == null || thumbnail.isEmpty()) {
-                return ResponseEntity.badRequest()
-                        .body(Map.of("error", "Thumbnail file is required"));
+                return ResponseEntity.badRequest().body(Map.of("error", "Thumbnail file is required"));
             }
             Collections existing = collectionsService.getById(docId);
             if (existing == null) {
@@ -114,50 +98,32 @@ public class CollectionsController {
             }
             String thumbnailUrl = firebaseStorageService.uploadCollectionThumbnail(docId, thumbnail);
             collectionsService.updateCollectionThumbnail(docId, thumbnailUrl);
-            return ResponseEntity.ok(Map.of(
-                    "id", docId,
-                    "thumbnailUrl", thumbnailUrl
-            ));
+            return ResponseEntity.ok(Map.of("id", docId, "thumbnailUrl", thumbnailUrl));
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(500)
-                    .body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
         }
     }
 
     @PostMapping("/{docId}/workouts/{workoutId}")
-    public ResponseEntity<?> addWorkoutToCollection(
-            @PathVariable String docId,
-            @PathVariable String workoutId
-    ) {
+    public ResponseEntity<?> addWorkoutToCollection(@PathVariable String docId, @PathVariable String workoutId) {
         try {
             collectionsService.addWorkoutToCollection(docId, workoutId);
-            return ResponseEntity.ok(Map.of(
-                    "status", "added",
-                    "workoutId", workoutId
-            ));
+            return ResponseEntity.ok(Map.of("status", "added", "workoutId", workoutId));
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(500)
-                    .body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
         }
     }
 
     @DeleteMapping("/{docId}/workouts/{workoutId}")
-    public ResponseEntity<?> removeWorkoutFromCollection(
-            @PathVariable String docId,
-            @PathVariable String workoutId
-    ) {
+    public ResponseEntity<?> removeWorkoutFromCollection(@PathVariable String docId, @PathVariable String workoutId) {
         try {
             collectionsService.removeWorkoutFromCollection(docId, workoutId);
-            return ResponseEntity.ok(Map.of(
-                    "status", "removed",
-                    "workoutId", workoutId
-            ));
+            return ResponseEntity.ok(Map.of("status", "removed", "workoutId", workoutId));
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(500)
-                    .body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
         }
     }
 
@@ -166,18 +132,13 @@ public class CollectionsController {
         try {
             Collections existing = collectionsService.getById(docId);
             if (existing == null) {
-                return ResponseEntity.status(404)
-                        .body(Map.of("error", "Collection not found"));
+                return ResponseEntity.status(404).body(Map.of("error", "Collection not found"));
             }
             collectionsService.deleteCollection(docId);
-            return ResponseEntity.ok(Map.of(
-                    "message", "Collection deleted successfully",
-                    "deletedId", docId
-            ));
+            return ResponseEntity.ok(Map.of("message", "Collection deleted successfully", "deletedId", docId));
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(500)
-                    .body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
         }
     }
 
