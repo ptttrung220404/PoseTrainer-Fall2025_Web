@@ -117,7 +117,6 @@
             color: white;
         }
 
-        /* ========== MAIN CONTENT ========== */
         .main-content {
             margin-left: 240px;
             flex: 1;
@@ -144,43 +143,111 @@
             font-weight: 600;
         }
 
+        /* ========== POST STATS & ACTIONS ========== */
+        .post-stats {
+            display: flex;
+            gap: 16px;
+            font-size: 13px;
+            color: #718096;
+            margin-bottom: 12px;
+            padding: 8px 0;
+            border-top: 1px solid #f0f0f0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .post-stats span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .post-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .post-actions-row {
+            display: contents;
+        }
+
         .btn {
-            display: inline-block;
-            padding: 8px 16px;
-            border: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 12px;
+            border: 2px solid transparent;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 500;
             transition: all 0.2s;
+            text-decoration: none;
+            text-align: center;
         }
 
         .btn-primary {
             background: #667eea;
             color: #fff;
+            border-color: #667eea;
         }
 
-        .btn-success {
-            background: #48bb78;
-            color: #fff;
-        }
-
-        .btn-warning {
-            background: #ed8936;
-            color: #fff;
-        }
-
-        .btn-danger {
-            background: #f56565;
-            color: #fff;
+        .btn-primary:hover {
+            background: #5568d3;
+            border-color: #5568d3;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
         }
 
         .btn-info {
-            background: #4299e1;
-            color: #fff;
+            background: #e3f2fd;
+            color: #1976d2;
+            border-color: #bbdefb;
         }
 
-        .btn:hover {
-            opacity: 0.9;
+        .btn-info:hover {
+            background: #1976d2;
+            color: white;
+            border-color: #1976d2;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(25, 118, 210, 0.2);
+        }
+
+        .btn-success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border-color: #a5d6a7;
+        }
+
+        .btn-success:hover {
+            background: #2e7d32;
+            color: white;
+            border-color: #2e7d32;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(46, 125, 50, 0.2);
+        }
+
+        .btn-warning {
+            background: #fff3e0;
+            color: #e65100;
+            border-color: #ffcc80;
+        }
+
+        .btn-warning:hover {
+            background: #e65100;
+            color: white;
+            border-color: #e65100;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(230, 81, 0, 0.2);
+        }
+
+        .btn.small {
+            font-size: 12px;
+            padding: 6px 10px;
+        }
+
+        .btn-full {
+            grid-column: 1 / -1;
         }
 
         .small {
@@ -537,20 +604,29 @@
                 <div class="post-content" th:text="${post.content}">Nội dung bài đăng</div>
 
                 <div class="post-stats">
-                    <span>❤️ <span th:text="${post.likesCount}">0</span> lượt thích</span>
-                    <span>💬 <span th:text="${post.commentsCount}">0</span> bình luận</span>
+                    <span>❤️ lượt thích</span>
+                    <span>💬 bình luận</span>
                 </div>
 
                 <div class="post-actions">
-                    <button class="btn btn-primary small"
-                            th:attr="onclick='openDetailModal(\'' + ${post.id} + '\')'">Chi tiết</button>
+                    <button class="btn btn-primary small btn-full"
+                            th:attr="onclick='openDetailModal(\'' + ${post.id} + '\')'">
+                        Chi tiết
+                    </button>
+
                     <button class="btn btn-info small"
-                            th:attr="onclick='viewComments(\'' + ${post.id} + '\')'">Xem bình luận</button>
+                            th:attr="onclick='viewComments(\'' + ${post.id} + '\')'">
+                        Bình luận
+                    </button>
                     <button class="btn btn-info small"
-                            th:attr="onclick='viewLikes(\'' + ${post.id} + '\')'">Xem lượt thích</button>
-                    <button class="btn small"
-                            th:class="${post.isVisible ? 'btn-warning' : 'btn-success'}"
-                            th:text="${post.isVisible ? 'Ẩn' : 'Hiển thị'}"
+                            th:attr="onclick='viewLikes(\'' + ${post.id} + '\')'">
+                         Lượt thích
+                    </button>
+
+                    <!-- Row 3: Ẩn/Hiển thị (full width) -->
+                    <button class="btn small btn-full"
+                            th:classappend="${post.isVisible ? 'btn-warning' : 'btn-success'}"
+                            th:text="${post.isVisible ? 'Ẩn bài đăng' : 'Hiển thị bài đăng'}"
                             th:attr="onclick='toggleVisibility(\'' + ${post.id} + '\', ' + ${post.isVisible} + ')'">
                         Toggle
                     </button>
@@ -714,8 +790,8 @@
             <div class="detail-section">
                 <h4>Thống kê</h4>
                 <div class="post-stats">
-                    <span>❤️ ${post.likesCount || 0} lượt thích</span>
-                    <span>💬 ${post.commentsCount || 0} bình luận</span>
+                    <span>❤️ lượt thích</span>
+                    <span>💬 bình luận</span>
                 </div>
             </div>
         `;
