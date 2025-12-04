@@ -5,63 +5,148 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Admin Panel</title>
     <th:block th:replace="~{layouts/main :: styles}"></th:block>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
+        .content-box {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
         .content-box h1 {
             font-size: 36px;
             color: #2d3748;
-            margin-bottom: 24px;
-        }
-
-        .meta-info {
-            background: #fff;
-            padding: 24px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            margin-bottom: 24px;
-        }
-
-        .meta-info p {
-            color: #4a5568;
-            margin-bottom: 12px;
-            font-size: 15px;
-        }
-
-        .meta-info strong {
-            color: #2d3748;
+            margin-bottom: 32px;
             font-weight: 600;
         }
 
-        .roles-list {
-            list-style: none;
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin-top: 8px;
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
         }
 
-        .roles-list li {
-            background: #667eea;
-            color: white;
-            padding: 6px 14px;
-            font-size: 13px;
+        .stat-card {
+            background: #fff;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+
+        .stat-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .stat-card-title {
+            font-size: 14px;
+            color: #718096;
             font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .stat-card-icon.users {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .stat-card-icon.exercises {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .stat-card-icon.collections {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .stat-card-icon.workouts {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+        }
+
+        .stat-card-icon.new-users {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
+        }
+
+        .stat-card-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 4px;
+        }
+
+        .stat-card-description {
+            font-size: 13px;
+            color: #a0aec0;
+        }
+
+        .chart-container {
+            background: #fff;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 32px;
+        }
+
+        .chart-header {
+            margin-bottom: 24px;
+        }
+
+        .chart-header h2 {
+            font-size: 20px;
+            color: #2d3748;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .chart-header p {
+            font-size: 14px;
+            color: #718096;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 400px;
         }
 
         .welcome-text {
             color: #718096;
             font-size: 15px;
             line-height: 1.6;
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
         @media (max-width: 768px) {
-            .sidebar {
-                width: 100%;
-                height: auto;
-                position: relative;
+            .stats-grid {
+                grid-template-columns: 1fr;
             }
 
-            .main-content {
-                margin-left: 0;
-                padding: 20px;
+            .chart-wrapper {
+                height: 300px;
             }
         }
     </style>
@@ -75,21 +160,162 @@
     <div class="content-box">
         <h1>ADMIN DASHBOARD</h1>
 
-        <div class="meta-info" th:if="${uid}">
-
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Total Users</h5>
-                    <h2 th:text="${totalUsers}">0</h2>
+        <!-- Statistics Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <div>
+                        <div class="stat-card-title">Người đăng ký mới</div>
+                        <div class="stat-card-value" th:text="${newUsersLast14Days}">0</div>
+                        <div class="stat-card-description">Trong 14 ngày gần nhất</div>
+                    </div>
+                    <div class="stat-card-icon new-users">👥</div>
                 </div>
             </div>
 
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <div>
+                        <div class="stat-card-title">Tổng số Exercises</div>
+                        <div class="stat-card-value" th:text="${totalExercises}">0</div>
+                        <div class="stat-card-description">Bài tập hiện có</div>
+                    </div>
+                    <div class="stat-card-icon exercises">💪</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <div>
+                        <div class="stat-card-title">Tổng số Collections</div>
+                        <div class="stat-card-value" th:text="${totalCollections}">0</div>
+                        <div class="stat-card-description">Bộ sưu tập hiện có</div>
+                    </div>
+                    <div class="stat-card-icon collections">📚</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <div>
+                        <div class="stat-card-title">Tổng số Workouts</div>
+                        <div class="stat-card-value" th:text="${totalWorkouts}">0</div>
+                        <div class="stat-card-description">Lịch tập hiện có</div>
+                    </div>
+                    <div class="stat-card-icon workouts">🏋️</div>
+                </div>
+            </div>
         </div>
 
+        <!-- Login Statistics Chart -->
+        <div class="chart-container">
+            <div class="chart-header">
+                <h2>Thống kê đăng nhập</h2>
+                <p>Số lượng người dùng đăng nhập trong 30 ngày gần nhất</p>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="loginChart"></canvas>
+            </div>
+        </div>
 
-
-        <p class="welcome-text">Đây là trang sau khi đăng nhập thành công. Sử dụng menu bên trái để điều hướng đến các chức năng quản lý.</p>
+        <div class="welcome-text">
+            <p>Đây là trang sau khi đăng nhập thành công. Sử dụng menu bên trái để điều hướng đến các chức năng quản lý.</p>
+        </div>
     </div>
 </main>
+
+<script>
+    // Load login statistics and render chart
+    fetch('/admin/dashboard/login-stats')
+        .then(response => response.json())
+        .then(data => {
+            const dates = Object.keys(data);
+            const counts = Object.values(data);
+            
+            // Format dates for display (dd/MM)
+            const formattedDates = dates.map(date => {
+                const [year, month, day] = date.split('-');
+                return `${day}/${month}`;
+            });
+
+            const ctx = document.getElementById('loginChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: formattedDates,
+                    datasets: [{
+                        label: 'Số lượt đăng nhập',
+                        data: counts,
+                        backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                        borderColor: 'rgba(102, 126, 234, 1)',
+                        borderWidth: 2,
+                        borderRadius: 8,
+                        borderSkipped: false,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            padding: 12,
+                            titleFont: {
+                                size: 14,
+                                weight: 'bold'
+                            },
+                            bodyFont: {
+                                size: 13
+                            },
+                            callbacks: {
+                                title: function(context) {
+                                    const index = context[0].dataIndex;
+                                    return dates[index]; // Show full date in tooltip
+                                },
+                                label: function(context) {
+                                    return 'Số lượt đăng nhập: ' + context.parsed.y;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1,
+                                font: {
+                                    size: 12
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                font: {
+                                    size: 11
+                                },
+                                maxRotation: 45,
+                                minRotation: 45
+                            },
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => {
+            console.error('Error loading login stats:', error);
+            document.getElementById('loginChart').parentElement.innerHTML = 
+                '<p style="text-align: center; color: #718096; padding: 40px;">Không thể tải dữ liệu thống kê</p>';
+        });
+</script>
+
 </body>
 </html>
