@@ -38,6 +38,7 @@ public class AdminPageController {
     @GetMapping("/dashboard")
     public String dashboard(Authentication auth, Model model,
                             @ModelAttribute(value = "displayName") String displayName) throws ExecutionException, InterruptedException {
+        // Thống kê cơ bản
         List<User> users = userService.getAll();
         int totalUser = 0;
         for (User user : users) {
@@ -47,7 +48,10 @@ public class AdminPageController {
         }
 
         model.addAttribute("totalUsers", totalUser);
-
+        model.addAttribute("newUsersLast14Days", dashboardService.getNewUsersCountLast14Days());
+        model.addAttribute("totalExercises", dashboardService.getTotalExercises());
+        model.addAttribute("totalCollections", dashboardService.getTotalCollections());
+        model.addAttribute("totalWorkouts", dashboardService.getTotalWorkouts());
 
         if (auth != null) {
             model.addAttribute("uid", auth.getName());
@@ -57,12 +61,12 @@ public class AdminPageController {
             displayName = "Admin";
         }
         model.addAttribute("displayName", displayName);
-        return "dashboard"; // -> templates/dashboard.html
+        return "dashboard";
     }
     @GetMapping("/dashboard/login-stats")
     @ResponseBody
     public Map<String, Integer> loginStats() throws Exception {
-        return dashboardService.getLoginStatsByDate();
+        return dashboardService.getLoginStatsLast30Days();
     }
 
     @GetMapping("/exercises")
