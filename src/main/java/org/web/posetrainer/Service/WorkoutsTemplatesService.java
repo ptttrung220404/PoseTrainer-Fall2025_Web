@@ -9,7 +9,9 @@ import org.web.posetrainer.Entity.WorkoutTemplate;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
@@ -159,4 +161,17 @@ public class WorkoutsTemplatesService {
     public PagedResponse<WorkoutTemplate> getPaged(int page, int size) throws ExecutionException, InterruptedException {
         return PagedResponse.of(getAll(), page, size);
     }
+    public void updateWorkoutThumbnail(String id, String thumbnailUrl)
+            throws ExecutionException, InterruptedException {
+
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("thumbnailUrl", thumbnailUrl);
+        updates.put("updatedAt", System.currentTimeMillis());
+
+        db().collection(COLLECTION_NAME)
+                .document(id)
+                .set(updates, SetOptions.merge())
+                .get();
+    }
+
 }

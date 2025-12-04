@@ -23,7 +23,7 @@ public class WorkoutTemplate {
     private String goalFit;
     private List<WorkoutItem> items;
     private int estDurationMin;
-
+    private String thumbnailUrl;
     @JsonProperty("isPublic")
     @PropertyName("isPublic")
     private boolean isPublic;
