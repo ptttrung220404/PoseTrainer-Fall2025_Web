@@ -56,9 +56,7 @@ public class ExcerciseService {
         return result;
     }
 
-    public PagedResponse<Excercise> getPaged(int page, int size) throws ExecutionException, InterruptedException {
-        return PagedResponse.of(getAll(), page, size);
-    }
+
     public void updateExcercise(String id, Excercise excercise)
             throws ExecutionException, InterruptedException {
 
