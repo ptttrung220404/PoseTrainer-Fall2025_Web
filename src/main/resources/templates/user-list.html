@@ -542,6 +542,7 @@
 <div th:replace="~{layouts/main :: sidebar(
     displayName=${displayName},
     uid=${uid},
+    roles=${roles},
     currentPage='users')}">
 </div>
 <!-- ========== MAIN CONTENT ========== -->
@@ -549,9 +550,9 @@
     <div class="container">
         <div class="top-bar">
             <h1>Danh sách người dùng</h1>
-            <button type="button" class="btn btn-primary" onclick="openAddModal()">
-                + Thêm người dùng
-            </button>
+<!--            <button type="button" class="btn btn-primary" onclick="openAddModal()">-->
+<!--                + Thêm người dùng-->
+<!--            </button>-->
         </div>
 
         <!-- Filter Section -->
@@ -627,8 +628,9 @@
                               th:classappend="${role == 'ADMIN' ? 'badge badge-admin' : 'badge badge-user'}"
                               th:text="${role}">USER</span>
                 </td>
-                <td th:text="${user.createdAt > 0 ? #dates.format(new java.util.Date(user.createdAt), 'dd/MM/yyyy HH:mm') : 'N/A'}">01/01/2024</td>
-                <td th:text="${user.lastLoginAt > 0 ? #dates.format(new java.util.Date(user.lastLoginAt), 'dd/MM/yyyy HH:mm') : 'Chưa đăng nhập'}">01/01/2024</td>
+                <td th:text="${user.createdAt > 0 ? #dates.format(new java.util.Date(user.createdAt * 1000), 'dd/MM/yyyy HH:mm') : 'N/A'}"></td>
+                <td th:text="${user.lastLoginAt > 0 ? #dates.format(new java.util.Date(user.lastLoginAt * 1000), 'dd/MM/yyyy HH:mm') : 'Chưa đăng nhập'}"></td>
+
                 <td>
                     <button type="button"
                             class="btn btn-primary"

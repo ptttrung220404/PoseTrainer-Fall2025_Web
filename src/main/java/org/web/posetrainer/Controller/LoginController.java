@@ -45,9 +45,10 @@ public class LoginController {
             LoginResponse loginResp = authService.login(request);
             List<String> roles = loginResp.getRoles();
             boolean isAdmin = false;
-
+            boolean isSuperAdmin = false;
             if (roles != null && !roles.isEmpty()) {
-                isAdmin = roles.stream().anyMatch(r -> r.equalsIgnoreCase("ADMIN"));
+                isSuperAdmin = roles.stream().anyMatch(r -> r.equalsIgnoreCase("SUPER_ADMIN"));
+                isAdmin = isSuperAdmin || roles.stream().anyMatch(r -> r.equalsIgnoreCase("ADMIN"));
             }
             if (!isAdmin) {
                 redirect.addFlashAttribute("error", "Tài khoản không có quyền truy cập trang quản trị!");

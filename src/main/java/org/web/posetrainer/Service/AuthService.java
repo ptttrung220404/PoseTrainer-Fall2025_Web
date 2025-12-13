@@ -4,7 +4,10 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.UserRecord;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
+import org.springframework.ui.Model;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.web.posetrainer.DTO.LoginRequest;
@@ -99,5 +102,18 @@ public class AuthService {
                         .setPassword(newPassword)
         );
     }
+    public void applyAuth(Authentication auth, Model model, String displayName) {
+        if (auth != null) {
+            model.addAttribute("uid", auth.getName());
 
+            List<String> authorities = auth.getAuthorities()
+                    .stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .toList();
+
+            model.addAttribute("roles", authorities);
+            model.addAttribute("displayName",
+                    (displayName != null && !displayName.isEmpty()) ? displayName : "Admin");
+        }
+    }
 }

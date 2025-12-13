@@ -41,7 +41,7 @@ public class DashboardService {
     // Số người đăng ký mới trong 14 ngày gần nhất
     public int getNewUsersCountLast14Days() throws ExecutionException, InterruptedException {
         List<User> users = userService.getAll();
-        long fourteenDaysAgo = System.currentTimeMillis() - (14L * 24 * 60 * 60 * 1000);
+        long fourteenDaysAgo = (System.currentTimeMillis()/1000 )- (14L * 24 * 60 * 60);
         int count = 0;
         
         for (User user : users) {
@@ -80,12 +80,14 @@ public class DashboardService {
         }
 
         // Đếm số lượt đăng nhập theo ngày
-        long thirtyDaysAgo = System.currentTimeMillis() - (30L * 24 * 60 * 60 * 1000);
+//        long thirtyDaysAgo = System.currentTimeMillis() - (30L * 24 * 60 * 60 * 1000);
+        long thirtyDaysAgo = (System.currentTimeMillis() / 1000) - (30L * 24 * 60 * 60 );
+
         for (User user : users) {
             long ts = user.getLastLoginAt();
             if (ts == 0 || ts < thirtyDaysAgo) continue;
 
-            LocalDate date = Instant.ofEpochMilli(ts)
+            LocalDate date = Instant.ofEpochSecond(ts)
                     .atZone(ZoneId.systemDefault())
                     .toLocalDate();
             String key = date.toString();

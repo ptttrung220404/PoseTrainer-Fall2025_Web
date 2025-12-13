@@ -99,9 +99,10 @@ protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res,
     } catch (Exception e) {
         System.out.println(">>> TOKEN VERIFY FAILED: " + e);
         SecurityContextHolder.clearContext();
-        res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        res.setContentType("application/json");
-        res.getWriter().write("{\"error\":\"UNAUTHORIZED\",\"message\":\"Invalid or expired token\"}");
+//        res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+//        res.setContentType("application/json");
+//        res.getWriter().write("{\"error\":\"UNAUTHORIZED\",\"message\":\"Invalid or expired token\"}");
+        res.sendRedirect("/login");
         return;
     }
 

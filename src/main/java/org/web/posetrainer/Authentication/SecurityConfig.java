@@ -7,6 +7,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -45,11 +47,12 @@ public class SecurityConfig {
                         .requestMatchers("/favicon.ico", "/css/**", "/js/**", "/images/**").permitAll()
                         .requestMatchers("/health", "/actuator/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/super_admin/**").hasRole("SUPER_ADMIN")
                         .requestMatchers("/me").authenticated()
                         .requestMatchers("/").permitAll()
                         .anyRequest().authenticated()
                 )
-                .securityMatcher("/admin/**", "/me")
+//                .securityMatcher("/admin/**", "/me")
                 .addFilterBefore(firebaseFilter, UsernamePasswordAuthenticationFilter.class)
                 .cors(Customizer.withDefaults())
                 .exceptionHandling(ex -> ex
@@ -62,6 +65,15 @@ public class SecurityConfig {
         return http.build();
     }
 
+    @Bean
+    public RoleHierarchy roleHierarchy() {
+        RoleHierarchyImpl hierarchy = new RoleHierarchyImpl();
+        hierarchy.setHierarchy("""
+        ROLE_SUPER_ADMIN > ROLE_ADMIN
+        ROLE_ADMIN > ROLE_USER
+    """);
+        return hierarchy;
+    }
 
 
     @Bean

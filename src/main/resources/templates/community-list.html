@@ -488,7 +488,7 @@
 </head>
 <body>
 
-<div th:replace="~{layouts/main :: sidebar(displayName=${displayName}, uid=${uid}, currentPage='community')}"></div>
+<div th:replace="~{layouts/main :: sidebar(displayName=${displayName}, uid=${uid}, roles=${roles},currentPage='community')}"></div>
 
 <!-- ========== MAIN CONTENT ========== -->
 <main class="main-content">
