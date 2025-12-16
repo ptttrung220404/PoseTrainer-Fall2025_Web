@@ -3,8 +3,10 @@ package org.web.posetrainer.Service;
 import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.QuerySnapshot;
+import com.google.firebase.auth.UserRecord;
 import org.springframework.stereotype.Service;
 import org.web.posetrainer.DTO.PagedResponse;
+import org.web.posetrainer.DTO.PostMailInfo;
 import org.web.posetrainer.Entity.Community;
 
 import java.util.ArrayList;
@@ -53,13 +55,54 @@ public class CommunityService {
         return community;
     }
 
-    public void toggleVisibility(String id, boolean isVisible) throws ExecutionException, InterruptedException {
+    public PostMailInfo toggleVisibility(String id, boolean isVisible) throws ExecutionException, InterruptedException {
+//        Map<String, Object> updates = new HashMap<>();
+//        updates.put("isVisible", isVisible);
+//        firestore.collection(COLLECTION_NAME)
+//                .document(id)
+//                .update(updates)
+//                .get();
+        DocumentSnapshot snapshot = firestore
+                .collection(COLLECTION_NAME)
+                .document(id)
+                .get()
+                .get();
+        if (!snapshot.exists()) {
+            throw new IllegalArgumentException("Post not found");
+        }
+        String content = snapshot.getString("content");
+        Map<String, Object> author =
+                (Map<String, Object>) snapshot.get("author");
+
+        if (author == null || !author.containsKey("uid")) {
+            throw new IllegalStateException("Author information missing");
+        }
+        String authorUid = (String) author.get("uid");
+        DocumentSnapshot userSnapshot = firestore
+                .collection("users")
+                .document(authorUid)
+                .get()
+                .get();
+        String email = userSnapshot.exists()
+                ? userSnapshot.getString("email")
+                : null;
         Map<String, Object> updates = new HashMap<>();
         updates.put("isVisible", isVisible);
+        updates.put("AdminUpdatedAt", System.currentTimeMillis());
+        if (!isVisible) {
+            updates.put("hiddenReason", "Vi phạm Tiêu Chuẩn Cộng Đồng");
+        } else {
+            updates.put("hiddenReason", null);
+        }
         firestore.collection(COLLECTION_NAME)
                 .document(id)
                 .update(updates)
                 .get();
+        return new PostMailInfo(
+                authorUid,
+                content,
+                isVisible
+        );
     }
 
     public List<Community.Comment> getComments(String postId) throws ExecutionException, InterruptedException {

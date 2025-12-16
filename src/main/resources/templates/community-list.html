@@ -580,7 +580,7 @@
                     <button class="btn small btn-full"
                             th:classappend="${post.isVisible ? 'btn-warning' : 'btn-success'}"
                             th:text="${post.isVisible ? 'Ẩn bài đăng' : 'Hiển thị bài đăng'}"
-                            th:attr="onclick='toggleVisibility(\'' + ${post.id} + '\', ' + ${post.isVisible} + ')'">
+                            th:attr="onclick='return confirmToggle(\'' + ${post.id} + '\', ' + ${post.isVisible} + ')'">
                         Toggle
                     </button>
                 </div>
@@ -818,7 +818,18 @@
                 body.innerHTML = `<div class="muted" style="color:red">Lỗi: ${err.message}</div>`;
             });
     }
+    function confirmToggle(postId, isVisible) {
+        const message = isVisible
+            ? "Bạn có chắc chắn muốn ẨN bài viết này không?\n(Lý do: Vi phạm tiêu chuẩn cộng đồng)"
+            : "Bạn có chắc chắn muốn HIỂN THỊ lại bài viết này không?";
 
+        if (!confirm(message)) {
+            return false; // hủy click
+        }
+
+        toggleVisibility(postId, isVisible);
+        return false; // tránh submit / reload
+    }
     function viewLikes(postId) {
         const modal = document.getElementById('likesModal');
         const body = document.getElementById('likesModalBody');

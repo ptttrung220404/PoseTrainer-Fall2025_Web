@@ -672,7 +672,7 @@
                        th:value="${userPage.size != null ? userPage.size : 10}"
                        style="max-width:120px"
                        onchange="this.form.submit()" />
-                
+
             </form>
         </div>
     </div>
@@ -752,7 +752,7 @@
                 </div>
                 <div class="field">
                     <label>Vai trò</label>
-                    <select name="role">
+                    <select name="role" th:disabled="${!roles.contains('ROLE_SUPER_ADMIN')}" >
                         <option value="user">USER</option>
                         <option value="admin">ADMIN</option>
                     </select>
