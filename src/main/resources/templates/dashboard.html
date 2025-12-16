@@ -153,7 +153,7 @@
 </head>
 <body>
 
-<div th:replace="~{layouts/main :: sidebar(displayName=${displayName}, uid=${uid}, currentPage='dashboard')}"></div>
+<div th:replace="~{layouts/main :: sidebar(displayName=${displayName}, uid=${uid}, roles=${roles},currentPage='dashboard')}"></div>
 
 <!-- Main Content -->
 <main class="main-content">

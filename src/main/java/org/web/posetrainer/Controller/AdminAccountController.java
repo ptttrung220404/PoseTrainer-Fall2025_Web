@@ -1,56 +1,34 @@
 package org.web.posetrainer.Controller;
 
 import com.google.api.core.ApiFuture;
-import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.UserRecord;
-import com.google.firebase.auth.UserRecord.CreateRequest;
-import com.google.firebase.auth.UserRecord.UpdateRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.web.posetrainer.DTO.CreateUserRequest;
 import org.web.posetrainer.Entity.User;
-import org.web.posetrainer.Service.MailAsyncService;
-import org.web.posetrainer.Service.MailService;
-import org.web.posetrainer.Service.UserService;
 
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
-
 @RestController
-@RequestMapping("/api/admin/users")
-
-@PreAuthorize("hasRole('ADMIN')")
-
-public class UserController {
+@RequestMapping("/api/super_admin/admin")
+@RequiredArgsConstructor
+@PreAuthorize("hasRole('SUPER_ADMIN')")
+public class AdminAccountController {
     private final FirebaseAuth firebaseAuth;
     private final Firestore firestore;
-    private final UserService userService;
-    private final MailService mailService;
-    private final MailAsyncService mailAsyncService;
-
-    public UserController(FirebaseAuth firebaseAuth, Firestore firestore, UserService userService, MailService mailService, MailAsyncService mailAsyncService) {
-        this.firebaseAuth = firebaseAuth;
-        this.firestore = firestore;
-        this.userService = userService;
-        this.mailService = mailService;
-        this.mailAsyncService = mailAsyncService;
-    }
-
-
     @PostMapping
     public ResponseEntity<?> create(@Valid @RequestBody CreateUserRequest req) {
         String uid = null;
         try {
             // 1) Tạo user trong Firebase Auth
-            CreateRequest cr = new CreateRequest()
+            UserRecord.CreateRequest cr = new UserRecord.CreateRequest()
                     .setEmail(req.getEmail())
                     .setPassword(req.getPassword());
 
@@ -80,7 +58,7 @@ public class UserController {
                         req.getNotification().isAllowNotification()
                 ));
             }
-            long now = System.currentTimeMillis() * 1000;
+            long now = System.currentTimeMillis();
             userDoc.setCreatedAt(now);
             userDoc.setLastLoginAt(0L);
 
@@ -99,12 +77,10 @@ public class UserController {
             ));
 
         } catch (Exception e) {
+
             // Rollback: nếu đã tạo Auth mà Firestore lỗi -> xoá user trong Auth
             if (uid != null) {
-                try {
-                    firebaseAuth.deleteUser(uid);
-                } catch (Exception ignore) {
-                }
+                try { firebaseAuth.deleteUser(uid); } catch (Exception ignore) {}
             }
             return ResponseEntity.badRequest().body(Map.of(
                     "error", "CREATE_USER_FAILED",
@@ -131,8 +107,6 @@ public class UserController {
         firestore.collection("users").document(uid).update("roles", roles).get();
         return ResponseEntity.ok(Map.of("uid", uid, "roles", roles));
     }
-
-    // Khóa/mở khóa tài khoản
     @PatchMapping("/{uid}/active")
     public ResponseEntity<?> updateActiveStatus(
             @PathVariable String uid,
@@ -146,34 +120,13 @@ public class UserController {
             ));
         }
 
-        DocumentSnapshot userDoc = firestore
-                .collection("users")
-                .document(uid)
-                .get()
-                .get();
-
-        if (!userDoc.exists()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "error", "USER_NOT_FOUND"
-            ));
-        }
-
         // Cập nhật trong Firestore
         firestore.collection("users").document(uid).update("active", active).get();
 
         // Cập nhật trong Firebase Auth: disable/enable user
-        UpdateRequest updateRequest = new UpdateRequest(uid).setDisabled(!active);
+        UserRecord.UpdateRequest updateRequest = new UserRecord.UpdateRequest(uid).setDisabled(!active);
         firebaseAuth.updateUser(updateRequest);
 
-        try {
-            UserRecord userRecord = firebaseAuth.getUser(uid);
-            String email = userRecord.getEmail();
-            if (email != null) {
-                mailAsyncService.sendAccountStatusMail(email, active);
-            }
-        } catch (Exception e) {
-            e.printStackTrace(); // log thôi, không fail API
-        }
         return ResponseEntity.ok(Map.of(
                 "uid", uid,
                 "active", active,

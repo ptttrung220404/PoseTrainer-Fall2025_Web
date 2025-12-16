@@ -68,61 +68,13 @@
             word-break: break-all;
         }
 
-        .create-btn-sidebar {
-            width: 100%;
-            padding: 12px;
-            background: #4299e1;
-            color: white;
-            border: none;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            margin-bottom: 24px;
-            transition: background 0.3s;
-        }
-
-        .create-btn-sidebar:hover {
-            background: #3182ce;
-        }
-
-        .nav-menu {
-            list-style: none;
-        }
-
-        .nav-item {
-            margin-bottom: 2px;
-        }
-
-        .nav-link {
-            display: block;
-            padding: 12px 16px;
-            color: #4a5568;
-            text-decoration: none;
-            transition: all 0.2s;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        .nav-link:hover {
-            background: #f7fafc;
-            color: #2d3748;
-        }
-
-        .nav-link.active {
-            background: #667eea;
-            color: white;
-        }
-
         .main-content {
             margin-left: 240px;
-            flex: 1;
             padding: 40px;
+            width: calc(100% - 240px);
+            max-width: 1600px; /* rất rộng */
+            margin-right: auto;
         }
-
         .container {
             max-width: 1200px;
             background: #fff;
@@ -536,7 +488,7 @@
 </head>
 <body>
 
-<div th:replace="~{layouts/main :: sidebar(displayName=${displayName}, uid=${uid}, currentPage='community')}"></div>
+<div th:replace="~{layouts/main :: sidebar(displayName=${displayName}, uid=${uid}, roles=${roles},currentPage='community')}"></div>
 
 <!-- ========== MAIN CONTENT ========== -->
 <main class="main-content">
@@ -604,8 +556,9 @@
                 <div class="post-content" th:text="${post.content}">Nội dung bài đăng</div>
 
                 <div class="post-stats">
-                    <span>❤️ lượt thích</span>
-                    <span>💬 bình luận</span>
+
+                    <span>❤️<span th:text="${post.likesCount}">0</span> lượt thích</span>
+                    <span>💬  <span th:text="${post.commentsCount}">0</span>  bình luận</span>
                 </div>
 
                 <div class="post-actions">
@@ -627,7 +580,7 @@
                     <button class="btn small btn-full"
                             th:classappend="${post.isVisible ? 'btn-warning' : 'btn-success'}"
                             th:text="${post.isVisible ? 'Ẩn bài đăng' : 'Hiển thị bài đăng'}"
-                            th:attr="onclick='toggleVisibility(\'' + ${post.id} + '\', ' + ${post.isVisible} + ')'">
+                            th:attr="onclick='return confirmToggle(\'' + ${post.id} + '\', ' + ${post.isVisible} + ')'">
                         Toggle
                     </button>
                 </div>
@@ -865,7 +818,18 @@
                 body.innerHTML = `<div class="muted" style="color:red">Lỗi: ${err.message}</div>`;
             });
     }
+    function confirmToggle(postId, isVisible) {
+        const message = isVisible
+            ? "Bạn có chắc chắn muốn ẨN bài viết này không?\n(Lý do: Vi phạm tiêu chuẩn cộng đồng)"
+            : "Bạn có chắc chắn muốn HIỂN THỊ lại bài viết này không?";
 
+        if (!confirm(message)) {
+            return false; // hủy click
+        }
+
+        toggleVisibility(postId, isVisible);
+        return false; // tránh submit / reload
+    }
     function viewLikes(postId) {
         const modal = document.getElementById('likesModal');
         const body = document.getElementById('likesModalBody');

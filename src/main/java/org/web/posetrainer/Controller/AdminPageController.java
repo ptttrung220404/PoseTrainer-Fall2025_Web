@@ -17,6 +17,7 @@ import org.web.posetrainer.Entity.Excercise;
 import org.web.posetrainer.Entity.User;
 import org.web.posetrainer.Entity.WorkoutTemplate;
 import org.web.posetrainer.Service.*;
+import org.springframework.security.core.GrantedAuthority;
 
 import java.util.List;
 import java.util.Map;
@@ -35,9 +36,14 @@ public class AdminPageController {
     private final UserService userService;
     private final CommunityService communityService;
     private final DashboardService dashboardService;
+    private final PageService pageService;
+    private final AuthService authService;
     @GetMapping("/dashboard")
     public String dashboard(Authentication auth, Model model,
                             @ModelAttribute(value = "displayName") String displayName) throws ExecutionException, InterruptedException {
+        if (auth == null || !auth.isAuthenticated()) {
+            return "redirect:/login";
+        }
         // Thống kê cơ bản
         List<User> users = userService.getAll();
         int totalUser = 0;
@@ -53,10 +59,7 @@ public class AdminPageController {
         model.addAttribute("totalCollections", dashboardService.getTotalCollections());
         model.addAttribute("totalWorkouts", dashboardService.getTotalWorkouts());
 
-        if (auth != null) {
-            model.addAttribute("uid", auth.getName());
-            model.addAttribute("roles", auth.getAuthorities());
-        }
+        authService.applyAuth(auth, model, displayName);
         if (displayName == null || displayName.trim().isEmpty()) {
             displayName = "Admin";
         }
@@ -77,14 +80,12 @@ public class AdminPageController {
                                    @RequestParam(required = false) String keyword,
                                    @RequestParam(defaultValue = "updated_desc") String sort)
             throws ExecutionException, InterruptedException {
-
-        if (auth != null) {
-            model.addAttribute("uid", auth.getName());
-            String name = (displayName != null && !displayName.isEmpty()) ? displayName : "Admin";
-            model.addAttribute("displayName", name);
+        if (auth == null || !auth.isAuthenticated()) {
+            return "redirect:/login";
         }
+        authService.applyAuth(auth, model, displayName);
 
-        List<Excercise> filteredExercises = filterAndSortExercises(excerciseService.getAll(), keyword, sort);
+        List<Excercise> filteredExercises = pageService.filterAndSortExercises(excerciseService.getAll(), keyword, sort);
         model.addAttribute("exercisePage", PagedResponse.of(filteredExercises, page, size));
         model.addAttribute("keyword", keyword);
         model.addAttribute("sort", sort);
@@ -103,11 +104,11 @@ public class AdminPageController {
                                   @RequestParam(required = false) String keyword,
                                   @RequestParam(defaultValue = "updated_desc") String sort)
             throws ExecutionException, InterruptedException {
-        if (auth != null) {
-            model.addAttribute("uid", auth.getName());
-            model.addAttribute("displayName", displayName != null && !displayName.isEmpty() ? displayName : "Admin");
+        if (auth == null || !auth.isAuthenticated()) {
+            return "redirect:/login";
         }
-        List<WorkoutTemplate> filteredWorkouts = filterAndSortWorkouts(workoutsService.getAll(), keyword, sort);
+        authService.applyAuth(auth, model, displayName);
+        List<WorkoutTemplate> filteredWorkouts = pageService.filterAndSortWorkouts(workoutsService.getAll(), keyword, sort);
         model.addAttribute("workoutPage", PagedResponse.of(filteredWorkouts, page, size));
         model.addAttribute("keyword", keyword);
         model.addAttribute("sort", sort);
@@ -122,13 +123,12 @@ public class AdminPageController {
                                      @RequestParam(required = false) String keyword,
                                      @RequestParam(defaultValue = "updated_desc") String sort)
             throws ExecutionException, InterruptedException {
-
-        if (auth != null) {
-            model.addAttribute("uid", auth.getName());
-            model.addAttribute("displayName", displayName != null && !displayName.isEmpty() ? displayName : "Admin");
+        if (auth == null || !auth.isAuthenticated()) {
+            return "redirect:/login";
         }
+        authService.applyAuth(auth, model, displayName);
 
-        List<Collections> filteredCollections = filterAndSortCollections(collectionsService.getAll(), keyword, sort);
+        List<Collections> filteredCollections = pageService.filterAndSortCollections(collectionsService.getAll(), keyword, sort);
         model.addAttribute("collectionsPage", PagedResponse.of(filteredCollections, page, size));
         model.addAttribute("keyword", keyword);
         model.addAttribute("sort", sort);
@@ -143,13 +143,12 @@ public class AdminPageController {
                                @RequestParam(required = false) String keyword,
                                @RequestParam(defaultValue = "created_desc") String sort)
             throws ExecutionException, InterruptedException {
-
-        if (auth != null) {
-            model.addAttribute("uid", auth.getName());
-            model.addAttribute("displayName", displayName != null && !displayName.isEmpty() ? displayName : "Admin");
+        if (auth == null || !auth.isAuthenticated()) {
+            return "redirect:/login";
         }
+        authService.applyAuth(auth, model, displayName);
 
-        List<User> filteredUsers = filterAndSortUsers(userService.getAll(), keyword, sort);
+        List<User> filteredUsers = pageService.filterAndSortUsers(userService.getAll(), keyword, sort);
         model.addAttribute("userPage", PagedResponse.of(filteredUsers, page, size));
         model.addAttribute("keyword", keyword);
         model.addAttribute("sort", sort);
@@ -164,24 +163,22 @@ public class AdminPageController {
                                      @RequestParam(required = false) String keyword,
                                      @RequestParam(defaultValue = "created_desc") String sort)
             throws ExecutionException, InterruptedException {
-
-        if (auth != null) {
-            model.addAttribute("uid", auth.getName());
-            model.addAttribute("displayName", displayName != null && !displayName.isEmpty() ? displayName : "Admin");
+        if (auth == null || !auth.isAuthenticated()) {
+            return "redirect:/login";
         }
-
-        List<Community> filteredPosts = filterAndSortPosts(communityService.getAll(), keyword, sort);
+        authService.applyAuth(auth, model, displayName);
+        List<Community> filteredPosts = pageService.filterAndSortPosts(communityService.getAll(), keyword, sort);
         model.addAttribute("communityPage", PagedResponse.of(filteredPosts, page, size));
         model.addAttribute("keyword", keyword);
         model.addAttribute("sort", sort);
         return "community-list";
     }
     @GetMapping("/profile")
-    public String showProfile(Authentication auth, Model model) {
+    public String showProfile(Authentication auth, Model model, @ModelAttribute(value = "displayName") String displayName) {
         if (auth == null || !auth.isAuthenticated()) {
             return "redirect:/login";
         }
-
+        authService.applyAuth(auth, model, displayName);
         String uid = auth.getName();
         userService.getUserByUid(uid).ifPresentOrElse(
                 user -> model.addAttribute("user", user),
@@ -192,125 +189,6 @@ public class AdminPageController {
     }
 
 
-    private List<Excercise> filterAndSortExercises(List<Excercise> source, String keyword, String sort) {
-        SortOption option = resolveSort(sort, "updated", "desc");
-        Comparator<Excercise> comparator = switch (option.field()) {
-            case "name" -> Comparator.comparing(ex -> safeString(ex.getName()), String.CASE_INSENSITIVE_ORDER);
-            case "level" -> Comparator.comparing(ex -> safeString(ex.getLevel()), String.CASE_INSENSITIVE_ORDER);
-            default -> Comparator.comparingLong(Excercise::getUpdatedAt);
-        };
-        if (option.isDesc()) {
-            comparator = comparator.reversed();
-        }
-        return source.stream()
-                .filter(ex -> matchesKeyword(keyword, ex.getName(), ex.getSlug()))
-                .sorted(comparator)
-                .collect(Collectors.toList());
-    }
 
-    private List<WorkoutTemplate> filterAndSortWorkouts(List<WorkoutTemplate> source, String keyword, String sort) {
-        SortOption option = resolveSort(sort, "updated", "desc");
-        Comparator<WorkoutTemplate> comparator = switch (option.field()) {
-            case "title" -> Comparator.comparing(w -> safeString(w.getTitle()), String.CASE_INSENSITIVE_ORDER);
-            case "level" -> Comparator.comparing(w -> safeString(w.getLevel()), String.CASE_INSENSITIVE_ORDER);
-            case "duration" -> Comparator.comparingInt(WorkoutTemplate::getEstDurationMin);
-            default -> Comparator.comparingLong(WorkoutTemplate::getUpdatedAt);
-        };
-        if (option.isDesc()) {
-            comparator = comparator.reversed();
-        }
-        return source.stream()
-                .filter(w -> matchesKeyword(keyword, w.getTitle(), w.getDescription(), w.getId()))
-                .sorted(comparator)
-                .collect(Collectors.toList());
-    }
 
-    private List<Collections> filterAndSortCollections(List<Collections> source, String keyword, String sort) {
-        SortOption option = resolveSort(sort, "updated", "desc");
-        Comparator<Collections> comparator = switch (option.field()) {
-            case "title" -> Comparator.comparing(c -> safeString(c.getTitle()), String.CASE_INSENSITIVE_ORDER);
-            case "category" -> Comparator.comparing(c -> safeString(c.getCategory()), String.CASE_INSENSITIVE_ORDER);
-            default -> Comparator.comparingLong(Collections::getUpdatedAt);
-        };
-        if (option.isDesc()) {
-            comparator = comparator.reversed();
-        }
-        return source.stream()
-                .filter(c -> matchesKeyword(keyword, c.getTitle(), c.getCategory()))
-                .sorted(comparator)
-                .collect(Collectors.toList());
-    }
-
-    private List<User> filterAndSortUsers(List<User> source, String keyword, String sort) {
-        SortOption option = resolveSort(sort, "created", "desc");
-        Comparator<User> comparator = switch (option.field()) {
-            case "name" -> Comparator.comparing(u -> safeString(u.getDisplayName()), String.CASE_INSENSITIVE_ORDER);
-            case "email" -> Comparator.comparing(u -> safeString(u.getEmail()), String.CASE_INSENSITIVE_ORDER);
-            case "lastLogin" -> Comparator.comparingLong(User::getLastLoginAt);
-            default -> Comparator.comparingLong(User::getCreatedAt);
-        };
-        if (option.isDesc()) {
-            comparator = comparator.reversed();
-        }
-        return source.stream()
-                .filter(u -> matchesKeyword(keyword, u.getDisplayName(), u.getEmail()))
-                .sorted(comparator)
-                .collect(Collectors.toList());
-    }
-
-    private List<Community> filterAndSortPosts(List<Community> source, String keyword, String sort) {
-        SortOption option = resolveSort(sort, "created", "desc");
-        Comparator<Community> comparator = switch (option.field()) {
-            case "author" -> Comparator.comparing(Community::getDisplayName, String.CASE_INSENSITIVE_ORDER);
-            case "likes" -> Comparator.comparingLong(Community::getLikesCount);
-            case "comments" -> Comparator.comparingLong(Community::getCommentsCount);
-            default -> Comparator.comparingLong(c -> timestampToMillis(c.getCreatedAt()));
-        };
-        if (option.isDesc()) {
-            comparator = comparator.reversed();
-        }
-        return source.stream()
-                .filter(c -> matchesKeyword(keyword, c.getDisplayName(), c.getContent()))
-                .sorted(comparator)
-                .collect(Collectors.toList());
-    }
-
-    private boolean matchesKeyword(String keyword, String... candidates) {
-        if (keyword == null || keyword.isBlank()) {
-            return true;
-        }
-        String needle = keyword.toLowerCase(Locale.ROOT);
-        for (String candidate : candidates) {
-            if (candidate != null && candidate.toLowerCase(Locale.ROOT).contains(needle)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private String safeString(String value) {
-        return value == null ? "" : value;
-    }
-
-    private long timestampToMillis(com.google.cloud.Timestamp ts) {
-        return ts == null ? 0L : ts.toDate().getTime();
-    }
-
-    private SortOption resolveSort(String sort, String defaultField, String defaultDir) {
-        if (sort == null || sort.isBlank()) {
-            return new SortOption(defaultField, defaultDir);
-        }
-        String[] parts = sort.split("_");
-        if (parts.length != 2) {
-            return new SortOption(defaultField, defaultDir);
-        }
-        String direction = "asc".equalsIgnoreCase(parts[1]) ? "asc" : "desc";
-        return new SortOption(parts[0], direction);
-    }
-
-    private record SortOption(String field, String direction) {
-        boolean isDesc() {
-            return "desc".equalsIgnoreCase(direction);
-        }
-    }
 }

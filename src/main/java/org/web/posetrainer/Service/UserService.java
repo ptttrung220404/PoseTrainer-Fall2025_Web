@@ -64,7 +64,19 @@ public class UserService {
         List<User> result = new ArrayList<>();
         for (DocumentSnapshot doc : future.get().getDocuments()) {
             User user = doc.toObject(User.class);
-            if (user != null) {
+            if (user != null && user.getRoles().contains("user")) {
+                user.setUid(doc.getId()); // gán UID (vì Firestore không tự fill)
+                result.add(user);
+            }
+        }
+        return result;
+    }
+    public List<User> getAllAdmin() throws ExecutionException, InterruptedException {
+        ApiFuture<QuerySnapshot> future = firestore.collection(COLLECTION_NAME).get();
+        List<User> result = new ArrayList<>();
+        for (DocumentSnapshot doc : future.get().getDocuments()) {
+            User user = doc.toObject(User.class);
+            if (user != null && user.getRoles().contains("admin")) {
                 user.setUid(doc.getId()); // gán UID (vì Firestore không tự fill)
                 result.add(user);
             }
