@@ -15,6 +15,8 @@ import org.web.posetrainer.Service.AuthService;
 import org.springframework.security.core.Authentication;
 import com.google.firebase.auth.FirebaseAuth;
 import jakarta.servlet.http.HttpServletResponse;
+import org.web.posetrainer.Service.UserService;
+
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -23,9 +25,11 @@ import java.util.Map;
 public class LoginController {
     private final AuthService authService;
     private final FirebaseAuth firebaseAuth;
-    public LoginController(AuthService authService, FirebaseAuth firebaseAuth) {
+    private final UserService userService;
+    public LoginController(AuthService authService, FirebaseAuth firebaseAuth, UserService userService) {
         this.authService = authService;
         this.firebaseAuth = firebaseAuth;
+        this.userService = userService;
     }
     @GetMapping("/login")
     public String showLogin(@RequestParam(value = "error", required = false) String error,
@@ -43,6 +47,27 @@ public class LoginController {
         try {
             // Step 1: Sign in with email/password
             LoginResponse loginResp = authService.login(request);
+            String uid = loginResp.getLocalId();
+            if (uid == null || uid.isBlank()) {
+                redirect.addFlashAttribute("error", "Không xác định được tài khoản. Vui lòng thử lại.");
+                return "redirect:/login";
+            }
+            try {
+                var userRecord = firebaseAuth.getUser(uid);
+                if (userRecord.isDisabled()) {
+                    redirect.addFlashAttribute("error", "Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên.");
+                    return "redirect:/login";
+                }
+            } catch (Exception ignored) {
+                // ignore FirebaseAuth lookup errors, fallback to Firestore check
+            }
+
+            var userOpt = userService.getUserByUid(uid);
+            if (userOpt.isEmpty() || !userOpt.get().isActive()) {
+                redirect.addFlashAttribute("error", "Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên.");
+                return "redirect:/login";
+            }
+
             List<String> roles = loginResp.getRoles();
             boolean isAdmin = false;
             boolean isSuperAdmin = false;
@@ -99,15 +124,31 @@ public class LoginController {
     ) {
         try {
             // 1️⃣ Kiểm tra email có tồn tại trong Firebase Auth không
+            com.google.firebase.auth.UserRecord userRecord;
             try {
-                firebaseAuth.getUserByEmail(email); // nếu không tồn tại sẽ throw FirebaseAuthException
+                userRecord = firebaseAuth.getUserByEmail(email); // nếu không tồn tại sẽ throw FirebaseAuthException
             } catch (com.google.firebase.auth.FirebaseAuthException ex) {
                 redirectAttributes.addFlashAttribute("error",
                         "Email này chưa được đăng ký trong hệ thống.");
                 return "redirect:/forgot";
             }
 
-            // 2️⃣ Gửi email khôi phục mật khẩu
+            if (userRecord.isDisabled()) {
+                redirectAttributes.addFlashAttribute("error",
+                        "Tài khoản đã bị khóa. Không thể gửi email khôi phục mật khẩu.");
+                return "redirect:/forgot";
+            }
+
+            // 2️⃣ Kiểm tra active trong Firestore trước khi gửi mail reset
+            String uid = userRecord.getUid();
+            var userOpt = userService.getUserByUid(uid);
+            if (userOpt.isEmpty() || !userOpt.get().isActive()) {
+                redirectAttributes.addFlashAttribute("error",
+                        "Tài khoản đã bị khóa. Không thể gửi email khôi phục mật khẩu.");
+                return "redirect:/forgot";
+            }
+
+            // 3️⃣ Gửi email khôi phục mật khẩu
             authService.sendPasswordResetEmail(email);
             redirectAttributes.addFlashAttribute("success",
                     "Email khôi phục mật khẩu đã được gửi!");

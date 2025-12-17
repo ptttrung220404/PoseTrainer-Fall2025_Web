@@ -20,7 +20,7 @@ public class PageService {
             comparator = comparator.reversed();
         }
         return source.stream()
-                .filter(ex -> matchesKeyword(keyword, ex.getName(), ex.getSlug()))
+                .filter(ex -> matchesKeyword(keyword, ex.getId(), ex.getName(), ex.getSlug()))
                 .sorted(comparator)
                 .collect(Collectors.toList());
     }
@@ -53,7 +53,7 @@ public class PageService {
             comparator = comparator.reversed();
         }
         return source.stream()
-                .filter(c -> matchesKeyword(keyword, c.getTitle(), c.getCategory()))
+                .filter(c -> matchesKeyword(keyword, c.getId(), c.getTitle(), c.getCategory()))
                 .sorted(comparator)
                 .collect(Collectors.toList());
     }
@@ -70,7 +70,7 @@ public class PageService {
             comparator = comparator.reversed();
         }
         return source.stream()
-                .filter(u -> matchesKeyword(keyword, u.getDisplayName(), u.getEmail()))
+                .filter(u -> matchesKeyword(keyword, u.getUid(), u.getDisplayName(), u.getEmail()))
                 .sorted(comparator)
                 .collect(Collectors.toList());
     }
@@ -87,7 +87,7 @@ public class PageService {
             comparator = comparator.reversed();
         }
         return source.stream()
-                .filter(c -> matchesKeyword(keyword, c.getDisplayName(), c.getContent()))
+                .filter(c -> matchesKeyword(keyword, c.getId(), c.getDisplayName(), c.getContent()))
                 .sorted(comparator)
                 .collect(Collectors.toList());
     }
