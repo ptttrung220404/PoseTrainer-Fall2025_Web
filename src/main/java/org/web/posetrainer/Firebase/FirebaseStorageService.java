@@ -50,6 +50,7 @@ public class FirebaseStorageService {
         }
 
         Bucket bucket = StorageClient.getInstance().bucket(bucketName);
+
         String basePath = "collections/" + collectionId + "/";
 
         // Tên file cố định như Exercise
@@ -61,7 +62,43 @@ public class FirebaseStorageService {
         // Trả về public media link
         return buildDownloadUrl(objectName);
     }
+    public String uploadWorkoutThumbnail(String WorkoutTemplateId, MultipartFile thumbnail)
+            throws IOException {
 
+        if (thumbnail == null || thumbnail.isEmpty()) {
+            return null;
+        }
+        System.out.println(">>> Thumbnail ContentType = " + thumbnail.getContentType());
+        System.out.println(">>> Thumbnail OriginalName = " + thumbnail.getOriginalFilename());
+        Bucket bucket = StorageClient.getInstance().bucket(bucketName);
+        System.out.println("Bucket: " + bucket.getName());
+
+        String basePath = "workouts_templates/" + WorkoutTemplateId + "/";
+
+        // Tên file cố định như Exercise
+        String objectName = basePath + "thumbnail.jpg";
+        System.out.println(">>> Uploading to path: " + objectName);
+        // Upload lên Firebase Storage
+        bucket.create(objectName, thumbnail.getBytes(), thumbnail.getContentType());
+
+        // Trả về public media link
+        return buildDownloadUrl(objectName);
+    }
+    public String uploadUserAvatar(String uid, MultipartFile avatar) throws IOException {
+        if (avatar == null || avatar.isEmpty()) return null;
+
+        Bucket bucket = StorageClient.getInstance().bucket(bucketName);
+
+        String contentType = avatar.getContentType() == null ? "" : avatar.getContentType().toLowerCase();
+        String ext = ".jpg";
+        if (contentType.contains("png")) ext = ".png";
+        else if (contentType.contains("webp")) ext = ".webp";
+        else if (contentType.contains("gif")) ext = ".gif";
+
+        String objectName = "avatars/" + uid + "/" + UUID.randomUUID() + ext;
+        bucket.create(objectName, avatar.getBytes(), avatar.getContentType());
+        return buildDownloadUrl(objectName);
+    }
     private String buildDownloadUrl(String objectName) {
         // dạng: https://firebasestorage.googleapis.com/v0/b/<bucket>/o/<path>?alt=media
         return "https://firebasestorage.googleapis.com/v0/b/"

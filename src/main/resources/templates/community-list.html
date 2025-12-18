@@ -68,61 +68,13 @@
             word-break: break-all;
         }
 
-        .create-btn-sidebar {
-            width: 100%;
-            padding: 12px;
-            background: #4299e1;
-            color: white;
-            border: none;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            margin-bottom: 24px;
-            transition: background 0.3s;
-        }
-
-        .create-btn-sidebar:hover {
-            background: #3182ce;
-        }
-
-        .nav-menu {
-            list-style: none;
-        }
-
-        .nav-item {
-            margin-bottom: 2px;
-        }
-
-        .nav-link {
-            display: block;
-            padding: 12px 16px;
-            color: #4a5568;
-            text-decoration: none;
-            transition: all 0.2s;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        .nav-link:hover {
-            background: #f7fafc;
-            color: #2d3748;
-        }
-
-        .nav-link.active {
-            background: #667eea;
-            color: white;
-        }
-
         .main-content {
             margin-left: 240px;
-            flex: 1;
             padding: 40px;
+            width: calc(100% - 240px);
+            max-width: 1600px; /* rất rộng */
+            margin-right: auto;
         }
-
         .container {
             max-width: 1200px;
             background: #fff;
@@ -525,6 +477,11 @@
             align-items: center;
             gap: 6px;
         }
+
+        /* Override: add author dropdown in same row */
+        .filter-row {
+            grid-template-columns: 2fr 220px 320px;
+        }
         .empty-state {
             text-align: center;
             padding: 40px;
@@ -536,7 +493,7 @@
 </head>
 <body>
 
-<div th:replace="~{layouts/main :: sidebar(displayName=${displayName}, uid=${uid}, currentPage='community')}"></div>
+<div th:replace="~{layouts/main :: sidebar(displayName=${displayName}, uid=${uid}, roles=${roles},currentPage='community')}"></div>
 
 <!-- ========== MAIN CONTENT ========== -->
 <main class="main-content">
@@ -553,7 +510,7 @@
 
                 <div class="filter-row">
                     <div class="filter-group">
-                        <label class="filter-label">Tìm theo tác giả hoặc nội dung</label>
+                        <label class="filter-label">Tìm theo ID / tác giả / nội dung</label>
                         <input
                                 type="text"
                                 name="keyword"
@@ -572,6 +529,18 @@
                             <option value="comments_desc" th:selected="${sort == 'comments_desc'}">Nhiều bình luận</option>
                         </select>
                     </div>
+                    <div class="filter-group">
+                        <label class="filter-label">User đã đăng bài</label>
+                        <select name="authorUid" class="filter-select">
+                            <option value="all" th:selected="${authorFilter == null || authorFilter == '' || authorFilter == 'all'}">Tất cả</option>
+                            <option th:each="a : ${postAuthors}"
+                                    th:value="${a.uid}"
+                                    th:selected="${authorFilter == a.uid}"
+                                    th:text="${a.displayName + (a.email != null ? ' - ' + a.email : '')}">
+                                User
+                            </option>
+                        </select>
+                    </div>
                 </div>
                 <div class="filter-actions">
                     <button type="submit" class="filter-btn filter-btn-primary">Áp dụng</button>
@@ -582,6 +551,9 @@
 
         <div class="posts-grid" th:if="${communityPage.totalItems > 0}">
             <div class="post-card" th:each="post : ${communityPage.items}">
+                <div style="font-size: 11px; color: #718096; font-family: monospace; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #f0f0f0;">
+                    ID: <span th:text="${post.id}">-</span>
+                </div>
                 <div class="post-header">
                     <img th:src="${post.photoURL ?: '/images/default-avatar.png'}"
                          alt="Avatar"
@@ -604,8 +576,9 @@
                 <div class="post-content" th:text="${post.content}">Nội dung bài đăng</div>
 
                 <div class="post-stats">
-                    <span>❤️ lượt thích</span>
-                    <span>💬 bình luận</span>
+
+                    <span>❤️<span th:text="${post.likesCount}">0</span> lượt thích</span>
+                    <span>💬  <span th:text="${post.commentsCount}">0</span>  bình luận</span>
                 </div>
 
                 <div class="post-actions">
@@ -620,14 +593,14 @@
                     </button>
                     <button class="btn btn-info small"
                             th:attr="onclick='viewLikes(\'' + ${post.id} + '\')'">
-                         Lượt thích
+                        Lượt thích
                     </button>
 
                     <!-- Row 3: Ẩn/Hiển thị (full width) -->
                     <button class="btn small btn-full"
                             th:classappend="${post.isVisible ? 'btn-warning' : 'btn-success'}"
                             th:text="${post.isVisible ? 'Ẩn bài đăng' : 'Hiển thị bài đăng'}"
-                            th:attr="onclick='toggleVisibility(\'' + ${post.id} + '\', ' + ${post.isVisible} + ')'">
+                            th:attr="onclick='return confirmToggle(\'' + ${post.id} + '\', ' + ${post.isVisible} + ')'">
                         Toggle
                     </button>
                 </div>
@@ -646,14 +619,14 @@
             <div class="pagination-controls">
                 <a class="page-btn"
                    th:classappend="${!communityPage.hasPrev} ? ' disabled'"
-                   th:href="@{/admin/community(page=${communityPage.page - 1},size=${communityPage.size},keyword=${keyword},sort=${sort})}">
+                   th:href="@{/admin/community(page=${communityPage.page - 1},size=${communityPage.size},keyword=${keyword},sort=${sort},authorUid=${authorFilter})}">
                     ‹ Trước
                 </a>
                 <span class="page-status"
                       th:text="'Trang ' + ${communityPage.page} + ' / ' + ${communityPage.totalPages}">Trang 1 / 1</span>
                 <a class="page-btn"
                    th:classappend="${!communityPage.hasNext} ? ' disabled'"
-                   th:href="@{/admin/community(page=${communityPage.page + 1},size=${communityPage.size},keyword=${keyword},sort=${sort})}">
+                   th:href="@{/admin/community(page=${communityPage.page + 1},size=${communityPage.size},keyword=${keyword},sort=${sort},authorUid=${authorFilter})}">
                     Sau ›
                 </a>
             </div>
@@ -661,6 +634,7 @@
                 <input type="hidden" name="page" value="1">
                 <input type="hidden" name="keyword" th:value="${keyword}">
                 <input type="hidden" name="sort" th:value="${sort}">
+                <input type="hidden" name="authorUid" th:value="${authorFilter}">
                 <label for="communitySize">Mỗi trang</label>
                 <input type="number" id="communitySize" name="size" min="1"
                        class="form-control form-control-sm"
@@ -865,7 +839,18 @@
                 body.innerHTML = `<div class="muted" style="color:red">Lỗi: ${err.message}</div>`;
             });
     }
+    function confirmToggle(postId, isVisible) {
+        const message = isVisible
+            ? "Bạn có chắc chắn muốn ẨN bài viết này không?\n(Lý do: Vi phạm tiêu chuẩn cộng đồng)"
+            : "Bạn có chắc chắn muốn HIỂN THỊ lại bài viết này không?";
 
+        if (!confirm(message)) {
+            return false; // hủy click
+        }
+
+        toggleVisibility(postId, isVisible);
+        return false; // tránh submit / reload
+    }
     function viewLikes(postId) {
         const modal = document.getElementById('likesModal');
         const body = document.getElementById('likesModalBody');
@@ -949,5 +934,6 @@
         if (e.target === this) closeLikesModal();
     });
 </script>
+<th:block th:replace="~{layouts/main :: footer}"></th:block>
 </body>
 </html>

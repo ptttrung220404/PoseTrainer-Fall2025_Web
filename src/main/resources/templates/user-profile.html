@@ -19,9 +19,11 @@
 
         /* ========== MAIN CONTENT ========== */
         .main-content {
-            margin-left: 240px;
+            margin: 0 auto;
             flex: 1;
             padding: 40px;
+            width: 100%;
+            max-width: 900px;
         }
 
         .container {
@@ -97,6 +99,82 @@
             border-radius: 50%;
             object-fit: cover;
             border: 3px solid #667eea;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .avatar-actions {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .hint {
+            font-size: 12px;
+            color: #718096;
+            margin-top: 6px;
+        }
+
+        .divider {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        /* Modal */
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(3px);
+        }
+
+        .modal {
+            background: #fff;
+            width: 92%;
+            max-width: 520px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .modal-body {
+            padding: 18px 20px;
+        }
+
+        .modal-footer {
+            padding: 14px 20px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            border-top: 1px solid #e2e8f0;
+            background: #f7fafc;
         }
 
         .user-details {
@@ -245,6 +323,7 @@
 <div th:replace="~{layouts/main :: sidebar(
     displayName=${displayName},
     uid=${uid},
+    roles=${roles},
     currentPage='profile')}">
 </div>
 
@@ -302,7 +381,9 @@
                 </div>
                 <div class="info-row" th:if="${user.createdAt > 0}">
                     <div class="info-label">Ngày tạo:</div>
-                    <div class="info-value" th:text="${#dates.format(new java.util.Date(user.createdAt), 'dd/MM/yyyy HH:mm')}">-</div>
+                    <div class="info-value">
+                        <span id="createdAtText" th:attr="data-ts=${user.createdAt}">-</span>
+                    </div>
                 </div>
             </div>
 
@@ -321,33 +402,33 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="photoURL">URL ảnh đại diện</label>
-                        <input type="url"
-                               id="photoURL"
-                               name="photoURL"
-                               th:value="${user.photoURL}"
-                               placeholder="https://example.com/avatar.jpg"
-                               oninput="updateAvatarPreview(this.value)">
-                        <small style="color: #718096; display: block; margin-top: 4px;">
-                            Nhập URL ảnh đại diện (tùy chọn)
-                        </small>
+                        <label for="avatarFile">Ảnh đại diện (upload lên Storage)</label>
+                        <input type="file" id="avatarFile" accept="image/*">
+                        <!-- store current photoURL (no manual URL input) -->
+                        <input type="hidden" id="photoURL" name="photoURL" th:value="${user.photoURL}">
+                        <div class="hint">Hỗ trợ: JPG/PNG/WEBP/GIF, tối đa 3MB.</div>
+                        <div class="avatar-actions">
+                            <button type="button" class="btn btn-primary" onclick="uploadAvatar()">Upload & lưu ảnh</button>
+                            <button type="button" class="btn btn-secondary" onclick="clearAvatarSelection()">Hủy chọn</button>
+                        </div>
                     </div>
 
-                    <div class="form-group" th:if="${user.notification != null}">
-                        <label>
-                            <input type="checkbox"
-                                   id="allowNotification"
-                                   name="allowNotification"
-                                   th:checked="${user.notification.allowNotification}">
-                            Cho phép nhận thông báo
-                        </label>
-                    </div>
+
 
                     <div class="form-actions">
                         <button type="submit" class="btn btn-success">Lưu thay đổi</button>
                         <button type="button" class="btn btn-secondary" onclick="resetForm()">Đặt lại</button>
                     </div>
                 </form>
+            </div>
+
+            <hr class="divider">
+
+            <!-- Change password (modal trigger) -->
+            <div class="profile-section">
+                <h2>Bảo mật</h2>
+                <p class="hint" style="margin-bottom: 12px;">Đổi mật khẩu sẽ yêu cầu đăng nhập lại.</p>
+                <button type="button" class="btn btn-primary" onclick="openChangePasswordModal()">Đổi mật khẩu</button>
             </div>
 
             <!-- Đăng xuất -->
@@ -369,6 +450,38 @@
         </div>
     </div>
 </main>
+
+<!-- Change password modal -->
+<div id="changePasswordBackdrop" class="modal-backdrop" onclick="onBackdropClick(event)">
+    <div class="modal" role="dialog" aria-modal="true">
+        <div class="modal-header">
+            <h3>Đổi mật khẩu</h3>
+            <button type="button" class="btn btn-secondary" onclick="closeChangePasswordModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <div id="changePasswordModalMsg" class="alert" style="display:none; margin-bottom: 14px;"></div>
+            <form id="changePasswordForm">
+                <div class="form-group">
+                    <label for="currentPassword">Mật khẩu hiện tại</label>
+                    <input type="password" id="currentPassword" autocomplete="current-password" required>
+                </div>
+                <div class="form-group">
+                    <label for="newPassword">Mật khẩu mới</label>
+                    <input type="password" id="newPassword" autocomplete="new-password" minlength="6" required>
+                    <div class="hint">Tối thiểu 6 ký tự.</div>
+                </div>
+                <div class="form-group">
+                    <label for="confirmNewPassword">Nhập lại mật khẩu mới</label>
+                    <input type="password" id="confirmNewPassword" autocomplete="new-password" minlength="6" required>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeChangePasswordModal()">Hủy</button>
+            <button type="button" class="btn btn-success" id="btnChangePasswordSave" onclick="submitChangePassword()">Lưu</button>
+        </div>
+    </div>
+</div>
 
 <script>
     const originalData = {
@@ -413,14 +526,53 @@
             successMsg.style.display = 'none';
             errorMsg.style.display = 'none';
         }, 5000);
+
+        // ensure user sees the message (page can be scrolled down)
+        try {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } catch (_) {
+            window.scrollTo(0, 0);
+        }
     }
+
+    function formatTimestampSmart(ts) {
+        if (!ts || ts === 0) return '-';
+        const n = Number(ts);
+        if (Number.isNaN(n)) return '-';
+        // heuristic:
+        // > 1e15: microseconds (ms*1000)  -> /1000
+        // > 1e12: milliseconds           -> 그대로
+        // else: seconds                  -> *1000
+        let ms = n;
+        if (n > 1e15) ms = Math.floor(n / 1000);
+        else if (n < 1e12) ms = n * 1000;
+        const d = new Date(ms);
+        if (Number.isNaN(d.getTime())) return '-';
+        return d.toLocaleString('vi-VN', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    // Render createdAt safely (sec/ms/micro)
+    (function initTimestamps() {
+        const created = document.getElementById('createdAtText');
+        if (created) {
+            const ts = created.getAttribute('data-ts');
+            created.textContent = formatTimestampSmart(ts);
+        }
+    })();
 
     document.getElementById('updateForm')?.addEventListener('submit', async function(e) {
         e.preventDefault();
 
         const formData = {
             displayName: document.getElementById('displayName').value.trim(),
-            photoURL: document.getElementById('photoURL').value.trim() || null
+            // photoURL is managed by upload; keep it synced but do not require manual input
+            photoURL: (document.getElementById('photoURL')?.value || '').trim() || null
         };
 
         const allowNotification = document.getElementById('allowNotification');
@@ -458,6 +610,203 @@
             showMessage('Lỗi kết nối: ' + error.message, true);
         }
     });
+
+    // Avatar preview on file select
+    document.getElementById('avatarFile')?.addEventListener('change', function() {
+        const file = this.files?.[0];
+        if (!file) return;
+        const preview = document.getElementById('avatarPreview');
+        if (preview) {
+            preview.src = URL.createObjectURL(file);
+        }
+    });
+
+    function clearAvatarSelection() {
+        const input = document.getElementById('avatarFile');
+        if (input) input.value = '';
+        // revert preview to current photoURL input
+        const url = document.getElementById('photoURL')?.value || originalData.photoURL || '';
+        updateAvatarPreview(url);
+    }
+
+    async function uploadAvatar() {
+        const input = document.getElementById('avatarFile');
+        const file = input?.files?.[0];
+        if (!file) {
+            showMessage('Vui lòng chọn ảnh trước khi upload', true);
+            return;
+        }
+        if (file.size > 3 * 1024 * 1024) {
+            showMessage('Ảnh tối đa 3MB', true);
+            return;
+        }
+
+        const fd = new FormData();
+        fd.append('avatar', file);
+
+        try {
+            const resp = await fetch('/api/admin/profile/avatar', {
+                method: 'POST',
+                body: fd
+            });
+            const data = await resp.json().catch(() => ({}));
+            if (!resp.ok) {
+                showMessage(data.error || ('Upload thất bại (HTTP ' + resp.status + ')'), true);
+                return;
+            }
+            const url = data.photoURL;
+            if (url) {
+                // update immediately (no reload)
+                document.getElementById('photoURL').value = url;
+                originalData.photoURL = url;
+                updateAvatarPreview(url + (url.includes('?') ? '&' : '?') + 't=' + Date.now());
+                showMessage('Upload & lưu ảnh đại diện thành công!', false);
+                clearAvatarSelection();
+            } else {
+                showMessage('Upload thành công nhưng không nhận được URL', true);
+            }
+        } catch (e) {
+            showMessage('Lỗi kết nối khi upload ảnh: ' + e.message, true);
+        }
+    }
+
+    // ===== Change password modal =====
+    function openChangePasswordModal() {
+        const b = document.getElementById('changePasswordBackdrop');
+        if (!b) return;
+        // reset fields
+        document.getElementById('currentPassword').value = '';
+        document.getElementById('newPassword').value = '';
+        document.getElementById('confirmNewPassword').value = '';
+        const modalMsg = document.getElementById('changePasswordModalMsg');
+        if (modalMsg) {
+            modalMsg.style.display = 'none';
+            modalMsg.textContent = '';
+            modalMsg.className = 'alert';
+        }
+        b.style.display = 'flex';
+        setTimeout(() => document.getElementById('currentPassword')?.focus(), 0);
+    }
+
+    function closeChangePasswordModal() {
+        const b = document.getElementById('changePasswordBackdrop');
+        if (!b) return;
+        b.style.display = 'none';
+    }
+
+    function onBackdropClick(e) {
+        const b = document.getElementById('changePasswordBackdrop');
+        if (e.target === b) closeChangePasswordModal();
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeChangePasswordModal();
+    });
+
+    async function submitChangePassword() {
+        const currentPassword = document.getElementById('currentPassword').value.trim();
+        const newPassword = document.getElementById('newPassword').value.trim();
+        const confirmNewPassword = document.getElementById('confirmNewPassword').value.trim();
+        const saveBtn = document.getElementById('btnChangePasswordSave');
+        const modalMsg = document.getElementById('changePasswordModalMsg');
+
+        // immediate feedback so user knows click worked
+        if (modalMsg) {
+            modalMsg.style.display = 'block';
+            modalMsg.className = 'alert';
+            modalMsg.style.background = '#edf2f7';
+            modalMsg.style.border = '1px solid #cbd5e0';
+            modalMsg.style.color = '#2d3748';
+            modalMsg.textContent = 'Đang đổi mật khẩu...';
+        }
+        if (saveBtn) {
+            saveBtn.disabled = true;
+            saveBtn.style.opacity = '0.7';
+            saveBtn.textContent = 'Đang lưu...';
+        }
+
+        if (!currentPassword) {
+            showMessage('Vui lòng nhập mật khẩu hiện tại', true);
+            if (modalMsg) {
+                modalMsg.style.display = 'block';
+                modalMsg.className = 'alert alert-error';
+                modalMsg.textContent = 'Vui lòng nhập mật khẩu hiện tại';
+            }
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.style.opacity = '1';
+                saveBtn.textContent = 'Lưu';
+            }
+            return;
+        }
+        if (!newPassword || newPassword.length < 6) {
+            showMessage('Mật khẩu mới tối thiểu 6 ký tự', true);
+            if (modalMsg) {
+                modalMsg.style.display = 'block';
+                modalMsg.className = 'alert alert-error';
+                modalMsg.textContent = 'Mật khẩu mới tối thiểu 6 ký tự';
+            }
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.style.opacity = '1';
+                saveBtn.textContent = 'Lưu';
+            }
+            return;
+        }
+        if (newPassword !== confirmNewPassword) {
+            showMessage('Nhập lại mật khẩu mới không khớp', true);
+            if (modalMsg) {
+                modalMsg.style.display = 'block';
+                modalMsg.className = 'alert alert-error';
+                modalMsg.textContent = 'Nhập lại mật khẩu mới không khớp';
+            }
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.style.opacity = '1';
+                saveBtn.textContent = 'Lưu';
+            }
+            return;
+        }
+
+        try {
+            const resp = await fetch('/api/admin/profile/change-password', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ currentPassword, newPassword })
+            });
+            const data = await resp.json().catch(() => ({}));
+            if (!resp.ok) {
+                showMessage(data.error || ('Đổi mật khẩu thất bại (HTTP ' + resp.status + ')'), true);
+                if (modalMsg) {
+                    modalMsg.style.display = 'block';
+                    modalMsg.className = 'alert alert-error';
+                    modalMsg.textContent = data.error || ('Đổi mật khẩu thất bại (HTTP ' + resp.status + ')');
+                }
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtn.style.opacity = '1';
+                    saveBtn.textContent = 'Lưu';
+                }
+                return;
+            }
+            closeChangePasswordModal();
+            showMessage(data.message || 'Đổi mật khẩu thành công. Đang chuyển về đăng nhập...', false);
+            setTimeout(() => window.location.replace('/login'), 800);
+        } catch (e) {
+            showMessage('Lỗi kết nối khi đổi mật khẩu: ' + e.message, true);
+            if (modalMsg) {
+                modalMsg.style.display = 'block';
+                modalMsg.className = 'alert alert-error';
+                modalMsg.textContent = 'Lỗi kết nối khi đổi mật khẩu: ' + e.message;
+            }
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.style.opacity = '1';
+                saveBtn.textContent = 'Lưu';
+            }
+        }
+    }
 </script>
+<th:block th:replace="~{layouts/main :: footer}"></th:block>
 </body>
 </html>

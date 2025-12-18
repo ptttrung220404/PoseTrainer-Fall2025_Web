@@ -501,14 +501,20 @@
             align-items: center;
             gap: 6px;
         }
-
+        .main-content {
+            margin-left: 240px;
+            padding: 40px;
+            width: calc(100% - 240px);
+            max-width: 1600px; /* rất rộng */
+            margin-right: auto;
+        }
 
     </style>
 </head>
 <body>
 <!-- ========== SIDEBAR ========== -->
 
-<div th:replace="~{layouts/main :: sidebar(displayName=${displayName}, uid=${uid}, currentPage='workouts')}"></div>
+<div th:replace="~{layouts/main :: sidebar(displayName=${displayName}, uid=${uid},roles=${roles}, currentPage='workouts')}"></div>
 
 <!-- ========== MAIN CONTENT ========== -->
 <main class="main-content">
@@ -555,37 +561,41 @@
         </div>
 
         <div class="table-responsive">
-        <table class="table table-striped table-hover align-middle">
-            <thead>
-            <tr>
-                <th>Title</th>
-                <th>Level</th>
-                <th>Public?</th>
-                <th>#Exercises</th>
-                <th>UpdatedAt</th>
-                <th>Actions</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:if="${workoutPage.totalItems == 0}">
-                <td colspan="6">Chưa có workout nào.</td>
-            </tr>
-            <tr th:each="w : ${workoutPage.items}">
-                <td th:text="${w.title ?: w.name ?: w.id}">Title</td>
-                <td><span class="badge" th:text="${w.level ?: ''}">level</span></td>
-                <td>
-                    <span th:if="${w.isPublic}" class="badge" style="background:#d4edda">Public</span>
-                    <span th:unless="${w.isPublic}" class="badge" style="background:#f8d7da">Private</span>
-                </td>
-                <td th:text="${#lists.size(w.items ?: {})}">0</td>
-                <td th:text="${w.updatedAt > 0 ? #dates.format(new java.util.Date(w.updatedAt), 'dd/MM/yyyy HH:mm') : '-'}">-</td>
-                <td>
-                    <button class="btn btn-primary small" th:attr="onclick='openDetailModal(\'' + ${w.id} + '\')'">Chi tiết</button>
-                    <button class="btn small" th:attr="onclick='openAddModalWithClone(\'' + ${w.id} + '\')'">Duplicate</button>
-                </td>
-            </tr>
-            </tbody>
-        </table>
+            <table class="table table-striped table-hover align-middle">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Level</th>
+                    <th>Public</th>
+                    <th>#Exercises</th>
+                    <th>UpdatedAt</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${workoutPage.totalItems == 0}">
+                    <td colspan="7">Chưa có workout nào.</td>
+                </tr>
+                <tr th:each="w : ${workoutPage.items}">
+                    <td>
+                        <span style="font-size: 12px; color: #718096; font-family: monospace;" th:text="${w.id}">-</span>
+                    </td>
+                    <td th:text="${w.title ?: w.name ?: w.id}">Title</td>
+                    <td><span class="badge" th:text="${w.level ?: ''}">level</span></td>
+                    <td>
+                        <span th:if="${w.isPublic}" class="badge" style="background:#d4edda">Public</span>
+                        <span th:unless="${w.isPublic}" class="badge" style="background:#f8d7da">Private</span>
+                    </td>
+                    <td th:text="${#lists.size(w.items ?: {})}">0</td>
+                    <td th:text="${w.updatedAt > 0 ? #dates.format(new java.util.Date(w.updatedAt), 'dd/MM/yyyy HH:mm') : '-'}">-</td>
+                    <td>
+                        <button class="btn btn-primary small" th:attr="onclick='openDetailModal(\'' + ${w.id} + '\')'">Chi tiết</button>
+
+                    </td>
+                </tr>
+                </tbody>
+            </table>
         </div>
         <div class="pagination-bar">
             <div class="pagination-info muted"
@@ -616,289 +626,315 @@
                        th:value="${workoutPage.size != null ? workoutPage.size : 10}"
                        style="max-width:120px"
                        onchange="this.form.submit()" />
-                
+
             </form>
         </div>
 
-        <p class="muted" style="margin-top:16px;">Tip: Click "Chi tiết" để mở modal sửa, thêm/xóa/reorder exercise.</p>
+
     </div>
-<!-- ========== ADD WORKOUT MODAL ========== -->
-<div id="addModal" class="modal-backdrop">
-    <div class="modal">
-        <div class="modal-header">
-            <h3>Thêm Workout Template</h3>
-            <button class="btn-close" onclick="closeAddModal()">✕</button>
-        </div>
+    <!-- ========== ADD WORKOUT MODAL ========== -->
+    <div id="addModal" class="modal-backdrop">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Thêm Workout Template</h3>
+                <button class="btn-close" onclick="closeAddModal()">✕</button>
+            </div>
 
-        <div class="modal-body">
-            <form id="addForm">
-                <div class="form-grid">
-                    <div class="field form-grid-full">
-                        <label>Title *</label>
-                        <input type="text" name="title" placeholder="Nhập tên workout" required>
-                    </div>
-
-                    <div class="field">
-                        <label>Slug (unique id)</label>
-                        <input type="text" name="slug" placeholder="auto nếu bỏ trống">
-                    </div>
-
-                    <div class="field">
-                        <label>Level</label>
-                        <select name="level">
-                            <option value="easy">Easy - Dễ</option>
-                            <option value="medium" selected>Medium - Trung bình</option>
-                            <option value="hard">Hard - Khó</option>
-                        </select>
-                    </div>
-
-                    <div class="field">
-                        <label>Estimated Duration (phút)</label>
-                        <input type="number" name="estDurationMin" value="30" min="0">
-                    </div>
-
-                    <div class="field">
-                        <label>Goal Fit</label>
-                        <select name="goalFit">
-                            <option value="general_fitness">General Fitness</option>
-                            <option value="muscle_gain">Muscle Gain</option>
-                            <option value="fat_loss">Fat Loss</option>
-                        </select>
-                    </div>
-
-                    <div class="field form-grid-full">
-                        <label>Description</label>
-                        <textarea name="description" placeholder="Mô tả chi tiết về workout..."></textarea>
-                    </div>
-
-                    <div class="field">
-                        <label>Focus (Multiple select)</label>
-                        <select name="focus" multiple style="height:120px;">
-                            <option value="upper">Upper Body</option>
-                            <option value="lower">Lower Body</option>
-                            <option value="fullbody">Full Body</option>
-                            <option value="core">Core</option>
-                        </select>
-                    </div>
-
-                    <div class="field">
-                        <label>Public Status</label>
-                        <div class="checkbox-wrapper">
-                            <input type="checkbox" name="isPublic" id="addIsPublic" checked>
-                            <label for="addIsPublic" style="margin: 0; font-weight: normal;">Công khai cho mọi người</label>
+            <div class="modal-body">
+                <form id="addForm">
+                    <div class="form-grid">
+                        <div class="field form-grid-full">
+                            <label>Title *</label>
+                            <input type="text" name="title" placeholder="Nhập tên workout" required>
                         </div>
-                    </div>
-                </div>
 
-                <hr class="section-divider">
-
-                <h4 class="section-title">Danh sách Exercises</h4>
-
-                <div class="exercise-selector">
-                    <div class="exercise-inputs">
                         <div class="field">
-                            <label>Chọn Exercise</label>
-                            <select id="addExerciseSelect">
-                                <option value="">-- Chọn exercise --</option>
+                            <label>Slug (unique id)</label>
+                            <input type="text" name="slug" placeholder="auto nếu bỏ trống">
+                        </div>
+
+                        <div class="field">
+                            <label>Level</label>
+                            <select name="level">
+                                <option value="easy">Easy - Dễ</option>
+                                <option value="medium" selected>Medium - Trung bình</option>
+                                <option value="hard">Hard - Khó</option>
                             </select>
                         </div>
 
                         <div class="field">
-                            <label>Sets</label>
-                            <input type="number" id="add_sets" value="3" min="1">
+                            <label>Estimated Duration (phút)</label>
+                            <input type="number" name="estDurationMin" value="30" min="0">
                         </div>
 
                         <div class="field">
-                            <label>Reps</label>
-                            <input type="number" id="add_reps" value="10" min="1">
+                            <label>Goal Fit</label>
+                            <select name="goalFit">
+                                <option value="general_fitness">General Fitness</option>
+                                <option value="muscle_gain">Muscle Gain</option>
+                                <option value="fat_loss">Fat Loss</option>
+                            </select>
+                        </div>
+
+                        <div class="field form-grid-full">
+                            <label>Description</label>
+                            <textarea name="description" placeholder="Mô tả chi tiết về workout..."></textarea>
                         </div>
 
                         <div class="field">
-                            <label>Rest (s)</label>
-                            <input type="number" id="add_rest" value="60" min="0">
-                        </div>
-
-                        <div class="field">
-                            <label>Difficulty</label>
-                            <select id="add_diff">
-                                <option value="easy">Easy</option>
-                                <option value="medium" selected>Medium</option>
-                                <option value="hard">Hard</option>
+                            <label>Focus (Multiple select)</label>
+                            <select name="focus" multiple style="height:120px;">
+                                <option value="upper">Upper Body</option>
+                                <option value="lower">Lower Body</option>
+                                <option value="fullbody">Full Body</option>
+                                <option value="core">Core</option>
                             </select>
                         </div>
 
                         <div class="field">
-                            <label>&nbsp;</label>
-                            <button type="button" class="btn btn-primary" onclick="addItemInAddModal()" style="width: 100%;">+ Thêm</button>
+                            <label>Public Status</label>
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" name="isPublic" id="addIsPublic" checked>
+                                <label for="addIsPublic" style="margin: 0; font-weight: normal;">Công khai cho mọi người</label>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <table class="items-table" id="addItemsTable">
-                    <thead>
-                    <tr>
-                        <th style="width: 50px;">#</th>
-                        <th>Exercise</th>
-                        <th style="width: 80px;">Sets</th>
-                        <th style="width: 80px;">Reps</th>
-                        <th style="width: 80px;">Rest</th>
-                        <th style="width: 100px;">Diff</th>
-                        <th style="width: 180px;">Actions</th>
-                    </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-
-                <div id="addError" class="error-message"></div>
-            </form>
-        </div>
-
-        <div class="modal-footer">
-            <button class="btn btn-secondary" onclick="closeAddModal()">Hủy</button>
-            <button class="btn btn-success" onclick="submitAddWorkout()">Lưu Workout</button>
-        </div>
-    </div>
-</div>
-
-<!-- ========== DETAIL / EDIT MODAL ========== -->
-<div id="detailModal" class="modal-backdrop">
-    <div class="modal">
-        <div class="modal-header">
-            <h3>Chi tiết / Sửa Workout</h3>
-            <button class="btn-close" onclick="closeDetailModal()">✕</button>
-        </div>
-
-        <div class="modal-body">
-            <form id="detailForm">
-                <div class="form-grid">
-                    <div class="field form-grid-full">
-                        <label>Title</label>
-                        <input type="text" name="title">
-                    </div>
+                    <hr class="section-divider">
 
                     <div class="field">
-                        <label>Slug (id)</label>
-                        <input type="text" name="slug" readonly style="background: #f7fafc;">
-                    </div>
-
-                    <div class="field">
-                        <label>Level</label>
-                        <select name="level">
-                            <option value="easy">Easy - Dễ</option>
-                            <option value="medium">Medium - Trung bình</option>
-                            <option value="hard">Hard - Khó</option>
-                        </select>
-                    </div>
-
-                    <div class="field">
-                        <label>Estimated Duration (phút)</label>
-                        <input type="number" name="estDurationMin" value="30" min="0">
-                    </div>
-
-                    <div class="field">
-                        <label>Goal Fit</label>
-                        <select name="goalFit">
-                            <option value="general_fitness">General Fitness</option>
-                            <option value="muscle_gain">Muscle Gain</option>
-                            <option value="fat_loss">Fat Loss</option>
-                        </select>
-                    </div>
-
-                    <div class="field form-grid-full">
-                        <label>Description</label>
-                        <textarea name="description"></textarea>
-                    </div>
-
-                    <div class="field">
-                        <label>Focus (Multiple select)</label>
-                        <select name="focus" multiple style="height:120px;">
-                            <option value="upper">Upper Body</option>
-                            <option value="lower">Lower Body</option>
-                            <option value="fullbody">Full Body</option>
-                            <option value="core">Core</option>
-                        </select>
-                    </div>
-
-                    <div class="field">
-                        <label>Public Status</label>
-                        <div class="checkbox-wrapper">
-                            <input type="checkbox" name="isPublic" id="detailIsPublic">
-                            <label for="detailIsPublic" style="margin: 0; font-weight: normal;">Công khai cho mọi người</label>
+                        <label>Upload Thumbnail *</label>
+                        <input type="file" id="addThumbnail" accept="image/*" onchange="previewThumb('add')" required>
+                        <div class="thumbnail-container">
+                            <img id="addPreviewThumb" class="preview-thumb" style="display:none;">
+                            <p class="muted" id="addThumbPlaceholder">Chưa có ảnh. Vui lòng chọn file.</p>
                         </div>
                     </div>
-                </div>
 
-                <hr class="section-divider">
+                    <hr class="section-divider">
+                    <h4 class="section-title">Danh sách Exercises</h4>
 
-                <h4 class="section-title">📋 Danh sách Exercises</h4>
+                    <div class="exercise-selector">
+                        <div class="exercise-inputs">
+                            <div class="field">
+                                <label>Chọn Exercise</label>
+                                <select id="addExerciseSelect">
+                                    <option value="">-- Chọn exercise --</option>
+                                </select>
+                            </div>
 
-                <div class="exercise-selector">
-                    <div class="exercise-inputs">
-                        <div class="field">
-                            <label>Chọn Exercise</label>
-                            <select id="detailExerciseSelect">
-                                <option value="">-- Chọn exercise --</option>
-                            </select>
-                        </div>
+                            <div class="field">
+                                <label>Sets</label>
+                                <input type="number" id="add_sets" value="3" min="1">
+                            </div>
 
-                        <div class="field">
-                            <label>Sets</label>
-                            <input id="detail_sets" type="number" value="3" min="1">
-                        </div>
+                            <div class="field">
+                                <label>Reps</label>
+                                <input type="number" id="add_reps" value="10" min="1">
+                            </div>
 
-                        <div class="field">
-                            <label>Reps</label>
-                            <input id="detail_reps" type="number" value="10" min="1">
-                        </div>
+                            <div class="field">
+                                <label>Rest (s)</label>
+                                <input type="number" id="add_rest" value="60" min="0">
+                            </div>
 
-                        <div class="field">
-                            <label>Rest (s)</label>
-                            <input id="detail_rest" type="number" value="60" min="0">
-                        </div>
+                            <div class="field">
+                                <label>Difficulty</label>
+                                <select id="add_diff">
+                                    <option value="easy">Easy</option>
+                                    <option value="medium" selected>Medium</option>
+                                    <option value="hard">Hard</option>
+                                </select>
+                            </div>
 
-                        <div class="field">
-                            <label>Diff</label>
-                            <select id="detail_diff">
-                                <option value="easy">Easy</option>
-                                <option value="medium">Medium</option>
-                                <option value="hard">Hard</option>
-                            </select>
-                        </div>
-
-                        <div class="field">
-                            <label>&nbsp;</label>
-                            <button type="button" class="btn btn-primary" onclick="addItemInDetailModal()" style="width: 100%;">+ Add</button>
+                            <div class="field">
+                                <label>&nbsp;</label>
+                                <button type="button" class="btn btn-primary" onclick="addItemInAddModal()" style="width: 100%;">+ Thêm</button>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <table class="items-table" id="detailItemsTable">
-                    <thead>
-                    <tr>
-                        <th style="width: 50px;">#</th>
-                        <th>Exercise</th>
-                        <th style="width: 80px;">Sets</th>
-                        <th style="width: 80px;">Reps</th>
-                        <th style="width: 80px;">Rest</th>
-                        <th style="width: 100px;">Diff</th>
-                        <th style="width: 220px;">Actions</th>
-                    </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
+                    <table class="items-table" id="addItemsTable">
+                        <thead>
+                        <tr>
+                            <th style="width: 50px;">#</th>
+                            <th>Exercise</th>
+                            <th style="width: 80px;">Sets</th>
+                            <th style="width: 80px;">Reps</th>
+                            <th style="width: 80px;">Rest</th>
+                            <th style="width: 100px;">Diff</th>
+                            <th style="width: 180px;">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
 
-                <div id="detailError" class="error-message"></div>
-            </form>
-        </div>
+                    <div id="addError" class="error-message"></div>
+                </form>
+            </div>
 
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" onclick="closeDetailModal()">Đóng</button>
-            <button type="button" class="btn btn-warning" onclick="submitItemsUpdate()">Lưu Items</button>
-            <button type="button" class="btn btn-primary" onclick="submitWorkoutUpdate()">Lưu Info</button>
-            <button type="button" class="btn btn-danger" onclick="deleteWorkout()">Xóa Workout</button>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeAddModal()">Hủy</button>
+                <button class="btn btn-success" onclick="submitAddWorkout()">Lưu Workout</button>
+            </div>
         </div>
     </div>
-</div>
+
+    <!-- ========== DETAIL / EDIT MODAL ========== -->
+    <div id="detailModal" class="modal-backdrop">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Chi tiết / Sửa Workout</h3>
+                <button class="btn-close" onclick="closeDetailModal()">✕</button>
+            </div>
+
+            <div class="modal-body">
+                <form id="detailForm">
+                    <div class="form-grid">
+                        <div class="field form-grid-full">
+                            <label>Title</label>
+                            <input type="text" name="title">
+                        </div>
+
+                        <div class="field">
+                            <label>Slug (id)</label>
+                            <input type="text" name="slug" readonly style="background: #f7fafc;">
+                        </div>
+
+                        <div class="field">
+                            <label>Level</label>
+                            <select name="level">
+                                <option value="easy">Easy - Dễ</option>
+                                <option value="medium">Medium - Trung bình</option>
+                                <option value="hard">Hard - Khó</option>
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label>Estimated Duration (phút)</label>
+                            <input type="number" name="estDurationMin" value="30" min="0">
+                        </div>
+
+                        <div class="field">
+                            <label>Goal Fit</label>
+                            <select name="goalFit">
+                                <option value="general_fitness">General Fitness</option>
+                                <option value="muscle_gain">Muscle Gain</option>
+                                <option value="fat_loss">Fat Loss</option>
+                            </select>
+                        </div>
+
+                        <div class="field form-grid-full">
+                            <label>Description</label>
+                            <textarea name="description"></textarea>
+                        </div>
+
+                        <div class="field">
+                            <label>Focus (Multiple select)</label>
+                            <select name="focus" multiple style="height:120px;">
+                                <option value="upper">Upper Body</option>
+                                <option value="lower">Lower Body</option>
+                                <option value="fullbody">Full Body</option>
+                                <option value="core">Core</option>
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label>Public Status</label>
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" name="isPublic" id="detailIsPublic">
+                                <label for="detailIsPublic" style="margin: 0; font-weight: normal;">Công khai cho mọi người</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="section-divider">
+                    <h4 class="section-title">Thumbnail</h4>
+                    <div class="field">
+                        <label>Current Thumbnail</label>
+                        <div class="thumbnail-container">
+                            <img id="detailPreviewThumb" class="preview-thumb" style="display:none;">
+                            <p class="muted" id="detailThumbPlaceholder">Chưa có ảnh.</p>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label>Upload New Thumbnail</label>
+                        <input type="file" id="detailThumbnail" accept="image/*" onchange="previewThumb('detail')">
+                    </div>
+
+                    <hr class="section-divider">
+
+                    <h4 class="section-title">📋 Danh sách Exercises</h4>
+
+                    <div class="exercise-selector">
+                        <div class="exercise-inputs">
+                            <div class="field">
+                                <label>Chọn Exercise</label>
+                                <select id="detailExerciseSelect">
+                                    <option value="">-- Chọn exercise --</option>
+                                </select>
+                            </div>
+
+                            <div class="field">
+                                <label>Sets</label>
+                                <input id="detail_sets" type="number" value="3" min="1">
+                            </div>
+
+                            <div class="field">
+                                <label>Reps</label>
+                                <input id="detail_reps" type="number" value="10" min="1">
+                            </div>
+
+                            <div class="field">
+                                <label>Rest (s)</label>
+                                <input id="detail_rest" type="number" value="60" min="0">
+                            </div>
+
+                            <div class="field">
+                                <label>Diff</label>
+                                <select id="detail_diff">
+                                    <option value="easy">Easy</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="hard">Hard</option>
+                                </select>
+                            </div>
+
+                            <div class="field">
+                                <label>&nbsp;</label>
+                                <button type="button" class="btn btn-primary" onclick="addItemInDetailModal()" style="width: 100%;">+ Add</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <table class="items-table" id="detailItemsTable">
+                        <thead>
+                        <tr>
+                            <th style="width: 50px;">#</th>
+                            <th>Exercise</th>
+                            <th style="width: 80px;">Sets</th>
+                            <th style="width: 80px;">Reps</th>
+                            <th style="width: 80px;">Rest</th>
+                            <th style="width: 100px;">Diff</th>
+                            <th style="width: 220px;">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+
+                    <div id="detailError" class="error-message"></div>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeDetailModal()">Đóng</button>
+                <button type="button" class="btn btn-warning" onclick="submitItemsUpdate()">Lưu Items</button>
+                <button type="button" class="btn btn-primary" onclick="submitWorkoutUpdate()">Lưu Info</button>
+                <button class="btn btn-primary" onclick="uploadThumbnail()">Upload Thumbnail</button>
+                <button type="button" class="btn btn-danger" onclick="deleteWorkout()">Xóa Workout</button>
+            </div>
+        </div>
+    </div>
 </main>
 <script>
     // ---------- state ----------
@@ -920,6 +956,10 @@
     // ---------- boot: load exercises for dropdowns ----------
     window.addEventListener('load', () => {
         loadExercises();
+        const addThumb = q('#addThumbnail');
+        const detailThumb = q('#detailThumbnail');
+        addThumb?.addEventListener('change', () => previewThumb('add'));
+        detailThumb?.addEventListener('change', () => previewThumb('detail'));
         // Workouts are now loaded from server via Thymeleaf, no need to load via JS
     });
 
@@ -975,37 +1015,7 @@
     }
 
     // open add modal but prefill by cloning existing workout
-    async function openAddModalWithClone(id) {
-        try {
-            const resp = await fetch('/api/admin/workouts/' + id);
-            if (!resp.ok) {
-                alert('Cannot load workout to clone');
-                return;
-            }
-            const w = await resp.json();
 
-            // prefill
-            q('#addForm [name=title]').value = (w.title || w.name) + ' (copy)';
-            q('#addForm [name=slug]').value = ''; // new slug
-            q('#addForm [name=level]').value = w.level || 'medium';
-            q('#addForm [name=isPublic]').checked = !!w.isPublic;
-
-            addItems = (w.items || []).map(it => ({
-                exerciseId: it.exerciseId,
-                sets: it.configOverride?.sets ?? (it.sets ?? 3),
-                reps: it.configOverride?.reps ?? (it.reps ?? 10),
-                restSec: it.configOverride?.restSec ?? (it.restSec ?? 60),
-                difficulty: it.configOverride?.difficulty ?? (it.difficulty ?? 'medium')
-            }));
-            renderAddItemsTable();
-
-            q('#addError').textContent = '';
-            q('#addModal').style.display = 'flex';
-        } catch (e) {
-            console.error(e);
-            alert('Lỗi khi clone');
-        }
-    }
 
     function closeAddModal() {
         q('#addModal').style.display = 'none';
@@ -1073,6 +1083,11 @@
             q('#addError').textContent = 'Title bắt buộc';
             return;
         }
+        const thumbFile = q('#addThumbnail').files[0];
+        if (!thumbFile) {
+            q('#addError').textContent = 'Vui lòng chọn thumbnail';
+            return;
+        }
         const slug = q('#addForm [name=slug]').value.trim();
         const level = q('#addForm [name=level]').value;
         const isPublic = q('#addForm [name=isPublic]').checked;
@@ -1098,23 +1113,27 @@
             estDurationMin: parseInt(q('#addForm [name=estDurationMin]').value || '0'),
             goalFit: q('#addForm [name=goalFit]').value,
             focus: Array.from(q('#addForm [name=focus]').selectedOptions).map(o => o.value),
-            createdBy: q('#addForm [name=createdBy]').value.trim(),
-            version: parseInt(q('#addForm [name=version]').value || '1'),
+            // createdBy: q('#addForm [name=createdBy]').value.trim(),
+            // version: parseInt(q('#addForm [name=version]').value || '1'),
             items: items,
             updatedAt: Date.now()
         };
 
         try {
+            const fd = new FormData();
+            fd.append('data', new Blob([JSON.stringify(payload)], {type: 'application/json'}));
+            fd.append('thumbnail', thumbFile);
             const resp = await fetch('/api/admin/workouts/create', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(payload)
+
+                body: fd
             });
             if (!resp.ok) {
                 const text = await resp.text();
                 q('#addError').textContent = 'Tạo thất bại (HTTP ' + resp.status + ') ' + text;
                 return;
             }
+            await resp.json();
             closeAddModal();
             window.location.reload(); // Reload page to refresh list
         } catch (e) {
@@ -1169,6 +1188,14 @@
             }));
 
             renderDetailItemsTable();
+            const img = q('#detailPreviewThumb');
+            if (w.thumbnailUrl) {
+                img.src = w.thumbnailUrl;
+                img.style.display = 'block';
+            } else {
+                img.removeAttribute('src');
+                img.style.display = 'none';
+            }
         } catch (e) {
             console.error(e);
             q('#detailError').textContent = 'Lỗi khi tải chi tiết';
@@ -1377,8 +1404,79 @@
 
     // ---------- small util: refresh lists ----------
     // (already implemented above: loadWorkouts, loadExercises)
-
+    function previewThumb(mode) {
+        const input = mode === 'add' ? q('#addThumbnail') : q('#detailThumbnail');
+        const img = mode === 'add' ? q('#addPreviewThumb') : q('#detailPreviewThumb');
+        if (!input || !img) return;
+        const file = input.files[0];
+        if (!file) {
+            img.removeAttribute('src');
+            img.style.display = 'none';
+            return;
+        }
+        img.src = URL.createObjectURL(file);
+        img.style.display = 'block';
+    }
+    async function uploadThumbnail() {
+        if (!currentEditingId) {
+            q('#detailError').textContent = 'Missing id';
+            return;
+        }
+        const file = q('#detailThumbnail').files[0];
+        if (!file) {
+            q('#detailError').textContent = 'Chọn file trước';
+            return;
+        }
+        q('#detailError').textContent = '';
+        await maybeUploadThumbnail(currentEditingId, 'detail');
+        window.location.reload(); // Reload page to refresh list
+    }
+    async function httpFetch(url, options = {}) {
+        const opts = {...options, credentials: 'include'};
+        if (options.headers) {
+            opts.headers = options.headers;
+        }
+        return fetch(url, opts);
+    }
+    async function maybeUploadThumbnail(id, mode) {
+        const input = mode === 'add' ? q('#addThumbnail') : q('#detailThumbnail');
+        const file = input?.files?.[0];
+        if (!file) return;
+        const fd = new FormData();
+        fd.append('thumbnail', file);
+        try {
+            const resp = await httpFetch('/api/admin/workouts/' + id + '/thumbnail', {
+                method: 'PUT',
+                body: fd
+            });
+            if (!resp.ok) {
+                console.warn('Thumbnail upload failed', resp.status);
+                q('#detailError').textContent = 'Upload thumbnail thất bại';
+                return;
+            }
+            const data = await resp.json();
+            if (mode === 'detail' && data.thumbnailUrl) {
+                const img = q('#detailPreviewThumb');
+                img.src = data.thumbnailUrl;
+                img.style.display = 'block';
+            } else if (mode === 'add' && data.thumbnailUrl) {
+                const img = q('#addPreviewThumb');
+                img.src = data.thumbnailUrl;
+                img.style.display = 'block';
+            }
+            q('#detailError').style.color = 'green';
+            q('#detailError').textContent = 'Upload thumbnail thành công';
+            setTimeout(() => {
+                q('#detailError').style.color = 'red';
+                q('#detailError').textContent = '';
+            }, 1500);
+        } catch (e) {
+            console.error(e);
+            q('#detailError').textContent = 'Lỗi khi upload thumbnail';
+        }
+    }
 </script>
-
+</main>
+<th:block th:replace="~{layouts/main :: footer}"></th:block>
 </body>
 </html>

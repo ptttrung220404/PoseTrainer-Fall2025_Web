@@ -1,4 +1,4 @@
-package org.web.posetrainer.Config;
+package org.web.posetrainer.Authentication;
 
 import com.google.cloud.firestore.Firestore;
 import com.google.firebase.FirebaseApp;
@@ -7,7 +7,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.http.MediaType;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -15,7 +17,6 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.*;
-import org.web.posetrainer.Authentication.FirebaseAuthFilter;
 
 import java.util.List;
 
@@ -43,44 +44,56 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/auth/**", "/login").permitAll()
+                        .requestMatchers("/auth/**", "/login","/forgot").permitAll()
                         .requestMatchers("/favicon.ico", "/css/**", "/js/**", "/images/**").permitAll()
                         .requestMatchers("/health", "/actuator/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/super_admin/**").hasRole("SUPER_ADMIN")
                         .requestMatchers("/me").authenticated()
                         .requestMatchers("/").permitAll()
                         .anyRequest().authenticated()
                 )
+//                .securityMatcher("/admin/**", "/me")
                 .addFilterBefore(firebaseFilter, UsernamePasswordAuthenticationFilter.class)
                 .cors(Customizer.withDefaults())
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((req, res, e) -> {
                             System.out.println("Auth failed for: " + req.getRequestURI());
+                            String uri = req.getRequestURI();
+                            String accept = req.getHeader("Accept");
+                            String xrw = req.getHeader("X-Requested-With");
+
+                            boolean isApi = uri != null && uri.startsWith("/api/");
+                            boolean isAjax = "XMLHttpRequest".equalsIgnoreCase(xrw);
+                            boolean wantsHtml = accept != null && accept.contains(MediaType.TEXT_HTML_VALUE);
+                            boolean isAdminPage = uri != null && (uri.startsWith("/admin") || uri.startsWith("/super_admin"));
+
+                            // For browser page navigation -> redirect to login
+                            if (!isApi && !isAjax && (wantsHtml || isAdminPage)) {
+                                res.sendRedirect("/login");
+                                return;
+                            }
+
+                            // For APIs / fetch -> 401 JSON
                             res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            res.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                            res.getWriter().write("{\"error\":\"UNAUTHORIZED\",\"message\":\"Invalid or expired token\"}");
                         })
                 );
 
         return http.build();
     }
 
-//    @Bean
-//    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-//        var firebaseFilter = new FirebaseAuthFilter(firebaseApp);
-//
-//        http
-//                .csrf(csrf -> csrf.disable())
-//                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-//                .authorizeHttpRequests(auth -> auth
-//                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-//                        .requestMatchers("/health", "/actuator/**").permitAll()
-//                        .requestMatchers(HttpMethod.POST, "/auth/**").permitAll()
-//                        .anyRequest().hasRole("ADMIN")                               // tất cả endpoint còn lại: ADMIN
-//                )
-//                .addFilterBefore(firebaseFilter, UsernamePasswordAuthenticationFilter.class)
-//                .cors(Customizer.withDefaults());
-//
-//        return http.build();
-//    }
+    @Bean
+    public RoleHierarchy roleHierarchy() {
+        RoleHierarchyImpl hierarchy = new RoleHierarchyImpl();
+        hierarchy.setHierarchy("""
+        ROLE_SUPER_ADMIN > ROLE_ADMIN
+        ROLE_ADMIN > ROLE_USER
+    """);
+        return hierarchy;
+    }
+
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {

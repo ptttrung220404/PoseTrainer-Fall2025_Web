@@ -1,13 +1,19 @@
 package org.web.posetrainer.Service;
 import com.google.cloud.firestore.Firestore;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.UserRecord;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
+import org.springframework.ui.Model;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.web.posetrainer.DTO.LoginRequest;
 import org.web.posetrainer.DTO.LoginResponse;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -21,6 +27,24 @@ public class AuthService {
                        Firestore firestore) {
         this.apiKey = apiKey;
         this.firestore = firestore;
+    }
+    public void sendPasswordResetEmail(String email) throws IOException {
+        String url = "https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=" + apiKey;
+
+        Map<String, Object> body = Map.of(
+                "requestType", "PASSWORD_RESET",
+                "email", email
+        );
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
+
+        try {
+            restTemplate.postForEntity(url, entity, String.class);
+        } catch (HttpClientErrorException e) {
+            throw new RuntimeException("Email không tồn tại hoặc không hợp lệ.");
+        }
     }
 
     public LoginResponse login(LoginRequest req) {
@@ -70,6 +94,26 @@ public class AuthService {
         } catch (HttpClientErrorException e) {
             // lỗi do email/pass sai, user disabled, ...
             throw new RuntimeException(e.getResponseBodyAsString(), e);
+        }
+    }
+    public void adminChangeOwnPassword(String uid, String newPassword) throws Exception {
+        FirebaseAuth.getInstance().updateUser(
+                new UserRecord.UpdateRequest(uid)
+                        .setPassword(newPassword)
+        );
+    }
+    public void applyAuth(Authentication auth, Model model, String displayName) {
+        if (auth != null) {
+            model.addAttribute("uid", auth.getName());
+
+            List<String> authorities = auth.getAuthorities()
+                    .stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .toList();
+
+            model.addAttribute("roles", authorities);
+            model.addAttribute("displayName",
+                    (displayName != null && !displayName.isEmpty()) ? displayName : "Admin");
         }
     }
 }

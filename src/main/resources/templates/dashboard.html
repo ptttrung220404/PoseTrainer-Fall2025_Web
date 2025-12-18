@@ -153,7 +153,7 @@
 </head>
 <body>
 
-<div th:replace="~{layouts/main :: sidebar(displayName=${displayName}, uid=${uid}, currentPage='dashboard')}"></div>
+<div th:replace="~{layouts/main :: sidebar(displayName=${displayName}, uid=${uid}, roles=${roles},currentPage='dashboard')}"></div>
 
 <!-- Main Content -->
 <main class="main-content">
@@ -218,9 +218,7 @@
             </div>
         </div>
 
-        <div class="welcome-text">
-            <p>Đây là trang sau khi đăng nhập thành công. Sử dụng menu bên trái để điều hướng đến các chức năng quản lý.</p>
-        </div>
+
     </div>
 </main>
 
@@ -316,6 +314,6 @@
                 '<p style="text-align: center; color: #718096; padding: 40px;">Không thể tải dữ liệu thống kê</p>';
         });
 </script>
-
+<th:block th:replace="~{layouts/main :: footer}"></th:block>
 </body>
 </html>
