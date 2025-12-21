@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.web.posetrainer.DTO.PagedResponse;
 import org.web.posetrainer.Entity.Excercise;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -15,7 +16,7 @@ import java.util.concurrent.ExecutionException;
 public class ExcerciseService {
     private static final String COLLECTION_NAME = "exercises";
     private final Firestore firestore;
-
+    long now = Instant.now().getEpochSecond();
     public ExcerciseService(Firestore firestore) {
         this.firestore = firestore;
     }
@@ -71,7 +72,7 @@ public class ExcerciseService {
         updates.put("isPublic", excercise.getIsPublic());
 
         // update time
-        updates.put("updatedAt", System.currentTimeMillis());
+        updates.put("updatedAt", now);
 
         firestore.collection(COLLECTION_NAME)
                 .document(id)
@@ -88,7 +89,7 @@ public class ExcerciseService {
             updates.put("media." + entry.getKey(), entry.getValue());
         }
 
-        updates.put("updatedAt", System.currentTimeMillis());
+        updates.put("updatedAt", now);
 
         firestore.collection("exercises")
                 .document(id)

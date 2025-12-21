@@ -133,11 +133,59 @@ public class UserController {
     }
 
     // Khóa/mở khóa tài khoản
+//    @PatchMapping("/{uid}/active")
+//    public ResponseEntity<?> updateActiveStatus(
+//            @PathVariable String uid,
+//            @RequestBody Map<String, Boolean> body)
+//            throws ExecutionException, InterruptedException, FirebaseAuthException {
+//        Boolean active = body.get("active");
+//        if (active == null) {
+//            return ResponseEntity.badRequest().body(Map.of(
+//                    "error", "INVALID_REQUEST",
+//                    "message", "Trường 'active' là bắt buộc"
+//            ));
+//        }
+//
+//        DocumentSnapshot userDoc = firestore
+//                .collection("users")
+//                .document(uid)
+//                .get()
+//                .get();
+//
+//        if (!userDoc.exists()) {
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+//                    "error", "USER_NOT_FOUND"
+//            ));
+//        }
+//
+//        // Cập nhật trong Firestore
+//        firestore.collection("users").document(uid).update("active", active).get();
+//
+//        // Cập nhật trong Firebase Auth: disable/enable user
+//        UpdateRequest updateRequest = new UpdateRequest(uid).setDisabled(!active);
+//        firebaseAuth.updateUser(updateRequest);
+//
+//        try {
+//            UserRecord userRecord = firebaseAuth.getUser(uid);
+//            String email = userRecord.getEmail();
+//            if (email != null) {
+//                mailAsyncService.sendAccountStatusMail(email, active);
+//            }
+//        } catch (Exception e) {
+//            e.printStackTrace(); // log thôi, không fail API
+//        }
+//        return ResponseEntity.ok(Map.of(
+//                "uid", uid,
+//                "active", active,
+//                "message", active ? "Tài khoản đã được mở khóa" : "Tài khoản đã được khóa"
+//        ));
+//    }
     @PatchMapping("/{uid}/active")
     public ResponseEntity<?> updateActiveStatus(
             @PathVariable String uid,
             @RequestBody Map<String, Boolean> body)
             throws ExecutionException, InterruptedException, FirebaseAuthException {
+
         Boolean active = body.get("active");
         if (active == null) {
             return ResponseEntity.badRequest().body(Map.of(
@@ -146,38 +194,45 @@ public class UserController {
             ));
         }
 
-        DocumentSnapshot userDoc = firestore
-                .collection("users")
-                .document(uid)
-                .get()
-                .get();
-
-        if (!userDoc.exists()) {
+        // 1. Kiểm tra user trong Firebase Auth (nguồn chính)
+        UserRecord userRecord;
+        try {
+            userRecord = firebaseAuth.getUser(uid);
+        } catch (FirebaseAuthException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "error", "USER_NOT_FOUND"
             ));
         }
 
-        // Cập nhật trong Firestore
-        firestore.collection("users").document(uid).update("active", active).get();
-
-        // Cập nhật trong Firebase Auth: disable/enable user
-        UpdateRequest updateRequest = new UpdateRequest(uid).setDisabled(!active);
+        // 2. Disable / Enable account trong Firebase Auth
+        boolean disabled = !active;
+        UpdateRequest updateRequest = new UpdateRequest(uid)
+                .setDisabled(disabled);
         firebaseAuth.updateUser(updateRequest);
 
+        // 3. Mirror trạng thái sang Firestore
+        firestore.collection("users")
+                .document(uid)
+                .update("active", active)
+                .get();
+
+        // 4. Gửi mail thông báo (không fail API)
         try {
-            UserRecord userRecord = firebaseAuth.getUser(uid);
             String email = userRecord.getEmail();
             if (email != null) {
                 mailAsyncService.sendAccountStatusMail(email, active);
             }
         } catch (Exception e) {
-            e.printStackTrace(); // log thôi, không fail API
+            e.printStackTrace();
         }
+
         return ResponseEntity.ok(Map.of(
                 "uid", uid,
                 "active", active,
-                "message", active ? "Tài khoản đã được mở khóa" : "Tài khoản đã được khóa"
+                "message", active
+                        ? "Tài khoản đã được kích hoạt"
+                        : "Tài khoản đã bị vô hiệu hóa"
         ));
     }
+
 }

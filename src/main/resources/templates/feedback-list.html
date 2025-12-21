@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+          integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4Dd3BTDjf4mxj9A5kHtQ/"
+          crossorigin="anonymous">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danh sách phản hồi - Admin Panel</title>
+    <th:block th:replace="~{layouts/main :: styles}"></th:block>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ========== MAIN CONTENT ========== */
+        .main-content {
+            margin-left: 240px;
+            flex: 1;
+            padding: 40px;
+        }
+
+        .container {
+            max-width: 1400px;
+            background: #fff;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .top-bar h1 {
+            font-size: 28px;
+            color: #2d3748;
+            font-weight: 600;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        th {
+            background: #f7fafc;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        tbody tr:hover {
+            background: #f7fafc;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+            text-decoration: none;
+            margin-right: 4px;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-success {
+            background: #48bb78;
+            color: #fff;
+        }
+
+        .btn-success:hover {
+            background: #38a169;
+        }
+
+        .btn-danger {
+            background: #f56565;
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            background: #e53e3e;
+        }
+
+        .btn-secondary {
+            background: #718096;
+            color: #fff;
+        }
+
+        .btn-secondary:hover {
+            background: #4a5568;
+        }
+
+        .btn-warning {
+            background: #ed8936;
+            color: #fff;
+        }
+
+        .btn-warning:hover {
+            background: #dd6b20;
+        }
+
+        .small {
+            font-size: 12px;
+            padding: 6px 12px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-right: 4px;
+        }
+
+        .badge-pending {
+            background: #feebc8;
+            color: #c05621;
+        }
+
+        .badge-accepted {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .badge-rejected {
+            background: #fed7d7;
+            color: #c53030;
+        }
+
+        .badge-resolved {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+
+        .badge-type {
+            background: #e6fffa;
+            color: #234e52;
+        }
+
+        .content-preview {
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* MODAL - IMPROVED DESIGN */
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+            animation: fadeIn 0.2s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal {
+            background: #fff;
+            border-radius: 12px;
+            padding: 0;
+            max-width: 700px;
+            width: 90%;
+            max-height: 90vh;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 32px;
+            border-bottom: 1px solid #e2e8f0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .modal-header h2 {
+            font-size: 22px;
+            color: #fff;
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .modal-header .btn-close {
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.2s;
+            padding: 0;
+        }
+
+        .modal-header .btn-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(90deg);
+        }
+
+        .modal-body {
+            padding: 32px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .modal-body::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .modal-body::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .modal-body::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 4px;
+        }
+
+        .modal-body::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            padding: 20px 32px;
+            border-top: 1px solid #e2e8f0;
+            background: #f7fafc;
+        }
+
+        /* FORM STYLING */
+        .field {
+            margin-bottom: 20px;
+        }
+
+        .field label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 14px;
+        }
+
+        .field input[type="text"],
+        .field input[type="email"],
+        .field textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .field input[type="text"]:focus,
+        .field input[type="email"]:focus,
+        .field textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .field input[type="text"][readonly],
+        .field textarea[readonly] {
+            background: #f7fafc;
+            cursor: not-allowed;
+        }
+
+        .field textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        /* ERROR/SUCCESS MESSAGE */
+        .message {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-top: 16px;
+            font-size: 14px;
+        }
+
+        .message.error {
+            background: #fed7d7;
+            color: #c53030;
+            border-left: 4px solid #f56565;
+        }
+
+        .message.success {
+            background: #c6f6d5;
+            color: #22543d;
+            border-left: 4px solid #48bb78;
+        }
+
+        /* INFO GRID */
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .info-item {
+            background: #f7fafc;
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 3px solid #667eea;
+        }
+
+        .info-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .info-value {
+            font-size: 14px;
+            color: #2d3748;
+            font-weight: 500;
+        }
+
+        /* FILTER SECTION */
+        .filter-section {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+        }
+
+        .filter-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 6px;
+        }
+
+        .search-hint {
+            font-size: 12px;
+            color: #718096;
+            margin-top: 6px;
+            line-height: 1.4;
+        }
+
+        .search-input,
+        .filter-select {
+            padding: 10px 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .search-input:focus,
+        .filter-select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .filter-btn-primary {
+            background: #667eea;
+            color: #fff;
+        }
+
+        .filter-btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .filter-btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .filter-btn-secondary:hover {
+            background: #cbd5e0;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .main-content {
+                margin: 0 auto;
+                flex: 1;
+                padding: 40px;
+                width: 100%;
+                max-width: 900px;
+            }
+
+            .modal {
+                width: 95%;
+                max-height: 95vh;
+            }
+
+            .modal-body {
+                padding: 20px;
+            }
+
+            .modal-header,
+            .modal-footer {
+                padding: 16px 20px;
+            }
+
+            .top-bar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .filter-row {
+                grid-template-columns: 1fr;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            th, td {
+                padding: 8px;
+            }
+        }
+
+        .pagination-bar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-top: 16px;
+            padding-top: 12px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .pagination-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .page-btn {
+            padding: 6px 14px;
+            border: 1px solid #cbd5e0;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #2d3748;
+            font-size: 14px;
+            background: #fff;
+        }
+
+        .page-btn:hover {
+            background: #edf2f7;
+        }
+
+        .page-btn.disabled {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        .page-status {
+            font-weight: 500;
+            color: #2d3748;
+        }
+
+        .page-size-form {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+
+    </style>
+</head>
+<body>
+<div th:replace="~{layouts/main :: sidebar(
+    displayName=${displayName},
+    uid=${uid},
+    roles=${roles},
+    currentPage='feedbacks')}">
+</div>
+<!-- ========== MAIN CONTENT ========== -->
+<main class="main-content">
+    <div class="container">
+        <div class="top-bar">
+            <h1>Danh sách phản hồi</h1>
+        </div>
+
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <form method="get" action="/admin/feedbacks">
+                <input type="hidden" name="page" value="1">
+                <input type="hidden" name="size" th:value="${feedbackPage.size}">
+
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label class="filter-label">Tìm kiếm </label>
+                        <input
+                                type="text"
+                                name="keyword"
+                                class="search-input"
+                                placeholder="VD: feedbackId, uid người gửi, email/tên người gửi, postId, exerciseId, keyword nội dung..."
+                                th:value="${keyword}"
+                        />
+                        <div class="search-hint">
+                            Search được theo: <b>Feedback ID</b>, <b>UID người gửi</b>, <b>Email/Tên người gửi</b>, <b>Post ID</b>, <b>Exercise ID</b>, <b>Nội dung</b>, <b>Loại feedback</b>.
+                        </div>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Sắp xếp theo</label>
+                        <select name="sort" class="filter-select">
+                            <option value="created_desc" th:selected="${sort == 'created_desc'}">Ngày tạo mới nhất</option>
+                            <option value="created_asc" th:selected="${sort == 'created_asc'}">Ngày tạo cũ nhất</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Loại feedback</label>
+                        <select name="type" class="filter-select">
+                            <option value="all" th:selected="${typeFilter == null || typeFilter == '' || typeFilter == 'all'}">Tất cả</option>
+                            <option value="exercise" th:selected="${typeFilter == 'exercise'}">Exercise</option>
+                            <option value="post" th:selected="${typeFilter == 'post'}">Post</option>
+                            <option value="app" th:selected="${typeFilter == 'app'}">App</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Trạng thái</label>
+                        <select name="status" class="filter-select">
+                            <option value="all" th:selected="${statusFilter == null || statusFilter == '' || statusFilter == 'all'}">Tất cả</option>
+                            <option value="pending" th:selected="${statusFilter == 'pending'}">Pending</option>
+                            <option value="accepted" th:selected="${statusFilter == 'accepted'}">Accepted</option>
+                            <option value="rejected" th:selected="${statusFilter == 'rejected'}">Rejected</option>
+                            <option value="resolved" th:selected="${statusFilter == 'resolved'}">Resolved</option>
+                            <!-- legacy status (if existing data has it) -->
+                            <option value="read" th:selected="${statusFilter == 'read'}">Read</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">User đã gửi feedback</label>
+                        <select name="senderUid" class="filter-select">
+                            <option value="all" th:selected="${senderFilter == null || senderFilter == '' || senderFilter == 'all'}">Tất cả</option>
+                            <option th:each="a : ${feedbackSenders}"
+                                    th:value="${a.uid}"
+                                    th:selected="${senderFilter == a.uid}"
+                                    th:text="${a.displayName + (a.email != null ? ' - ' + a.email : '')}">
+                                User
+                            </option>
+                        </select>
+                    </div>
+                </div>
+                <div class="filter-actions">
+                    <button type="submit" class="filter-btn filter-btn-primary">Áp dụng</button>
+                    <a href="/admin/feedbacks" class="filter-btn filter-btn-secondary">Reset</a>
+                </div>
+            </form>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Người gửi</th>
+                    <th>Thời gian</th>
+                    <th>Loại</th>
+                    <th>Nội dung</th>
+                    <th>Trạng thái</th>
+                    <th>Hành động</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${feedbackPage.totalItems == 0}">
+                    <td colspan="7">Chưa có phản hồi nào.</td>
+                </tr>
+                <tr th:each="feedback : ${feedbackPage.items}">
+                    <td>
+                        <span style="font-size: 12px; color: #718096; font-family: monospace;" th:text="${feedback.id}">-</span>
+                    </td>
+                    <td>
+                        <div th:text="${feedback.userDisplayName ?: feedback.userEmail ?: 'N/A'}">
+                            N/A
+                        </div>
+                        <div style="font-size: 12px; color: #718096;"
+                             th:if="${feedback.userEmail != null and feedback.userEmail != '' and feedback.userDisplayName != null and feedback.userDisplayName != ''}"
+                             th:text="${feedback.userEmail}">
+                            email@example.com
+                        </div>
+                    </td>
+                    <td th:text="${feedback.createdAt > 0 ? #dates.format(new java.util.Date(feedback.createdAt * 1000), 'dd/MM/yyyy HH:mm') : 'N/A'}">
+                        N/A
+                    </td>
+                    <td>
+                        <span class="badge badge-type" th:text="${feedback.type ?: 'N/A'}">N/A</span>
+                    </td>
+                    <td>
+                        <div class="content-preview" th:text="${feedback.content ?: 'N/A'}">N/A</div>
+                    </td>
+                    <td>
+                        <span th:if="${feedback.status != null and feedback.status == 'pending'}" class="badge badge-pending">Pending</span>
+                        <span th:if="${feedback.status != null and feedback.status == 'accepted'}" class="badge badge-accepted">Accepted</span>
+                        <span th:if="${feedback.status != null and feedback.status == 'rejected'}" class="badge badge-rejected">Rejected</span>
+                        <span th:if="${feedback.status != null and feedback.status == 'resolved'}" class="badge badge-resolved">Resolved</span>
+                        <span th:if="${feedback.status != null and feedback.status != 'pending' and feedback.status != 'accepted' and feedback.status != 'rejected' and feedback.status != 'resolved'}"
+                              class="badge" th:text="${feedback.status}">Unknown</span>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <button type="button"
+                                    class="btn btn-primary small"
+                                    th:attr="data-id=${feedback.id}"
+                                    onclick="openDetailModal(this)">
+                                Chi tiết
+                            </button>
+                            <button th:if="${feedback.status != null and feedback.status == 'pending'}"
+                                    type="button"
+                                    class="btn btn-success small"
+                                    th:attr="data-id=${feedback.id}"
+                                    onclick="updateStatus(this, 'accepted')">
+                                Chấp nhận
+                            </button>
+                            <button th:if="${feedback.status != null and feedback.status == 'pending'}"
+                                    type="button"
+                                    class="btn btn-danger small"
+                                    th:attr="data-id=${feedback.id}"
+                                    onclick="updateStatus(this, 'rejected')">
+                                Từ chối
+                            </button>
+                            <button th:if="${feedback.status != null and feedback.status == 'accepted'}"
+                                    type="button"
+                                    class="btn btn-warning small"
+                                    th:attr="data-id=${feedback.id}"
+                                    onclick="updateStatus(this, 'resolved')">
+                                Đã giải quyết
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="pagination-bar">
+            <div class="pagination-info muted"
+                 th:text="${feedbackPage.totalItems > 0 ? 'Hiển thị ' + feedbackPage.fromItem + '-' + feedbackPage.toItem + ' trên ' + feedbackPage.totalItems + ' phản hồi' : 'Không có phản hồi'}">
+                Hiển thị 0-0 trên 0 phản hồi
+            </div>
+            <div class="pagination-controls">
+                <a class="page-btn"
+                   th:classappend="${!feedbackPage.hasPrev} ? ' disabled'"
+                   th:href="@{/admin/feedbacks(page=${feedbackPage.page - 1},size=${feedbackPage.size},keyword=${keyword},sort=${sort},type=${typeFilter},status=${statusFilter},senderUid=${senderFilter})}">
+                    ‹ Trước
+                </a>
+                <span class="page-status"
+                      th:text="'Trang ' + ${feedbackPage.page} + ' / ' + ${feedbackPage.totalPages}">Trang 1 / 1</span>
+                <a class="page-btn"
+                   th:classappend="${!feedbackPage.hasNext} ? ' disabled'"
+                   th:href="@{/admin/feedbacks(page=${feedbackPage.page + 1},size=${feedbackPage.size},keyword=${keyword},sort=${sort},type=${typeFilter},status=${statusFilter},senderUid=${senderFilter})}">
+                    Sau ›
+                </a>
+            </div>
+            <form class="page-size-form" method="get">
+                <input type="hidden" name="page" value="1">
+                <input type="hidden" name="keyword" th:value="${keyword}">
+                <input type="hidden" name="sort" th:value="${sort}">
+                <input type="hidden" name="type" th:value="${typeFilter}">
+                <input type="hidden" name="status" th:value="${statusFilter}">
+                <input type="hidden" name="senderUid" th:value="${senderFilter}">
+                <label for="feedbackSize">Mỗi trang</label>
+                <input type="number" id="feedbackSize" name="size" min="1"
+                       class="form-control form-control-sm"
+                       th:value="${feedbackPage.size != null ? feedbackPage.size : 10}"
+                       style="max-width:120px"
+                       onchange="this.form.submit()" />
+            </form>
+        </div>
+    </div>
+</main>
+
+<!-- ============ MODAL CHI TIẾT PHẢN HỒI ============ -->
+<div id="detailModalBackdrop" class="modal-backdrop">
+    <div class="modal">
+        <div class="modal-header">
+            <h2>Chi tiết phản hồi</h2>
+            <button class="btn btn-secondary" onclick="closeDetailModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">ID</div>
+                    <div class="info-value" id="detailId">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Người gửi</div>
+                    <div class="info-value" id="detailSender">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Email</div>
+                    <div class="info-value" id="detailEmail">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Loại</div>
+                    <div class="info-value" id="detailType">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Trạng thái</div>
+                    <div class="info-value" id="detailStatus">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Thời gian tạo</div>
+                    <div class="info-value" id="detailCreatedAt">-</div>
+                </div>
+                <div class="info-item" id="detailExerciseItem" style="display: none;">
+                    <div class="info-label">Bài tập</div>
+                    <div class="info-value" id="detailExerciseName">-</div>
+                </div>
+                <div class="info-item" id="detailPostItem" style="display: none;">
+                    <div class="info-label">ID Bài viết</div>
+                    <div class="info-value" id="detailPostId" style="font-family: monospace; font-size: 12px;">-</div>
+                </div>
+                <div class="info-item" id="detailPostContentItem" style="display: none;">
+                    <div class="info-label">Nội dung bài viết</div>
+                    <div class="info-value" id="detailPostContent">-</div>
+                </div>
+                <div class="info-item" id="detailPostAuthorUidItem" style="display: none;">
+                    <div class="info-label">ID Người đăng bài</div>
+                    <div class="info-value" id="detailPostAuthorUid" style="font-family: monospace; font-size: 12px;">-</div>
+                </div>
+                <div class="info-item" id="detailPostAuthorNameItem" style="display: none;">
+                    <div class="info-label">Tên người đăng bài</div>
+                    <div class="info-value" id="detailPostAuthorName">-</div>
+                </div>
+                <div class="info-item" id="detailPostAuthorEmailItem" style="display: none;">
+                    <div class="info-label">Email người đăng bài</div>
+                    <div class="info-value" id="detailPostAuthorEmail">-</div>
+                </div>
+            </div>
+            <div class="field">
+                <label>Nội dung phản hồi</label>
+                <textarea id="detailContent" readonly></textarea>
+            </div>
+            <div id="detailMessage" style="margin-top: 16px;"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeDetailModal()">Đóng</button>
+            <button id="btnAccept" class="btn btn-success" style="display: none;" onclick="updateStatusFromModal('accepted')">Chấp nhận</button>
+            <button id="btnReject" class="btn btn-danger" style="display: none;" onclick="updateStatusFromModal('rejected')">Từ chối</button>
+            <button id="btnResolve" class="btn btn-warning" style="display: none;" onclick="updateStatusFromModal('resolved')">Đã giải quyết</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentFeedbackId = null;
+
+    // ================== DETAIL MODAL ==================
+    async function openDetailModal(btn) {
+        const id = btn.dataset.id;
+        currentFeedbackId = id;
+        const msg = document.getElementById('detailMessage');
+        msg.textContent = '';
+        msg.style.display = 'none';
+
+        try {
+            const resp = await fetch('/api/admin/feedbacks/' + id);
+            if (!resp.ok) {
+                msg.style.display = 'block';
+                msg.className = 'message error';
+                msg.textContent = 'Không tải được dữ liệu (HTTP ' + resp.status + ')';
+                document.getElementById('detailModalBackdrop').style.display = 'flex';
+                return;
+            }
+
+            const feedback = await resp.json();
+
+            const formatDate = (timestamp) => {
+                if (!timestamp || timestamp === 0) return 'N/A';
+                const date = new Date(timestamp * 1000);
+                return date.toLocaleString('vi-VN', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            };
+
+            document.getElementById('detailId').textContent = feedback.id || '-';
+            document.getElementById('detailSender').textContent = feedback.userDisplayName || feedback.userEmail || 'N/A';
+            document.getElementById('detailEmail').textContent = feedback.userEmail || '-';
+            document.getElementById('detailType').textContent = feedback.type || '-';
+
+            const statusBadge = document.getElementById('detailStatus');
+            const status = feedback.status || 'unknown';
+            statusBadge.textContent = status;
+            statusBadge.className = 'badge';
+            if (status === 'pending') statusBadge.className += ' badge-pending';
+            else if (status === 'accepted') statusBadge.className += ' badge-accepted';
+            else if (status === 'rejected') statusBadge.className += ' badge-rejected';
+            else if (status === 'resolved') statusBadge.className += ' badge-resolved';
+
+            document.getElementById('detailCreatedAt').textContent = formatDate(feedback.createdAt);
+            document.getElementById('detailContent').value = feedback.content || '-';
+
+            // Show/hide exercise or post info
+            if (feedback.type === 'exercise' && feedback.exerciseName) {
+                document.getElementById('detailExerciseItem').style.display = 'block';
+                document.getElementById('detailExerciseName').textContent = feedback.exerciseName;
+            } else {
+                document.getElementById('detailExerciseItem').style.display = 'none';
+            }
+
+            // Show/hide post info
+            if (feedback.type === 'post' && feedback.postId) {
+                document.getElementById('detailPostItem').style.display = 'block';
+                document.getElementById('detailPostId').textContent = feedback.postId || '-';
+
+                if (feedback.postContent) {
+                    document.getElementById('detailPostContentItem').style.display = 'block';
+                    const postContent = feedback.postContent.length > 100
+                        ? feedback.postContent.substring(0, 100) + '...'
+                        : feedback.postContent;
+                    document.getElementById('detailPostContent').textContent = postContent;
+                } else {
+                    document.getElementById('detailPostContentItem').style.display = 'none';
+                }
+
+                // Show post author info
+                if (feedback.postAuthorUid) {
+                    document.getElementById('detailPostAuthorUidItem').style.display = 'block';
+                    document.getElementById('detailPostAuthorUid').textContent = feedback.postAuthorUid;
+                } else {
+                    document.getElementById('detailPostAuthorUidItem').style.display = 'none';
+                }
+
+                if (feedback.postAuthorName) {
+                    document.getElementById('detailPostAuthorNameItem').style.display = 'block';
+                    document.getElementById('detailPostAuthorName').textContent = feedback.postAuthorName;
+                } else {
+                    document.getElementById('detailPostAuthorNameItem').style.display = 'none';
+                }
+
+                if (feedback.postAuthorEmail) {
+                    document.getElementById('detailPostAuthorEmailItem').style.display = 'block';
+                    document.getElementById('detailPostAuthorEmail').textContent = feedback.postAuthorEmail;
+                } else {
+                    document.getElementById('detailPostAuthorEmailItem').style.display = 'none';
+                }
+            } else {
+                document.getElementById('detailPostItem').style.display = 'none';
+                document.getElementById('detailPostContentItem').style.display = 'none';
+                document.getElementById('detailPostAuthorUidItem').style.display = 'none';
+                document.getElementById('detailPostAuthorNameItem').style.display = 'none';
+                document.getElementById('detailPostAuthorEmailItem').style.display = 'none';
+            }
+
+            // Show/hide action buttons based on status
+            const btnAccept = document.getElementById('btnAccept');
+            const btnReject = document.getElementById('btnReject');
+            const btnResolve = document.getElementById('btnResolve');
+
+            if (status === 'pending') {
+                btnAccept.style.display = 'inline-block';
+                btnReject.style.display = 'inline-block';
+                btnResolve.style.display = 'none';
+            } else if (status === 'accepted') {
+                btnAccept.style.display = 'none';
+                btnReject.style.display = 'none';
+                btnResolve.style.display = 'inline-block';
+            } else {
+                btnAccept.style.display = 'none';
+                btnReject.style.display = 'none';
+                btnResolve.style.display = 'none';
+            }
+
+            document.getElementById('detailModalBackdrop').style.display = 'flex';
+        } catch (e) {
+            console.error(e);
+            msg.style.display = 'block';
+            msg.className = 'message error';
+            msg.textContent = 'Có lỗi kết nối khi tải dữ liệu';
+            document.getElementById('detailModalBackdrop').style.display = 'flex';
+        }
+    }
+
+    function closeDetailModal() {
+        document.getElementById('detailModalBackdrop').style.display = 'none';
+        currentFeedbackId = null;
+    }
+
+    // ================== UPDATE STATUS ==================
+    async function updateStatus(btn, newStatus) {
+        const id = btn.dataset.id;
+        if (!confirm('Bạn có chắc chắn muốn cập nhật trạng thái?')) {
+            return;
+        }
+
+        try {
+            const resp = await fetch('/api/admin/feedbacks/' + id + '/status', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ status: newStatus })
+            });
+
+            if (!resp.ok) {
+                const errorData = await resp.json().catch(() => ({}));
+                alert('Cập nhật thất bại: ' + (errorData.message || 'HTTP ' + resp.status));
+                return;
+            }
+
+            window.location.reload();
+        } catch (e) {
+            console.error(e);
+            alert('Có lỗi kết nối khi cập nhật');
+        }
+    }
+
+    async function updateStatusFromModal(newStatus) {
+        if (!currentFeedbackId) {
+            alert('Không tìm thấy ID phản hồi');
+            return;
+        }
+
+        if (!confirm('Bạn có chắc chắn muốn cập nhật trạng thái?')) {
+            return;
+        }
+
+        const msg = document.getElementById('detailMessage');
+        msg.textContent = '';
+        msg.style.display = 'none';
+
+        try {
+            const resp = await fetch('/api/admin/feedbacks/' + currentFeedbackId + '/status', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ status: newStatus })
+            });
+
+            if (!resp.ok) {
+                const errorData = await resp.json().catch(() => ({}));
+                msg.style.display = 'block';
+                msg.className = 'message error';
+                msg.textContent = 'Cập nhật thất bại: ' + (errorData.message || 'HTTP ' + resp.status);
+                return;
+            }
+
+            msg.style.display = 'block';
+            msg.className = 'message success';
+            msg.textContent = 'Cập nhật thành công!';
+
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } catch (e) {
+            console.error(e);
+            msg.style.display = 'block';
+            msg.className = 'message error';
+            msg.textContent = 'Có lỗi kết nối khi cập nhật';
+        }
+    }
+</script>
+<th:block th:replace="~{layouts/main :: footer}"></th:block>
+</body>
+</html>

@@ -86,13 +86,13 @@ public class MailAsyncService {
 
                     <p style="margin-top:30px;">
                         Trân trọng,<br>
-                        <b>PoseTrainer System</b>
+                        <b>PoseTrainer</b>
                     </p>
                 </div>
 
                 <div style="background:#f1f1f1;padding:12px;
                             text-align:center;font-size:12px;color:#777;">
-                    © 2025 PoseTrainer System
+                    © 2025 PoseTrainer
                 </div>
             </div>
         </body>
@@ -138,13 +138,13 @@ public class MailAsyncService {
 
                     <p style="margin-top:30px;">
                         Trân trọng,<br>
-                        <b>PoseTrainer System</b>
+                        <b>PoseTrainer</b>
                     </p>
                 </div>
 
                 <div style="background:#f1f1f1;padding:12px;
                             text-align:center;font-size:12px;color:#777;">
-                    © 2025 PoseTrainer System
+                    © 2025 PoseTrainer
                 </div>
             </div>
         </body>

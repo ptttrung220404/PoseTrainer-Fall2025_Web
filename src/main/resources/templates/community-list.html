@@ -477,6 +477,11 @@
             align-items: center;
             gap: 6px;
         }
+
+        /* Override: add author dropdown in same row */
+        .filter-row {
+            grid-template-columns: 2fr 220px 320px;
+        }
         .empty-state {
             text-align: center;
             padding: 40px;
@@ -505,7 +510,7 @@
 
                 <div class="filter-row">
                     <div class="filter-group">
-                        <label class="filter-label">Tìm theo tác giả hoặc nội dung</label>
+                        <label class="filter-label">Tìm theo ID / tác giả / nội dung</label>
                         <input
                                 type="text"
                                 name="keyword"
@@ -524,6 +529,18 @@
                             <option value="comments_desc" th:selected="${sort == 'comments_desc'}">Nhiều bình luận</option>
                         </select>
                     </div>
+                    <div class="filter-group">
+                        <label class="filter-label">User đã đăng bài</label>
+                        <select name="authorUid" class="filter-select">
+                            <option value="all" th:selected="${authorFilter == null || authorFilter == '' || authorFilter == 'all'}">Tất cả</option>
+                            <option th:each="a : ${postAuthors}"
+                                    th:value="${a.uid}"
+                                    th:selected="${authorFilter == a.uid}"
+                                    th:text="${a.displayName + (a.email != null ? ' - ' + a.email : '')}">
+                                User
+                            </option>
+                        </select>
+                    </div>
                 </div>
                 <div class="filter-actions">
                     <button type="submit" class="filter-btn filter-btn-primary">Áp dụng</button>
@@ -534,6 +551,9 @@
 
         <div class="posts-grid" th:if="${communityPage.totalItems > 0}">
             <div class="post-card" th:each="post : ${communityPage.items}">
+                <div style="font-size: 11px; color: #718096; font-family: monospace; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #f0f0f0;">
+                    ID: <span th:text="${post.id}">-</span>
+                </div>
                 <div class="post-header">
                     <img th:src="${post.photoURL ?: '/images/default-avatar.png'}"
                          alt="Avatar"
@@ -573,7 +593,7 @@
                     </button>
                     <button class="btn btn-info small"
                             th:attr="onclick='viewLikes(\'' + ${post.id} + '\')'">
-                         Lượt thích
+                        Lượt thích
                     </button>
 
                     <!-- Row 3: Ẩn/Hiển thị (full width) -->
@@ -599,14 +619,14 @@
             <div class="pagination-controls">
                 <a class="page-btn"
                    th:classappend="${!communityPage.hasPrev} ? ' disabled'"
-                   th:href="@{/admin/community(page=${communityPage.page - 1},size=${communityPage.size},keyword=${keyword},sort=${sort})}">
+                   th:href="@{/admin/community(page=${communityPage.page - 1},size=${communityPage.size},keyword=${keyword},sort=${sort},authorUid=${authorFilter})}">
                     ‹ Trước
                 </a>
                 <span class="page-status"
                       th:text="'Trang ' + ${communityPage.page} + ' / ' + ${communityPage.totalPages}">Trang 1 / 1</span>
                 <a class="page-btn"
                    th:classappend="${!communityPage.hasNext} ? ' disabled'"
-                   th:href="@{/admin/community(page=${communityPage.page + 1},size=${communityPage.size},keyword=${keyword},sort=${sort})}">
+                   th:href="@{/admin/community(page=${communityPage.page + 1},size=${communityPage.size},keyword=${keyword},sort=${sort},authorUid=${authorFilter})}">
                     Sau ›
                 </a>
             </div>
@@ -614,6 +634,7 @@
                 <input type="hidden" name="page" value="1">
                 <input type="hidden" name="keyword" th:value="${keyword}">
                 <input type="hidden" name="sort" th:value="${sort}">
+                <input type="hidden" name="authorUid" th:value="${authorFilter}">
                 <label for="communitySize">Mỗi trang</label>
                 <input type="number" id="communitySize" name="size" min="1"
                        class="form-control form-control-sm"
@@ -913,5 +934,6 @@
         if (e.target === this) closeLikesModal();
     });
 </script>
+<th:block th:replace="~{layouts/main :: footer}"></th:block>
 </body>
 </html>

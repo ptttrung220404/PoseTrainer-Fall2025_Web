@@ -9,6 +9,7 @@ import org.web.posetrainer.DTO.PagedResponse;
 import org.web.posetrainer.DTO.PostMailInfo;
 import org.web.posetrainer.Entity.Community;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,7 +20,7 @@ public class CommunityService {
     private static final String COLLECTION_NAME = "community";
     private final Firestore firestore;
     private final UserService userService;
-
+    long now = Instant.now().getEpochSecond();
     public CommunityService(Firestore firestore, UserService userService) {
         this.firestore = firestore;
         this.userService = userService;
@@ -88,7 +89,9 @@ public class CommunityService {
                 : null;
         Map<String, Object> updates = new HashMap<>();
         updates.put("isVisible", isVisible);
-        updates.put("AdminUpdatedAt", System.currentTimeMillis());
+
+
+        updates.put("AdminUpdatedAt", now);
         if (!isVisible) {
             updates.put("hiddenReason", "Vi phạm Tiêu Chuẩn Cộng Đồng");
         } else {

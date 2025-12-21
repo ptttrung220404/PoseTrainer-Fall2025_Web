@@ -11,6 +11,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -102,6 +103,25 @@ protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res,
 //        res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 //        res.setContentType("application/json");
 //        res.getWriter().write("{\"error\":\"UNAUTHORIZED\",\"message\":\"Invalid or expired token\"}");
+        String uri = req.getRequestURI();
+        String accept = req.getHeader("Accept");
+        String xrw = req.getHeader("X-Requested-With");
+
+        boolean isApi = uri != null && uri.startsWith("/api/");
+        boolean isAjax = "XMLHttpRequest".equalsIgnoreCase(xrw);
+        boolean wantsHtml = accept != null && accept.contains(MediaType.TEXT_HTML_VALUE);
+        boolean isAdminPage = uri != null && (uri.startsWith("/admin") || uri.startsWith("/super_admin"));
+
+        // For browser page navigation -> redirect to login
+        if (!isApi && !isAjax && (wantsHtml || isAdminPage)) {
+            res.sendRedirect("/login");
+            return;
+        }
+
+        // For APIs / fetch -> 401 JSON
+        res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        res.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        res.getWriter().write("{\"error\":\"UNAUTHORIZED\",\"message\":\"Invalid or expired token\"}");
         res.sendRedirect("/login");
         return;
     }
