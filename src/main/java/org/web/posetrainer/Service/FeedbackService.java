@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.web.posetrainer.Entity.Excercise;
 import org.web.posetrainer.Entity.Feedbacks;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -18,6 +19,7 @@ public class FeedbackService {
     private final UserService userService;
     private final Firestore firestore;
     private final CommunityService communityService;
+    long now = Instant.now().getEpochSecond();
     public FeedbackService(UserService userService, Firestore firestore, CommunityService communityService) {
         this.userService = userService;
         this.firestore = firestore;
@@ -179,7 +181,7 @@ public class FeedbackService {
     }
     public boolean updateStatus(String id, String status) throws ExecutionException, InterruptedException {
         try {
-            long updatedAt = System.currentTimeMillis() / 1000;
+            long updatedAt = now;
             firestore.collection(COLLECTION_NAME)
                     .document(id)
                     .update("status", status, "updatedAt", updatedAt)

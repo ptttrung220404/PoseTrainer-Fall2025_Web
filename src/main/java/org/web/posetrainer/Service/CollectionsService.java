@@ -7,6 +7,7 @@ import org.web.posetrainer.DTO.PagedResponse;
 import org.web.posetrainer.Entity.Collections;
 
 import java.security.SecureRandom;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -33,10 +34,10 @@ public class CollectionsService {
     public String createCollection(Collections col) throws Exception {
         String docId = generateCollectionId();
         DocumentReference docRef = db().collection(COLLECTION_NAME).document(docId);
-
+        long now = Instant.now().getEpochSecond();
         col.setId(docId);
-        col.setCreatedAt(System.currentTimeMillis());
-        col.setUpdatedAt(System.currentTimeMillis());
+        col.setCreatedAt(now);
+        col.setUpdatedAt(now);
 
         if (col.getWorkoutTemplateIds() == null) {
             col.setWorkoutTemplateIds(new ArrayList<>());
@@ -77,7 +78,8 @@ public class CollectionsService {
     }
     public void updateCollection(String docId, Collections col) throws Exception {
         col.setId(docId);
-        col.setUpdatedAt(System.currentTimeMillis());
+        long now = Instant.now().getEpochSecond();
+        col.setUpdatedAt(now);
 
 
         db().collection(COLLECTION_NAME)
@@ -102,8 +104,8 @@ public class CollectionsService {
         if (!col.getWorkoutTemplateIds().contains(workoutId)) {
             col.getWorkoutTemplateIds().add(workoutId);
         }
-
-        col.setUpdatedAt(System.currentTimeMillis());
+        long now = Instant.now().getEpochSecond();
+        col.setUpdatedAt(now);
 
 
         db().collection(COLLECTION_NAME)
@@ -118,8 +120,8 @@ public class CollectionsService {
         if (col.getWorkoutTemplateIds() != null) {
             col.getWorkoutTemplateIds().remove(workoutId);
         }
-
-        col.setUpdatedAt(System.currentTimeMillis());
+        long now = Instant.now().getEpochSecond();
+        col.setUpdatedAt(now);
 
 
         db().collection(COLLECTION_NAME)
@@ -132,7 +134,9 @@ public class CollectionsService {
 
         Map<String, Object> updates = new HashMap<>();
         updates.put("thumbnailUrl", thumbnailUrl);
-        updates.put("updatedAt", System.currentTimeMillis());
+        long now = Instant.now().getEpochSecond();
+
+        updates.put("updatedAt", now);
 
         db().collection(COLLECTION_NAME)
                 .document(id)

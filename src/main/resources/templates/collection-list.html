@@ -637,7 +637,7 @@
                         <span th:unless="${c.isPublic}" class="badge" style="background:#f8d7da">Private</span>
                     </td>
                     <td th:text="${#lists.size(c.workoutTemplateIds ?: {})}">0</td>
-                    <td th:text="${c.updatedAt > 0 ? #dates.format(new java.util.Date(c.updatedAt), 'dd/MM/yyyy HH:mm') : '-'}">-</td>
+                    <td th:text="${c.updatedAt > 0 ? #dates.format(new java.util.Date(c.updatedAt * 1000), 'dd/MM/yyyy HH:mm') : '-'}">-</td>
                     <td>
                         <button class="btn btn-primary small" th:attr="onclick='openDetailModal(\'' + ${c.id} + '\')'">Chi tiết</button>
                     </td>

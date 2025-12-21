@@ -588,7 +588,7 @@
                         <span th:unless="${w.isPublic}" class="badge" style="background:#f8d7da">Private</span>
                     </td>
                     <td th:text="${#lists.size(w.items ?: {})}">0</td>
-                    <td th:text="${w.updatedAt > 0 ? #dates.format(new java.util.Date(w.updatedAt), 'dd/MM/yyyy HH:mm') : '-'}">-</td>
+                    <td th:text="${w.updatedAt > 0 ? #dates.format(new java.util.Date(w.updatedAt*1000), 'dd/MM/yyyy HH:mm') : '-'}">-</td>
                     <td>
                         <button class="btn btn-primary small" th:attr="onclick='openDetailModal(\'' + ${w.id} + '\')'">Chi tiết</button>
 

@@ -8,6 +8,7 @@ import org.web.posetrainer.DTO.PagedResponse;
 import org.web.posetrainer.Entity.WorkoutTemplate;
 
 import java.security.SecureRandom;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -17,7 +18,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class WorkoutsTemplatesService {
-
+    long now = Instant.now().getEpochSecond();
     private static final String COLLECTION_NAME = "workouts_templates";
 
     private Firestore db() {
@@ -46,7 +47,8 @@ public class WorkoutsTemplatesService {
 
         workout.setId(docId);                    // set ID = docId
         workout.setVersion(1);
-        workout.setUpdatedAt(System.currentTimeMillis());
+
+        workout.setUpdatedAt(now) ;
 
         if (workout.getItems() == null) {
             workout.setItems(new ArrayList<>());
@@ -72,6 +74,7 @@ public class WorkoutsTemplatesService {
     // --------------------------
     public void updateWorkout(String docId, WorkoutTemplate workout) throws Exception {
         workout.setId(docId);  // đảm bảo object vẫn có id
+        workout.setUpdatedAt(now);
         db().collection(COLLECTION_NAME)
                 .document(docId)     // CHỈ DÙNG docId từ controller
                 .set(workout, SetOptions.merge())
@@ -104,7 +107,7 @@ public class WorkoutsTemplatesService {
         item.setOrder(workout.getItems().size() + 1);
 
         workout.getItems().add(item);
-        workout.setUpdatedAt(System.currentTimeMillis());
+        workout.setUpdatedAt(now);
         workout.setVersion(workout.getVersion() + 1);
 
         db().collection(COLLECTION_NAME)
@@ -133,7 +136,7 @@ public class WorkoutsTemplatesService {
         }
 
         workout.setItems(newItems);
-        workout.setUpdatedAt(System.currentTimeMillis());
+        workout.setUpdatedAt(now);
         workout.setVersion(workout.getVersion() + 1);
 
         db().collection(COLLECTION_NAME)
@@ -166,7 +169,7 @@ public class WorkoutsTemplatesService {
 
         Map<String, Object> updates = new HashMap<>();
         updates.put("thumbnailUrl", thumbnailUrl);
-        updates.put("updatedAt", System.currentTimeMillis());
+        updates.put("updatedAt", now);
 
         db().collection(COLLECTION_NAME)
                 .document(id)

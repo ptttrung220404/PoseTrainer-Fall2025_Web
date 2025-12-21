@@ -517,9 +517,9 @@
     <div class="container">
         <div class="top-bar">
             <h1>Danh sách bài tập</h1>
-            <button type="button" class="btn btn-primary" onclick="openAddModal()">
-                + Thêm bài tập
-            </button>
+<!--            <button type="button" class="btn btn-primary" onclick="openAddModal()">-->
+<!--                + Thêm bài tập-->
+<!--            </button>-->
         </div>
 
         <!-- Filter Section -->
@@ -567,6 +567,7 @@
                     <th>Nhóm cơ</th>
                     <th>Tag</th>
                     <th>Public</th>
+                    <th>Updated At</th>
                     <th>Details</th>
                 </tr>
                 </thead>
@@ -592,6 +593,9 @@
                         <span th:if="${ex.isPublic}" class="badge badge-public">Public</span>
                         <span th:if="${!ex.isPublic}" class="badge badge-private">Private</span>
                     </td>
+                    <td th:text="${#dates.format(new java.util.Date(ex.updatedAt * 1000), 'dd/MM/yyyy HH:mm:ss')}">
+                    </td>
+
                     <td>
                         <button type="button" class="btn btn-primary" th:attr="data-id=${ex.id}"
                                 onclick="openDetailModal(this)">
@@ -735,8 +739,8 @@
                 </div>
 
                 <div class="field">
-                    <label>Video demo URL</label>
-                    <input type="text" name="demoVideoUrl" readonly>
+
+                    <input type="text" name="demoVideoUrl" hidden>
                 </div>
 
                 <div class="field">
@@ -814,7 +818,7 @@
                 sets: parseInt(form.sets.value || '3', 10),
                 reps: parseInt(form.reps.value || '10', 10),
                 restSec: parseInt(form.restSec.value || '60', 10),
-                difficulty: form.difficulty.value || 'medium'
+                difficulty: form.difficulty.value || 'beginner'
             }
         };
 
