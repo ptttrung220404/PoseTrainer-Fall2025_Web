@@ -42,17 +42,32 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+//                .authorizeHttpRequests(auth -> auth
+//                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+//                        .requestMatchers("/auth/**", "/login","/forgot").permitAll()
+//                        .requestMatchers("/favicon.ico", "/css/**", "/js/**", "/images/**").permitAll()
+//                        .requestMatchers("/health", "/actuator/**").permitAll()
+//                        .requestMatchers("/admin/**").hasRole("ADMIN")
+//                        .requestMatchers("/super_admin/**").hasRole("SUPER_ADMIN")
+//                        .requestMatchers("/me").authenticated()
+//                        .requestMatchers("/").permitAll()
+//                        .anyRequest().authenticated()
+//                )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/auth/**", "/login","/forgot").permitAll()
                         .requestMatchers("/favicon.ico", "/css/**", "/js/**", "/images/**").permitAll()
                         .requestMatchers("/health", "/actuator/**").permitAll()
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/super_admin/**").hasRole("SUPER_ADMIN")
+
+                        // FIX ĐÚNG Ở ĐÂY
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/super_admin/**").hasRole("SUPER_ADMIN")
+
                         .requestMatchers("/me").authenticated()
                         .requestMatchers("/").permitAll()
                         .anyRequest().authenticated()
                 )
+
 //                .securityMatcher("/admin/**", "/me")
                 .addFilterBefore(firebaseFilter, UsernamePasswordAuthenticationFilter.class)
                 .cors(Customizer.withDefaults())
@@ -99,7 +114,10 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         var cfg = new CorsConfiguration();
         cfg.setAllowedOrigins(List.of("*")); // chỉnh theo domain của bạn
-        cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        cfg.setAllowedMethods(List.of(
+                "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"
+        ));
+
         cfg.setAllowedHeaders(List.of("*"));
         var source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", cfg);
